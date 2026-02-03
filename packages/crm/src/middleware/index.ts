@@ -11,3 +11,13 @@ export {
   clearRateLimitStore,
   getRateLimitEntry,
 } from "./rate-limit";
+export {
+  requireApiKey,
+  optionalApiKey,
+  requireScope,
+  extractBearerToken,
+  getApiKeyFromContext,
+  requireApiKeyFromContext,
+  hasCurrentScope,
+  getRateLimitIdentifier,
+} from "./api-key";

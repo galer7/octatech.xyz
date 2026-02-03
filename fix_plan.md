@@ -158,28 +158,33 @@
 
 ---
 
-## Phase 5: API Key Management
+## Phase 5: API Key Management ✅ COMPLETED
 
-### 5.1 API Key Utilities
-- [ ] Create `packages/crm/src/lib/api-keys.ts`
-- [ ] Implement key generation (`oct_` prefix + 32 base62 chars)
-- [ ] Implement SHA-256 hashing for storage
-- [ ] Implement key validation against database
-- [ ] Implement scope checking (leads:read, leads:write, leads:delete, leads:*)
+### 5.1 API Key Utilities ✅
+- [x] Create `packages/crm/src/lib/api-keys.ts`
+- [x] Implement key generation (`oct_` prefix + 32 base62 chars)
+- [x] Implement SHA-256 hashing for storage
+- [x] Implement key validation against database
+- [x] Implement scope checking (leads:read, leads:write, leads:delete, leads:*)
 
-### 5.2 API Key Middleware
-- [ ] Create `packages/crm/src/middleware/api-key.ts`
-- [ ] Extract Bearer token from Authorization header
-- [ ] Validate key and check scopes
-- [ ] Update last_used_at timestamp
-- [ ] Return 401/403 for invalid/insufficient permissions
+### 5.2 API Key Middleware ✅
+- [x] Create `packages/crm/src/middleware/api-key.ts`
+- [x] Extract Bearer token from Authorization header
+- [x] Validate key and check scopes
+- [x] Update last_used_at timestamp
+- [x] Return 401/403 for invalid/insufficient permissions
 
-### 5.3 Admin API Key Endpoints
-- [ ] Create `packages/crm/src/routes/admin/api-keys.ts`
-- [ ] Implement `GET /api/admin/api-keys` (list all keys with prefix, name, scopes, last used)
-- [ ] Implement `POST /api/admin/api-keys` (create key, return full key once)
-- [ ] Implement `PATCH /api/admin/api-keys/:id` (update name/scopes)
-- [ ] Implement `DELETE /api/admin/api-keys/:id` (revoke key)
+### 5.3 Admin API Key Endpoints ✅
+- [x] Create `packages/crm/src/routes/admin/api-keys.ts`
+- [x] Implement `GET /api/admin/api-keys` (list all keys with prefix, name, scopes, last used)
+- [x] Implement `POST /api/admin/api-keys` (create key, return full key once)
+- [x] Implement `PATCH /api/admin/api-keys/:id` (update name/scopes)
+- [x] Implement `DELETE /api/admin/api-keys/:id` (revoke key)
+
+### 5.4 Tests ✅ (Added)
+- [x] Add comprehensive tests for API key utilities (key generation, hashing, format validation, scope checking)
+- [x] Add comprehensive tests for API key middleware (Bearer extraction, validation, scope enforcement)
+- [x] Add comprehensive tests for admin API key routes (CRUD operations)
 
 ---
 

@@ -12,6 +12,7 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 import { authRoutes } from "./routes/auth";
+import { adminApiKeysRoutes } from "./routes/admin";
 
 export const app = new Hono();
 
@@ -28,7 +29,7 @@ app.use(
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     exposeHeaders: [
       "X-RateLimit-Limit",
       "X-RateLimit-Remaining",
@@ -52,6 +53,9 @@ app.get("/api/v1/health", (c) => {
 
 // Auth routes (login, logout, me, change-password)
 app.route("/api/auth", authRoutes);
+
+// Admin API key management routes
+app.route("/api/admin/api-keys", adminApiKeysRoutes);
 
 // Root redirect to health check
 app.get("/", (c) => {
