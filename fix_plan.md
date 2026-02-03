@@ -403,39 +403,54 @@
 
 ---
 
-## Phase 11: Landing Page Updates
+## Phase 11: Landing Page Updates ✅ COMPLETED
 
-> **Implementation Note:** Use the `/frontend-design` skill when building the contact form and updating UI elements. This ensures the new components integrate seamlessly with the existing design while maintaining high visual quality.
+### 11.1 Contact Form Implementation ✅
+- [x] Create contact form section in `packages/web/index.html`
+- [x] Add form fields: name, email, company, phone, budget (dropdown), projectType (dropdown), message, source (dropdown)
+- [x] Add honeypot field (hidden `website` input)
+- [x] Implement client-side validation
+- [x] Implement form submission to `https://api.octatech.xyz/api/leads`
+- [x] Implement loading state during submission
+- [x] Implement success message display
+- [x] Implement error handling with user-friendly messages
+- [x] Add "Contact" link to header navigation
 
-### 11.1 Contact Form Implementation
-- [ ] Create contact form section in `packages/web/index.html`
-- [ ] Add form fields: name, email, company, phone, budget (dropdown), projectType (dropdown), message, source (dropdown)
-- [ ] Add honeypot field (hidden `website` input)
-- [ ] Implement client-side validation
-- [ ] Implement form submission to `https://api.octatech.xyz/api/leads`
-- [ ] Implement loading state during submission
-- [ ] Implement success message display
-- [ ] Implement error handling with user-friendly messages
+### 11.2 Cal.com Integration ✅
+- [x] Add Cal.com embed script to `<head>`
+- [x] Configure Cal.com UI (dark theme, indigo brand color #6366f1)
+- [x] Update "Book consultation" button in header with `data-cal-link="octatech/discovery"`
+- [x] Update "Talk to an architect" button in hero with `data-cal-link`
+- [x] Update "Book a call" button in Dedicated Team card with `data-cal-link`
+- [x] Update "Book call" button in CTA section with `data-cal-link`
 
-### 11.2 Cal.com Integration
-- [ ] Add Cal.com embed script to `<head>`
-- [ ] Configure Cal.com UI (dark theme, indigo brand color)
-- [ ] Update "Book consultation" button in header with `data-cal-link`
-- [ ] Update "Talk to an architect" button in hero with `data-cal-link`
-- [ ] Update "Book a call" button in Dedicated Team card with `data-cal-link`
-- [ ] Update "Book call" button in CTA section with `data-cal-link`
+### 11.3 Fix Dead Links ✅
+- [x] Update "Client Portal" link → `https://crm.octatech.xyz/admin` (with target="_blank")
+- [x] Update "View our work" link → `#case-studies`
+- [x] Update "See client results" link → `#case-studies`
+- [x] Update footer links:
+  - Services → `#expertise`
+  - Careers → `mailto:careers@octatech.xyz`
+  - Privacy → `/privacy` (placeholder)
+  - Terms → `/terms` (placeholder)
 
-### 11.3 Fix Dead Links
-- [ ] Update "Client Portal" link (href="#" → actual URL or remove)
-- [ ] Update "View our work" link (href="#" → #case-studies or portfolio)
-- [ ] Update "See client results" link (href="#" → case studies)
-- [ ] Update footer links (Services, Careers, Privacy, Terms) or remove
+### 11.4 Cal.com Webhook Handler ✅
+- [x] Create `packages/crm/src/routes/api/cal-webhook.ts`
+- [x] Implement `POST /api/webhooks/cal` endpoint
+- [x] Add Zod validation schemas for Cal.com webhook payload
+- [x] Parse Cal.com BOOKING_CREATED webhook payload
+- [x] Create lead from booking data if not exists (source: "Cal.com Booking")
+- [x] Add "meeting" activity to existing lead if found
+- [x] Register route in `packages/crm/src/app.ts`
+- [x] Export from `packages/crm/src/routes/api/index.ts`
 
-### 11.4 Cal.com Webhook Handler
-- [ ] Implement `POST /api/webhooks/cal` endpoint in CRM backend
-- [ ] Parse Cal.com BOOKING_CREATED webhook payload
-- [ ] Create lead from booking data if not exists
-- [ ] Add activity to existing lead if found
+### 11.5 Tests ✅ (Added)
+- [x] Add comprehensive tests for Cal.com webhook handler (30 tests)
+  - Validation tests (empty body, missing fields, invalid email)
+  - Event handling tests (BOOKING_CREATED, ignored events)
+  - Lead creation tests (new lead, with company, with projectDescription)
+  - Existing lead tests (add activity, no duplicate lead)
+  - Error handling tests (database errors, invalid JSON)
 
 ---
 

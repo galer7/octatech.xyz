@@ -14,7 +14,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 import { authRoutes } from "./routes/auth";
 import { adminApiKeysRoutes, adminWebhooksRoutes, adminNotificationsRoutes } from "./routes/admin";
-import { leadsRoutes, publicLeadsRoutes, meRoutes } from "./routes/api";
+import { leadsRoutes, publicLeadsRoutes, meRoutes, calWebhookRoutes } from "./routes/api";
 
 export const app = new Hono();
 
@@ -69,6 +69,11 @@ app.route("/api/admin/notifications", adminNotificationsRoutes);
 // Rate limiting is applied via the /api/* pattern
 app.use("/api/leads", rateLimiter);
 app.route("/api/leads", publicLeadsRoutes);
+
+// Cal.com webhook endpoint - no auth required
+// Cal.com sends webhooks when bookings are created
+app.use("/api/webhooks/cal", rateLimiter);
+app.route("/api/webhooks/cal", calWebhookRoutes);
 
 // API v1 routes (require API key authentication)
 app.route("/api/v1/leads", leadsRoutes);
