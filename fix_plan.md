@@ -82,19 +82,43 @@
 
 ---
 
-## Phase 3: CRM Backend Core
+## Phase 3: CRM Backend Core ✅ COMPLETED
 
-### 3.1 Hono Server Setup
-- [ ] Create `packages/crm/src/app.ts` with Hono app initialization
-- [ ] Configure CORS middleware (allow octatech.xyz origin)
-- [ ] Configure JSON body parsing
-- [ ] Configure request logging
-- [ ] Create error handling middleware
-- [ ] Create rate limiting middleware
+### 3.1 Hono Server Setup ✅
+- [x] Create `packages/crm/src/app.ts` with Hono app initialization
+- [x] Configure CORS middleware (allow octatech.xyz origin, expose rate limit headers)
+- [x] Configure JSON body parsing (built into Hono)
+- [x] Configure request logging
+- [x] Create error handling middleware (`packages/crm/src/middleware/error-handler.ts`)
+  - Handles custom ApiError instances with proper status codes
+  - Handles Zod validation errors with field-level details
+  - Returns consistent JSON error responses per API spec
+- [x] Create rate limiting middleware (`packages/crm/src/middleware/rate-limit.ts`)
+  - 100 requests/minute for authenticated requests (API key)
+  - 10 requests/minute for unauthenticated requests (by IP)
+  - 5 requests/15 minutes for login attempts
+  - Includes X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset headers
 
-### 3.2 Health Check Endpoint
-- [ ] Implement `GET /api/v1/health` endpoint
-- [ ] Return status, version, timestamp
+### 3.2 Health Check Endpoint ✅
+- [x] Implement `GET /api/v1/health` endpoint
+- [x] Return status ("healthy"), version, timestamp per API spec
+
+### 3.3 Error Classes ✅ (Added)
+- [x] Create `packages/crm/src/lib/errors.ts` with custom error classes
+  - ApiError base class
+  - BadRequestError (400)
+  - ValidationError (400)
+  - UnauthorizedError (401)
+  - InvalidApiKeyError (401)
+  - InsufficientScopeError (403)
+  - NotFoundError (404)
+  - RateLimitedError (429)
+  - InternalError (500)
+
+### 3.4 Tests ✅ (Added)
+- [x] Add comprehensive tests for error classes
+- [x] Add comprehensive tests for rate limiting middleware
+- [x] Add comprehensive tests for app endpoints (health, 404, CORS)
 
 ---
 

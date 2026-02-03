@@ -1,48 +1,61 @@
+/**
+ * Hono application setup for the CRM API.
+ *
+ * Configures middleware (CORS, logging, security headers, rate limiting)
+ * and registers routes. Error handling follows the API spec in
+ * specs/07-api-endpoints.md.
+ */
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
+import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 
 export const app = new Hono();
 
-// Middleware
+// Request logging
 app.use("*", logger());
+
+// Security headers (XSS protection, content type options, etc.)
 app.use("*", secureHeaders());
+
+// CORS configuration
 app.use(
   "*",
   cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: [
+      "X-RateLimit-Limit",
+      "X-RateLimit-Remaining",
+      "X-RateLimit-Reset",
+    ],
   })
 );
 
-// Health check endpoint
+// Rate limiting (100/min authenticated, 10/min unauthenticated)
+// Applied to all routes except health check
+app.use("/api/v1/*", rateLimiter);
+
+// Health check endpoint (no auth, no rate limiting)
 app.get("/api/v1/health", (c) => {
   return c.json({
-    status: "ok",
+    status: "healthy",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
   });
 });
 
-// Root redirect to health
+// Root redirect to health check
 app.get("/", (c) => {
   return c.redirect("/api/v1/health");
 });
 
-// 404 handler
-app.notFound((c) => {
-  return c.json({ error: "Not Found" }, 404);
-});
+// 404 handler for unmatched routes
+app.notFound(notFoundHandler);
 
-// Error handler
-app.onError((err, c) => {
-  console.error("Server error:", err);
-  return c.json(
-    {
-      error: "Internal Server Error",
-      message: process.env.NODE_ENV === "development" ? err.message : undefined,
-    },
-    500
-  );
-});
+// Global error handler
+app.onError(errorHandler);
