@@ -259,36 +259,48 @@
 
 ---
 
-## Phase 8: Notification Channels
+## Phase 8: Notification Channels ✅ COMPLETED
 
-### 8.1 Discord Notifications
-- [ ] Create `packages/crm/src/lib/notifications/discord.ts`
-- [ ] Implement Discord embed message formatting
-- [ ] Implement Discord webhook POST request
+### 8.1 Discord Notifications ✅
+- [x] Create `packages/crm/src/lib/notifications/discord.ts`
+- [x] Implement Discord embed message formatting (rich embeds with fields for lead data)
+- [x] Implement Discord webhook POST request with timeout and error handling
 
-### 8.2 Telegram Notifications
-- [ ] Create `packages/crm/src/lib/notifications/telegram.ts`
-- [ ] Implement Telegram HTML message formatting
-- [ ] Implement Telegram Bot API sendMessage request
+### 8.2 Telegram Notifications ✅
+- [x] Create `packages/crm/src/lib/notifications/telegram.ts`
+- [x] Implement Telegram HTML message formatting with proper escaping
+- [x] Implement Telegram Bot API sendMessage request
 
-### 8.3 Email Notifications (Resend)
-- [ ] Create `packages/crm/src/lib/notifications/email.ts`
-- [ ] Implement HTML email template for new leads
-- [ ] Implement Resend API integration
+### 8.3 Email Notifications (Resend) ✅
+- [x] Create `packages/crm/src/lib/notifications/email.ts`
+- [x] Implement HTML email template for new leads and status changes
+- [x] Implement Resend API integration with proper error handling
 
-### 8.4 Notification Dispatcher
-- [ ] Create `packages/crm/src/lib/notifications/dispatcher.ts`
-- [ ] Query enabled channels for event type
-- [ ] Dispatch to each channel asynchronously
-- [ ] Handle failures gracefully (don't block main operation)
+### 8.4 Notification Dispatcher ✅
+- [x] Create `packages/crm/src/lib/notifications/dispatcher.ts`
+- [x] Query enabled channels for event type
+- [x] Dispatch to each channel asynchronously (fire-and-forget)
+- [x] Handle failures gracefully (don't block main operation)
+- [x] Implement convenience functions for lead.created and lead.status_changed events
 
-### 8.5 Admin Notification Endpoints
-- [ ] Create `packages/crm/src/routes/admin/notifications.ts`
-- [ ] Implement `GET /api/admin/notifications` (list channels)
-- [ ] Implement `POST /api/admin/notifications` (create channel)
-- [ ] Implement `PATCH /api/admin/notifications/:id` (update channel)
-- [ ] Implement `DELETE /api/admin/notifications/:id` (delete channel)
-- [ ] Implement `POST /api/admin/notifications/:id/test` (send test notification)
+### 8.5 Admin Notification Endpoints ✅
+- [x] Create `packages/crm/src/routes/admin/notifications.ts`
+- [x] Implement `GET /api/admin/notifications` (list channels)
+- [x] Implement `GET /api/admin/notifications/:id` (get single channel)
+- [x] Implement `POST /api/admin/notifications` (create channel with Zod validation)
+- [x] Implement `PATCH /api/admin/notifications/:id` (update channel)
+- [x] Implement `DELETE /api/admin/notifications/:id` (delete channel)
+- [x] Implement `POST /api/admin/notifications/:id/test` (send test notification)
+- [x] Implement `GET /api/admin/notifications/events/list` (list available events)
+- [x] Implement `GET /api/admin/notifications/types/list` (list channel types with config hints)
+
+### 8.6 Notification Tests ✅ (Added)
+- [x] Add comprehensive tests for types.ts (type guards, URL generation, enum values) - 23 tests
+- [x] Add comprehensive tests for discord.ts (validation, embed formatting, delivery) - 29 tests
+- [x] Add comprehensive tests for telegram.ts (validation, HTML formatting, delivery) - 38 tests
+- [x] Add comprehensive tests for email.ts (validation, HTML templates, delivery) - 38 tests
+- [x] Add comprehensive tests for dispatcher.ts (dispatch, channel querying, async) - 17 tests
+- [x] Add comprehensive tests for admin routes (CRUD operations, validation) - 26 tests
 
 ---
 
