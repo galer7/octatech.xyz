@@ -11,18 +11,31 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// Mock the database module before importing app (which imports auth routes that use db)
-vi.mock("./db", () => ({
-  db: {
+// Create mock db factory function
+function createMockDb() {
+  return {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              offset: vi.fn().mockResolvedValue([]),
+            }),
+          }),
         }),
         innerJoin: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue([]),
           }),
+        }),
+        orderBy: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            offset: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+        limit: vi.fn().mockReturnValue({
+          offset: vi.fn().mockResolvedValue([]),
         }),
       }),
     }),
@@ -43,7 +56,16 @@ vi.mock("./db", () => ({
         returning: vi.fn().mockResolvedValue([]),
       }),
     }),
-  },
+  };
+}
+
+// Mock both ./db and ./db/connection before importing app
+vi.mock("./db", () => ({
+  db: createMockDb(),
+}));
+
+vi.mock("./db/connection", () => ({
+  db: createMockDb(),
 }));
 
 import { app } from "./app";

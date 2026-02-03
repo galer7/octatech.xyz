@@ -188,32 +188,39 @@
 
 ---
 
-## Phase 6: Leads API (Public)
+## Phase 6: Leads API (Public) ✅ COMPLETED
 
-### 6.1 Lead Validation
-- [ ] Create `packages/crm/src/lib/validation.ts`
-- [ ] Define Zod schemas for lead creation/update
-- [ ] Validate email format
-- [ ] Validate status values (new, contacted, qualified, proposal, won, lost)
-- [ ] Validate budget and projectType against allowed values
+### 6.1 Lead Validation ✅
+- [x] Create `packages/crm/src/lib/validation.ts`
+- [x] Define Zod schemas for lead creation/update
+- [x] Validate email format
+- [x] Validate status values (new, contacted, qualified, proposal, won, lost)
+- [x] Validate budget and projectType against allowed values
 
-### 6.2 Lead Endpoints
-- [ ] Create `packages/crm/src/routes/api/leads.ts`
-- [ ] Implement `GET /api/v1/leads` (list with pagination, filtering, search, sort)
-- [ ] Implement `GET /api/v1/leads/:id` (get single lead with activities)
-- [ ] Implement `POST /api/v1/leads` (create lead, trigger notifications)
-- [ ] Implement `PATCH /api/v1/leads/:id` (update lead, log status changes)
-- [ ] Implement `DELETE /api/v1/leads/:id` (delete lead)
-- [ ] Implement `POST /api/v1/leads/:id/activities` (add activity to lead)
+### 6.2 Lead Endpoints ✅
+- [x] Create `packages/crm/src/routes/api/leads.ts`
+- [x] Implement `GET /api/v1/leads` (list with pagination, filtering, search, sort)
+- [x] Implement `GET /api/v1/leads/:id` (get single lead with activities)
+- [x] Implement `POST /api/v1/leads` (create lead, trigger notifications)
+- [x] Implement `PATCH /api/v1/leads/:id` (update lead, log status changes)
+- [x] Implement `DELETE /api/v1/leads/:id` (delete lead)
+- [x] Implement `POST /api/v1/leads/:id/activities` (add activity to lead)
+- [x] Implement `GET /api/v1/leads/:id/activities` (get activities for a lead)
 
-### 6.3 Lead Creation from Contact Form
-- [ ] Create `packages/crm/src/routes/api/public-leads.ts`
-- [ ] Implement `POST /api/leads` (public endpoint for contact form)
-- [ ] Implement honeypot validation (reject if website field is filled)
-- [ ] Return success response even for honeypot (silent rejection)
+### 6.3 Lead Creation from Contact Form ✅
+- [x] Create `packages/crm/src/routes/api/public-leads.ts`
+- [x] Implement `POST /api/leads` (public endpoint for contact form)
+- [x] Implement honeypot validation (reject if website field is filled)
+- [x] Return success response even for honeypot (silent rejection)
 
-### 6.4 API Info Endpoint
-- [ ] Implement `GET /api/v1/me` (return info about current API key)
+### 6.4 API Info Endpoint ✅
+- [x] Implement `GET /api/v1/me` (return info about current API key)
+
+### 6.5 Tests ✅ (Added)
+- [x] Add comprehensive tests for validation schemas (150 tests)
+- [x] Add comprehensive tests for Leads API routes (70 tests)
+- [x] Add comprehensive tests for public leads endpoint (42 tests)
+- [x] Add comprehensive tests for API info endpoint (19 tests)
 
 ---
 
@@ -300,6 +307,8 @@
 
 ## Phase 10: Admin UI (React)
 
+> **Implementation Note:** Use the `/frontend-design` skill when building all UI components in this phase. This ensures distinctive, production-grade interfaces with high design quality that avoid generic AI aesthetics.
+
 ### 10.1 Admin UI Setup
 - [ ] Create `packages/crm/admin/` directory
 - [ ] Initialize Vite + React + TypeScript
@@ -369,6 +378,8 @@
 
 ## Phase 11: Landing Page Updates
 
+> **Implementation Note:** Use the `/frontend-design` skill when building the contact form and updating UI elements. This ensures the new components integrate seamlessly with the existing design while maintaining high visual quality.
+
 ### 11.1 Contact Form Implementation
 - [ ] Create contact form section in `packages/web/index.html`
 - [ ] Add form fields: name, email, company, phone, budget (dropdown), projectType (dropdown), message, source (dropdown)
@@ -402,6 +413,8 @@
 ---
 
 ## Phase 12: Blog System
+
+> **Implementation Note:** Use the `/frontend-design` skill when building blog layouts, pages, and components. This ensures distinctive, polished styling that matches the Octatech brand with high design quality.
 
 ### 12.1 Astro Blog Setup
 - [ ] Initialize `packages/blog/package.json` with Astro dependencies
