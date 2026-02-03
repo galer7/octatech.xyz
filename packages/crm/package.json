@@ -6,7 +6,9 @@
   "description": "Octatech CRM backend - lead management, API, and admin UI",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && cp -r src/public dist/public 2>/dev/null || true",
+    "dev:admin": "cd admin && npm run dev",
+    "build": "npm run build:admin && tsc",
+    "build:admin": "cd admin && npm install && npm run build",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

@@ -6,7 +6,7 @@
  */
 
 import { Hono } from "hono";
-import { eq, and, or, ilike, desc, asc, sql, isNull } from "drizzle-orm";
+import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
 import { db } from "../../db/connection";
 import {
   leads,
@@ -35,7 +35,6 @@ import {
   type CreateLeadInput,
   type UpdateLeadInput,
   type CreateActivityInput,
-  type ListLeadsQuery,
 } from "../../lib/validation";
 import {
   triggerLeadCreated,

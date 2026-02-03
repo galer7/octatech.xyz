@@ -331,74 +331,75 @@
 
 ---
 
-## Phase 10: Admin UI (React)
+## Phase 10: Admin UI (React) ✅ COMPLETED
 
-> **Implementation Note:** Use the `/frontend-design` skill when building all UI components in this phase. This ensures distinctive, production-grade interfaces with high design quality that avoid generic AI aesthetics.
+### 10.1 Admin UI Setup ✅
+- [x] Create `packages/crm/admin/` directory
+- [x] Initialize Vite + React + TypeScript
+- [x] Configure Tailwind CSS (dark theme, indigo accent #6366f1)
+- [x] Install React Router, React Query, date-fns, clsx
+- [x] Create API client with auth handling and CSRF protection
 
-### 10.1 Admin UI Setup
-- [ ] Create `packages/crm/admin/` directory
-- [ ] Initialize Vite + React + TypeScript
-- [ ] Configure Tailwind CSS (dark theme, indigo accent)
-- [ ] Install React Router, React Query, date-fns
-- [ ] Create API client with auth handling
+### 10.2 Authentication Pages ✅
+- [x] Create Login page (`/login`)
+- [x] Implement login form with email/password
+- [x] Implement "Remember me" checkbox
+- [x] Implement auth redirect (unauthenticated → login via ProtectedRoute)
 
-### 10.2 Authentication Pages
-- [ ] Create Login page (`/login`)
-- [ ] Implement login form with email/password
-- [ ] Implement "Remember me" checkbox
-- [ ] Implement auth redirect (unauthenticated → login)
+### 10.3 Dashboard Page ✅
+- [x] Create Dashboard page (`/`)
+- [x] Display lead count by status with animated stat cards
+- [x] Display recent leads list with status badges
+- [x] Add quick action buttons (Add Lead, AI Add)
 
-### 10.3 Dashboard Page
-- [ ] Create Dashboard page (`/`)
-- [ ] Display lead count by status
-- [ ] Display recent leads list
-- [ ] Add quick action buttons (Add Lead, AI Add)
+### 10.4 Lead Management Pages ✅
+- [x] Create Lead List page (`/leads`)
+- [x] Implement search, filter by status, sort
+- [x] Implement pagination with page info
+- [x] Create Lead Detail page (`/leads/:id`)
+- [x] Display lead info, status buttons, activity timeline
+- [x] Implement edit lead modal
+- [x] Implement add note form
+- [x] Implement delete confirmation
+- [x] Create Add Lead page (`/leads/new`)
+- [x] Create AI Add Lead page (`/leads/ai`)
+- [x] Implement textarea for pasting text
+- [x] Implement "Parse with AI" button
+- [x] Display extracted fields for editing before save
 
-### 10.4 Lead Management Pages
-- [ ] Create Lead List page (`/leads`)
-- [ ] Implement search, filter by status, sort
-- [ ] Implement pagination
-- [ ] Create Lead Detail page (`/leads/:id`)
-- [ ] Display lead info, status buttons, activity timeline
-- [ ] Implement edit lead modal
-- [ ] Implement add note form
-- [ ] Implement delete confirmation
-- [ ] Create Add Lead page (`/leads/new`)
-- [ ] Create AI Add Lead page (`/leads/ai`)
-- [ ] Implement textarea for pasting text
-- [ ] Implement "Parse with AI" button
-- [ ] Display extracted fields for editing before save
+### 10.5 API Key Management Page ✅
+- [x] Create API Keys page (`/api-keys`)
+- [x] Display keys with prefix, name, scopes, last used
+- [x] Implement create key modal (show full key once with copy button)
+- [x] Implement revoke confirmation
 
-### 10.5 API Key Management Page
-- [ ] Create API Keys page (`/api-keys`)
-- [ ] Display keys with prefix, name, scopes, last used
-- [ ] Implement create key modal (show full key once)
-- [ ] Implement revoke confirmation
+### 10.6 Webhook Management Pages ✅
+- [x] Create Webhooks page (`/webhooks`)
+- [x] Display webhooks with status, events
+- [x] Implement create/edit webhook modal
+- [x] Implement enable/disable toggle
+- [x] Implement test webhook button
+- [x] Create Webhook Deliveries page (`/webhooks/:id/deliveries`)
 
-### 10.6 Webhook Management Pages
-- [ ] Create Webhooks page (`/webhooks`)
-- [ ] Display webhooks with status, events
-- [ ] Implement create/edit webhook modal
-- [ ] Implement enable/disable toggle
-- [ ] Implement test webhook button
-- [ ] Create Webhook Deliveries page (`/webhooks/:id/deliveries`)
+### 10.7 Notification Channels Page ✅
+- [x] Create Notifications page (`/notifications`)
+- [x] Display Discord, Telegram, Email channels with type-specific icons
+- [x] Implement configure modal for each type with type-specific fields
+- [x] Implement enable/disable toggle
+- [x] Implement test notification button
 
-### 10.7 Notification Channels Page
-- [ ] Create Notifications page (`/notifications`)
-- [ ] Display Discord, Telegram, Email channels
-- [ ] Implement configure modal for each type
-- [ ] Implement enable/disable toggle
-- [ ] Implement test notification button
+### 10.8 Settings Page ✅
+- [x] Create Settings page (`/settings`)
+- [x] Implement Cal.com link setting
+- [x] Implement OpenAI API key setting (masked display)
+- [x] Implement change password form with validation
 
-### 10.8 Settings Page
-- [ ] Create Settings page (`/settings`)
-- [ ] Implement Cal.com link setting
-- [ ] Implement OpenAI API key setting (masked display)
-- [ ] Implement change password form
-
-### 10.9 Admin UI Build Integration
-- [ ] Configure Vite to build to `packages/crm/dist/admin`
-- [ ] Serve admin UI from Hono backend at `/admin/*`
+### 10.9 Admin UI Build Integration ✅
+- [x] Configure Vite to build to `packages/crm/dist/admin`
+- [x] Serve admin UI from Hono backend at `/admin/*`
+- [x] Implement SPA fallback for client-side routing
+- [x] Update CRM package.json with build:admin script
+- [x] Update root package.json workspaces to include admin
 
 ---
 

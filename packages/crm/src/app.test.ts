@@ -71,6 +71,7 @@ vi.mock("./db", () => ({
     "lead.deleted",
     "lead.activity_added",
   ],
+  notificationChannelTypeEnum: ["email", "discord", "telegram", "slack"],
 }));
 
 vi.mock("./db/connection", () => ({
@@ -118,11 +119,11 @@ describe("CRM API Application", () => {
   });
 
   describe("GET /", () => {
-    it("should redirect to health check", async () => {
+    it("should redirect to admin UI", async () => {
       const res = await app.request("/", { redirect: "manual" });
 
       expect(res.status).toBe(302);
-      expect(res.headers.get("Location")).toBe("/api/v1/health");
+      expect(res.headers.get("Location")).toBe("/admin");
     });
   });
 

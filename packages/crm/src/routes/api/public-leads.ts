@@ -11,7 +11,6 @@
 import { Hono } from "hono";
 import { db } from "../../db/connection";
 import { leads, leadActivities } from "../../db/schema";
-import { ValidationError } from "../../lib/errors";
 import {
   publicLeadSchema,
   formatZodErrors,
