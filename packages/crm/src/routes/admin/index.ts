@@ -5,3 +5,4 @@
  */
 
 export { adminApiKeysRoutes } from "./api-keys";
+export { adminWebhooksRoutes } from "./webhooks";

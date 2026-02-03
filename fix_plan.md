@@ -224,32 +224,38 @@
 
 ---
 
-## Phase 7: Webhook System
+## Phase 7: Webhook System ✅ COMPLETED
 
-### 7.1 Webhook Dispatcher
-- [ ] Create `packages/crm/src/lib/webhooks.ts`
-- [ ] Implement webhook payload formatting for each event type
-- [ ] Implement HMAC-SHA256 signature generation
-- [ ] Implement async webhook delivery with timeout (30s)
-- [ ] Implement retry logic with exponential backoff (1m, 5m, 30m, 2h, 24h)
-- [ ] Implement delivery logging to webhook_deliveries table
-- [ ] Implement failure tracking and auto-disable after 10 consecutive failures
+### 7.1 Webhook Dispatcher ✅
+- [x] Create `packages/crm/src/lib/webhooks.ts`
+- [x] Implement webhook payload formatting for each event type
+- [x] Implement HMAC-SHA256 signature generation
+- [x] Implement async webhook delivery with timeout (30s)
+- [x] Implement retry logic with exponential backoff (1m, 5m, 30m, 2h, 24h)
+- [x] Implement delivery logging to webhook_deliveries table
+- [x] Implement failure tracking and auto-disable after 10 consecutive failures
 
-### 7.2 Event Triggers
-- [ ] Create event dispatcher for `lead.created`
-- [ ] Create event dispatcher for `lead.updated`
-- [ ] Create event dispatcher for `lead.status_changed`
-- [ ] Create event dispatcher for `lead.deleted`
-- [ ] Create event dispatcher for `lead.activity_added`
+### 7.2 Event Triggers ✅
+- [x] Create event dispatcher for `lead.created`
+- [x] Create event dispatcher for `lead.updated`
+- [x] Create event dispatcher for `lead.status_changed`
+- [x] Create event dispatcher for `lead.deleted`
+- [x] Create event dispatcher for `lead.activity_added`
 
-### 7.3 Admin Webhook Endpoints
-- [ ] Create `packages/crm/src/routes/admin/webhooks.ts`
-- [ ] Implement `GET /api/admin/webhooks` (list all webhooks)
-- [ ] Implement `POST /api/admin/webhooks` (create webhook)
-- [ ] Implement `PATCH /api/admin/webhooks/:id` (update webhook)
-- [ ] Implement `DELETE /api/admin/webhooks/:id` (delete webhook)
-- [ ] Implement `POST /api/admin/webhooks/:id/test` (send test payload)
-- [ ] Implement `GET /api/admin/webhooks/:id/deliveries` (delivery history)
+### 7.3 Admin Webhook Endpoints ✅
+- [x] Create `packages/crm/src/routes/admin/webhooks.ts`
+- [x] Implement `GET /api/admin/webhooks` (list all webhooks)
+- [x] Implement `POST /api/admin/webhooks` (create webhook)
+- [x] Implement `PATCH /api/admin/webhooks/:id` (update webhook)
+- [x] Implement `DELETE /api/admin/webhooks/:id` (delete webhook)
+- [x] Implement `POST /api/admin/webhooks/:id/test` (send test payload)
+- [x] Implement `GET /api/admin/webhooks/:id/deliveries` (delivery history)
+
+### 7.4 Webhook Tests ✅ (Added)
+- [x] Add comprehensive tests for webhook payload formatting
+- [x] Add comprehensive tests for HMAC-SHA256 signature generation
+- [x] Add comprehensive tests for webhook delivery and retry logic
+- [x] Add comprehensive tests for admin webhook routes (CRUD operations)
 
 ---
 

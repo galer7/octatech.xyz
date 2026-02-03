@@ -62,6 +62,15 @@ function createMockDb() {
 // Mock both ./db and ./db/connection before importing app
 vi.mock("./db", () => ({
   db: createMockDb(),
+  webhooks: {},
+  webhookDeliveries: {},
+  webhookEventEnum: [
+    "lead.created",
+    "lead.updated",
+    "lead.status_changed",
+    "lead.deleted",
+    "lead.activity_added",
+  ],
 }));
 
 vi.mock("./db/connection", () => ({

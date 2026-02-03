@@ -18,6 +18,7 @@ import {
   isHoneypotFilled,
   type PublicLeadInput,
 } from "../../lib/validation";
+import { triggerLeadCreated } from "../../lib/webhooks";
 
 /**
  * Public leads routes app instance.
@@ -100,6 +101,11 @@ publicLeadsRoutes.post("/", async (c) => {
     leadId: newLead.id,
     type: "note",
     description: `Lead created via contact form (IP: ${clientIp})`,
+  });
+
+  // Trigger webhooks (fire-and-forget, don't await)
+  triggerLeadCreated(newLead).catch((err) => {
+    console.error("Failed to trigger lead.created webhook:", err);
   });
 
   // TODO: Trigger notifications (Discord, Telegram, Email) - Phase 8

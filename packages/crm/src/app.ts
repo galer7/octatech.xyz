@@ -12,7 +12,7 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 import { authRoutes } from "./routes/auth";
-import { adminApiKeysRoutes } from "./routes/admin";
+import { adminApiKeysRoutes, adminWebhooksRoutes } from "./routes/admin";
 import { leadsRoutes, publicLeadsRoutes, meRoutes } from "./routes/api";
 
 export const app = new Hono();
@@ -57,6 +57,9 @@ app.route("/api/auth", authRoutes);
 
 // Admin API key management routes
 app.route("/api/admin/api-keys", adminApiKeysRoutes);
+
+// Admin webhook management routes
+app.route("/api/admin/webhooks", adminWebhooksRoutes);
 
 // Public leads endpoint (contact form) - no auth required
 // Rate limiting is applied via the /api/* pattern

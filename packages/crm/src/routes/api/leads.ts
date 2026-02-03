@@ -37,6 +37,13 @@ import {
   type CreateActivityInput,
   type ListLeadsQuery,
 } from "../../lib/validation";
+import {
+  triggerLeadCreated,
+  triggerLeadUpdated,
+  triggerLeadStatusChanged,
+  triggerLeadDeleted,
+  triggerLeadActivityAdded,
+} from "../../lib/webhooks";
 
 /**
  * Leads API routes app instance.
@@ -299,7 +306,10 @@ leadsRoutes.post("/", requireScope("leads:write"), async (c) => {
     description: `Lead created via API (${apiKey.name})`,
   });
 
-  // TODO: Trigger webhooks and notifications (Phase 7 & 8)
+  // Trigger webhooks (fire-and-forget, don't await)
+  triggerLeadCreated(newLead).catch((err) => {
+    console.error("Failed to trigger lead.created webhook:", err);
+  });
 
   return c.json(
     {
@@ -340,22 +350,79 @@ leadsRoutes.patch("/:id", requireScope("leads:write"), async (c) => {
   const oldStatus = existingLead.status;
   const newStatus = input.status;
 
-  // Build update object
+  // Build update object and track changes for webhooks
   const updateData: Partial<typeof leads.$inferInsert> & { updatedAt: Date } = {
     updatedAt: new Date(),
   };
+  const changes: Record<string, { old: unknown; new: unknown }> = {};
 
-  if (input.name !== undefined) updateData.name = input.name;
-  if (input.email !== undefined) updateData.email = input.email;
-  if (input.company !== undefined) updateData.company = input.company;
-  if (input.phone !== undefined) updateData.phone = input.phone;
-  if (input.budget !== undefined) updateData.budget = input.budget;
-  if (input.projectType !== undefined) updateData.projectType = input.projectType;
-  if (input.message !== undefined) updateData.message = input.message;
-  if (input.source !== undefined) updateData.source = input.source;
-  if (input.status !== undefined) updateData.status = input.status;
-  if (input.notes !== undefined) updateData.notes = input.notes;
-  if (input.tags !== undefined) updateData.tags = input.tags;
+  if (input.name !== undefined) {
+    if (input.name !== existingLead.name) {
+      changes.name = { old: existingLead.name, new: input.name };
+    }
+    updateData.name = input.name;
+  }
+  if (input.email !== undefined) {
+    if (input.email !== existingLead.email) {
+      changes.email = { old: existingLead.email, new: input.email };
+    }
+    updateData.email = input.email;
+  }
+  if (input.company !== undefined) {
+    if (input.company !== existingLead.company) {
+      changes.company = { old: existingLead.company, new: input.company };
+    }
+    updateData.company = input.company;
+  }
+  if (input.phone !== undefined) {
+    if (input.phone !== existingLead.phone) {
+      changes.phone = { old: existingLead.phone, new: input.phone };
+    }
+    updateData.phone = input.phone;
+  }
+  if (input.budget !== undefined) {
+    if (input.budget !== existingLead.budget) {
+      changes.budget = { old: existingLead.budget, new: input.budget };
+    }
+    updateData.budget = input.budget;
+  }
+  if (input.projectType !== undefined) {
+    if (input.projectType !== existingLead.projectType) {
+      changes.projectType = { old: existingLead.projectType, new: input.projectType };
+    }
+    updateData.projectType = input.projectType;
+  }
+  if (input.message !== undefined) {
+    if (input.message !== existingLead.message) {
+      changes.message = { old: existingLead.message, new: input.message };
+    }
+    updateData.message = input.message;
+  }
+  if (input.source !== undefined) {
+    if (input.source !== existingLead.source) {
+      changes.source = { old: existingLead.source, new: input.source };
+    }
+    updateData.source = input.source;
+  }
+  if (input.status !== undefined) {
+    if (input.status !== existingLead.status) {
+      changes.status = { old: existingLead.status, new: input.status };
+    }
+    updateData.status = input.status;
+  }
+  if (input.notes !== undefined) {
+    if (input.notes !== existingLead.notes) {
+      changes.notes = { old: existingLead.notes, new: input.notes };
+    }
+    updateData.notes = input.notes;
+  }
+  if (input.tags !== undefined) {
+    const tagsChanged = JSON.stringify(input.tags) !== JSON.stringify(existingLead.tags);
+    if (tagsChanged) {
+      changes.tags = { old: existingLead.tags, new: input.tags };
+    }
+    updateData.tags = input.tags;
+  }
 
   // Set contactedAt when status changes to 'contacted' for the first time
   if (
@@ -378,7 +445,19 @@ leadsRoutes.patch("/:id", requireScope("leads:write"), async (c) => {
     await logStatusChange(id, oldStatus, newStatus);
   }
 
-  // TODO: Trigger webhooks for lead.updated / lead.status_changed (Phase 7)
+  // Trigger webhooks (fire-and-forget, don't await)
+  if (Object.keys(changes).length > 0) {
+    triggerLeadUpdated(updatedLead, changes).catch((err) => {
+      console.error("Failed to trigger lead.updated webhook:", err);
+    });
+  }
+
+  // Trigger status changed webhook in addition to lead.updated when status changes
+  if (statusChanged && oldStatus && newStatus) {
+    triggerLeadStatusChanged(updatedLead, oldStatus, newStatus).catch((err) => {
+      console.error("Failed to trigger lead.status_changed webhook:", err);
+    });
+  }
 
   return c.json({
     data: formatLeadResponse(updatedLead),
@@ -394,13 +473,17 @@ leadsRoutes.patch("/:id", requireScope("leads:write"), async (c) => {
 leadsRoutes.delete("/:id", requireScope("leads:delete"), async (c) => {
   const id = c.req.param("id");
 
-  // Verify lead exists
-  await getLeadOrThrow(id);
+  // Verify lead exists and capture info before deletion
+  const lead = await getLeadOrThrow(id);
+  const { name, email } = lead;
 
   // Delete lead (activities cascade automatically)
   await db.delete(leads).where(eq(leads.id, id));
 
-  // TODO: Trigger webhook for lead.deleted (Phase 7)
+  // Trigger webhook (fire-and-forget, don't await)
+  triggerLeadDeleted(id, name, email).catch((err) => {
+    console.error("Failed to trigger lead.deleted webhook:", err);
+  });
 
   return c.json({
     success: true,
@@ -417,8 +500,8 @@ leadsRoutes.delete("/:id", requireScope("leads:delete"), async (c) => {
 leadsRoutes.post("/:id/activities", requireScope("leads:write"), async (c) => {
   const id = c.req.param("id");
 
-  // Verify lead exists
-  await getLeadOrThrow(id);
+  // Verify lead exists and get lead data for webhook
+  const lead = await getLeadOrThrow(id);
 
   // Parse and validate request body
   const body = await c.req.json().catch(() => ({}));
@@ -446,7 +529,10 @@ leadsRoutes.post("/:id/activities", requireScope("leads:write"), async (c) => {
     .set({ updatedAt: new Date() })
     .where(eq(leads.id, id));
 
-  // TODO: Trigger webhook for lead.activity_added (Phase 7)
+  // Trigger webhook (fire-and-forget, don't await)
+  triggerLeadActivityAdded(lead, newActivity).catch((err) => {
+    console.error("Failed to trigger lead.activity_added webhook:", err);
+  });
 
   return c.json(
     {
