@@ -44,6 +44,16 @@ import {
   triggerLeadDeleted,
   triggerLeadActivityAdded,
 } from "../../lib/webhooks";
+import {
+  parseLeadText,
+  AIServiceError,
+  ParseFailedError,
+  isOpenAIConfigured,
+} from "../../lib/ai";
+import {
+  parseLeadSchema,
+  type ParseLeadInput,
+} from "../../lib/validation";
 
 /**
  * Leads API routes app instance.
@@ -564,4 +574,143 @@ leadsRoutes.get("/:id/activities", requireScope("leads:read"), async (c) => {
   return c.json({
     data: activities.map(formatActivityResponse),
   });
+});
+
+/**
+ * POST /api/v1/leads/parse
+ *
+ * Parse natural language text into structured lead data using AI.
+ * Optionally creates a lead immediately if autoSave is true.
+ * Requires leads:write scope.
+ *
+ * Request body:
+ * - text: Natural language text to parse (max 5000 chars)
+ * - autoSave: If true, create lead immediately (optional)
+ *
+ * Returns parsed lead data with confidence score and extracted fields list.
+ */
+leadsRoutes.post("/parse", requireScope("leads:write"), async (c) => {
+  // Check if OpenAI is configured
+  if (!isOpenAIConfigured()) {
+    return c.json(
+      {
+        error: "AI service not configured",
+        code: "AI_SERVICE_ERROR",
+      },
+      503
+    );
+  }
+
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}));
+  const parseResult = parseLeadSchema.safeParse(body);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Validation failed", formatZodErrors(parseResult.error));
+  }
+
+  const input: ParseLeadInput = parseResult.data;
+
+  try {
+    // Parse the text using AI
+    const result = await parseLeadText(input.text);
+
+    // If autoSave is true, create the lead
+    if (input.autoSave) {
+      // Validate we have minimum required fields
+      if (!result.parsed.name || !result.parsed.email) {
+        return c.json(
+          {
+            error: "Cannot auto-save: name and email are required",
+            code: "VALIDATION_ERROR",
+            parsed: result.parsed,
+            confidence: result.confidence,
+            extractedFields: result.extractedFields,
+          },
+          422
+        );
+      }
+
+      // Build a message if not extracted
+      const message =
+        result.parsed.message ||
+        `AI-parsed lead from text: "${input.text.substring(0, 100)}${input.text.length > 100 ? "..." : ""}"`;
+
+      // Get API key info for tracking
+      const apiKey = requireApiKeyFromContext(c);
+
+      // Insert lead
+      const [newLead] = await db
+        .insert(leads)
+        .values({
+          name: result.parsed.name,
+          email: result.parsed.email,
+          company: result.parsed.company,
+          phone: result.parsed.phone,
+          budget: result.parsed.budget,
+          projectType: result.parsed.projectType,
+          message,
+          source: result.parsed.source || "API",
+          status: "new",
+          rawInput: input.text,
+          aiParsed: true,
+        })
+        .returning();
+
+      // Create initial activity
+      await db.insert(leadActivities).values({
+        leadId: newLead.id,
+        type: "note",
+        description: `Lead created via AI parsing (${apiKey.name}). Confidence: ${Math.round(result.confidence * 100)}%`,
+      });
+
+      // Trigger webhooks (fire-and-forget, don't await)
+      triggerLeadCreated(newLead).catch((err) => {
+        console.error("Failed to trigger lead.created webhook:", err);
+      });
+
+      return c.json(
+        {
+          lead: formatLeadResponse(newLead),
+          parsed: result.parsed,
+          confidence: result.confidence,
+          extractedFields: result.extractedFields,
+        },
+        201
+      );
+    }
+
+    // Return parsed data without saving
+    return c.json({
+      parsed: result.parsed,
+      confidence: result.confidence,
+      extractedFields: result.extractedFields,
+    });
+  } catch (error) {
+    // Handle AI-specific errors
+    if (error instanceof ParseFailedError) {
+      return c.json(
+        {
+          error: error.message,
+          code: error.code,
+          confidence: error.confidence,
+          parsed: error.parsed,
+        },
+        422
+      );
+    }
+
+    if (error instanceof AIServiceError) {
+      return c.json(
+        {
+          error: error.message,
+          code: error.code,
+        },
+        503
+      );
+    }
+
+    // Re-throw unexpected errors
+    throw error;
+  }
 });

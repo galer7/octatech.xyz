@@ -18,6 +18,30 @@ vi.mock("../../db/connection", () => ({
   },
 }));
 
+// Mock AI module BEFORE imports
+vi.mock("../../lib/ai", () => ({
+  parseLeadText: vi.fn(),
+  isOpenAIConfigured: vi.fn(() => true),
+  AIServiceError: class AIServiceError extends Error {
+    code = "AI_SERVICE_ERROR";
+    constructor(message = "AI service temporarily unavailable") {
+      super(message);
+      this.name = "AIServiceError";
+    }
+  },
+  ParseFailedError: class ParseFailedError extends Error {
+    code = "PARSE_FAILED";
+    confidence: number;
+    parsed: unknown;
+    constructor(confidence: number, parsed: unknown) {
+      super("Could not extract lead information");
+      this.name = "ParseFailedError";
+      this.confidence = confidence;
+      this.parsed = parsed;
+    }
+  },
+}));
+
 // Mock api-key middleware BEFORE imports
 vi.mock("../../middleware/api-key", () => ({
   requireApiKey: vi.fn((c, next) => next()),
@@ -49,7 +73,12 @@ import {
   requireApiKeyFromContext,
 } from "../../middleware/api-key";
 import { InvalidApiKeyError, InsufficientScopeError } from "../../lib/errors";
+import { parseLeadText, isOpenAIConfigured, AIServiceError, ParseFailedError } from "../../lib/ai";
 import type { Lead, LeadActivity } from "../../db/schema";
+
+// Cast AI mocks
+const mockParseLeadText = parseLeadText as ReturnType<typeof vi.fn>;
+const mockIsOpenAIConfigured = isOpenAIConfigured as ReturnType<typeof vi.fn>;
 
 // Cast db methods to mocks
 const mockDb = db as {
@@ -1730,6 +1759,423 @@ describe("Leads API Routes", () => {
 
         expect(resDesc.status).toBe(200);
       }
+    });
+  });
+
+  // ==========================================================================
+  // POST /api/v1/leads/parse - AI Lead Parsing Tests
+  // ==========================================================================
+
+  describe("POST /api/v1/leads/parse", () => {
+    beforeEach(() => {
+      // Default: AI is configured
+      mockIsOpenAIConfigured.mockReturnValue(true);
+    });
+
+    describe("successful parsing", () => {
+      it("should parse lead text and return parsed data", async () => {
+        const mockResult = {
+          parsed: {
+            name: "Sarah Chen",
+            email: "sarah@techstartup.io",
+            company: "TechStartup Inc",
+            phone: "415-555-9876",
+            budget: "$50,000 - $100,000",
+            projectType: "Cloud Migration",
+            source: "LinkedIn",
+            message: "Looking for help with cloud migration",
+          },
+          confidence: 0.92,
+          extractedFields: ["name", "email", "company", "phone", "budget", "projectType", "source", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "Got a message from Sarah Chen (sarah@techstartup.io) at TechStartup Inc.",
+          }),
+        });
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.parsed.name).toBe("Sarah Chen");
+        expect(body.parsed.email).toBe("sarah@techstartup.io");
+        expect(body.confidence).toBe(0.92);
+        expect(body.extractedFields).toContain("name");
+        expect(body.extractedFields).toContain("email");
+      });
+
+      it("should return parsed data with partial fields", async () => {
+        const mockResult = {
+          parsed: {
+            name: "John Doe",
+            email: "john@example.com",
+            company: null,
+            phone: null,
+            budget: null,
+            projectType: null,
+            source: null,
+            message: "Interested in services",
+          },
+          confidence: 0.65,
+          extractedFields: ["name", "email", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "John Doe john@example.com",
+          }),
+        });
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.parsed.name).toBe("John Doe");
+        expect(body.parsed.company).toBeNull();
+        expect(body.extractedFields).toEqual(["name", "email", "message"]);
+      });
+    });
+
+    describe("autoSave option", () => {
+      it("should create lead when autoSave is true", async () => {
+        const mockResult = {
+          parsed: {
+            name: "Sarah Chen",
+            email: "sarah@techstartup.io",
+            company: "TechStartup Inc",
+            phone: null,
+            budget: "$50,000 - $100,000",
+            projectType: "Cloud Migration",
+            source: "LinkedIn",
+            message: "Looking for help with cloud migration",
+          },
+          confidence: 0.92,
+          extractedFields: ["name", "email", "company", "budget", "projectType", "source", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const newLead = createMockLead({
+          name: "Sarah Chen",
+          email: "sarah@techstartup.io",
+          company: "TechStartup Inc",
+          budget: "$50,000 - $100,000",
+          projectType: "Cloud Migration",
+          source: "LinkedIn",
+          rawInput: "Got a message from Sarah Chen...",
+          aiParsed: true,
+        });
+
+        // Mock insert for lead
+        const leadInsertChain = createInsertChain([newLead]);
+        mockDb.insert.mockReturnValueOnce(leadInsertChain);
+
+        // Mock insert for activity
+        const activityInsertChain = createInsertChain([createMockActivity()]);
+        mockDb.insert.mockReturnValueOnce(activityInsertChain);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "Got a message from Sarah Chen...",
+            autoSave: true,
+          }),
+        });
+
+        expect(res.status).toBe(201);
+        const body = await res.json();
+        expect(body.lead).toBeDefined();
+        expect(body.lead.name).toBe("Sarah Chen");
+        expect(body.lead.aiParsed).toBe(true);
+        expect(body.parsed).toBeDefined();
+        expect(body.confidence).toBe(0.92);
+      });
+
+      it("should return 422 when autoSave is true but name is missing", async () => {
+        const mockResult = {
+          parsed: {
+            name: null,
+            email: "sarah@techstartup.io",
+            company: null,
+            phone: null,
+            budget: null,
+            projectType: null,
+            source: null,
+            message: "Some message",
+          },
+          confidence: 0.5,
+          extractedFields: ["email", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "sarah@techstartup.io",
+            autoSave: true,
+          }),
+        });
+
+        expect(res.status).toBe(422);
+        const body = await res.json();
+        expect(body.error).toContain("name and email are required");
+        expect(body.code).toBe("VALIDATION_ERROR");
+      });
+
+      it("should return 422 when autoSave is true but email is missing", async () => {
+        const mockResult = {
+          parsed: {
+            name: "John Doe",
+            email: null,
+            company: null,
+            phone: null,
+            budget: null,
+            projectType: null,
+            source: null,
+            message: "Some message",
+          },
+          confidence: 0.5,
+          extractedFields: ["name", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "John Doe wants to talk",
+            autoSave: true,
+          }),
+        });
+
+        expect(res.status).toBe(422);
+        const body = await res.json();
+        expect(body.error).toContain("name and email are required");
+      });
+
+      it("should generate default message when message is not extracted", async () => {
+        const mockResult = {
+          parsed: {
+            name: "Sarah Chen",
+            email: "sarah@test.com",
+            company: null,
+            phone: null,
+            budget: null,
+            projectType: null,
+            source: null,
+            message: null,
+          },
+          confidence: 0.6,
+          extractedFields: ["name", "email"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const newLead = createMockLead({
+          name: "Sarah Chen",
+          email: "sarah@test.com",
+          message: 'AI-parsed lead from text: "Sarah Chen sarah@test.com..."',
+          aiParsed: true,
+        });
+
+        const leadInsertChain = createInsertChain([newLead]);
+        mockDb.insert.mockReturnValueOnce(leadInsertChain);
+
+        const activityInsertChain = createInsertChain([createMockActivity()]);
+        mockDb.insert.mockReturnValueOnce(activityInsertChain);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({
+            text: "Sarah Chen sarah@test.com needs help with something",
+            autoSave: true,
+          }),
+        });
+
+        expect(res.status).toBe(201);
+        const body = await res.json();
+        expect(body.lead).toBeDefined();
+      });
+    });
+
+    describe("validation errors", () => {
+      it("should return 400 when text is missing", async () => {
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({}),
+        });
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.code).toBe("VALIDATION_ERROR");
+      });
+
+      it("should return 400 when text is empty", async () => {
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "" }),
+        });
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.code).toBe("VALIDATION_ERROR");
+      });
+
+      it("should return 400 when text exceeds 5000 characters", async () => {
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "a".repeat(5001) }),
+        });
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body.code).toBe("VALIDATION_ERROR");
+      });
+
+      it("should accept text at exactly 5000 characters", async () => {
+        const mockResult = {
+          parsed: {
+            name: "Test",
+            email: "test@test.com",
+            company: null,
+            phone: null,
+            budget: null,
+            projectType: null,
+            source: null,
+            message: "Test message",
+          },
+          confidence: 0.7,
+          extractedFields: ["name", "email", "message"],
+        };
+
+        mockParseLeadText.mockResolvedValueOnce(mockResult);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "a".repeat(5000) }),
+        });
+
+        expect(res.status).toBe(200);
+      });
+    });
+
+    describe("AI service errors", () => {
+      it("should return 503 when OpenAI is not configured", async () => {
+        mockIsOpenAIConfigured.mockReturnValueOnce(false);
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "Test lead text" }),
+        });
+
+        expect(res.status).toBe(503);
+        const body = await res.json();
+        expect(body.code).toBe("AI_SERVICE_ERROR");
+        expect(body.error).toContain("not configured");
+      });
+
+      it("should return 503 when AI service throws AIServiceError", async () => {
+        mockParseLeadText.mockRejectedValueOnce(
+          new AIServiceError("AI service temporarily unavailable")
+        );
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "Test lead text" }),
+        });
+
+        expect(res.status).toBe(503);
+        const body = await res.json();
+        expect(body.code).toBe("AI_SERVICE_ERROR");
+      });
+
+      it("should return 422 when parsing fails with low confidence", async () => {
+        const emptyParsed = {
+          name: null,
+          email: null,
+          company: null,
+          phone: null,
+          budget: null,
+          projectType: null,
+          source: null,
+          message: null,
+        };
+
+        mockParseLeadText.mockRejectedValueOnce(
+          new ParseFailedError(0.15, emptyParsed)
+        );
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "random gibberish that makes no sense" }),
+        });
+
+        expect(res.status).toBe(422);
+        const body = await res.json();
+        expect(body.code).toBe("PARSE_FAILED");
+        expect(body.confidence).toBe(0.15);
+        expect(body.parsed).toBeDefined();
+      });
+    });
+
+    describe("authentication and authorization", () => {
+      it("should return 401 when not authenticated", async () => {
+        mockRequireApiKey.mockImplementationOnce(async () => {
+          throw new InvalidApiKeyError("Missing API key");
+        });
+
+        const res = await app.request("/api/v1/leads/parse", {
+          method: "POST",
+          body: JSON.stringify({ text: "Test" }),
+        });
+
+        expect(res.status).toBe(401);
+      });
+
+      it("should return 403 when insufficient scope", async () => {
+        // Create a new app with middleware that throws for scope check
+        const testApp = new Hono();
+
+        testApp.use("*", async (_c, next) => {
+          // Simulate requireApiKey passing
+          await next();
+        });
+
+        testApp.post("/api/v1/leads/parse", async () => {
+          // Simulate insufficient scope
+          throw new InsufficientScopeError("leads:write");
+        });
+
+        testApp.onError(errorHandler);
+
+        const res = await testApp.request("/api/v1/leads/parse", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ text: "Test" }),
+        });
+
+        expect(res.status).toBe(403);
+        const body = await res.json();
+        expect(body.code).toBe("INSUFFICIENT_SCOPE");
+      });
     });
   });
 });

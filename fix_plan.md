@@ -304,22 +304,30 @@
 
 ---
 
-## Phase 9: AI Features
+## Phase 9: AI Features ✅ COMPLETED
 
-### 9.1 OpenAI Integration
-- [ ] Create `packages/crm/src/lib/ai/openai.ts`
-- [ ] Configure OpenAI client with API key from settings/env
-- [ ] Implement lead parsing system prompt
-- [ ] Implement field extraction with gpt-4o-mini
-- [ ] Implement budget/projectType mapping to predefined options
-- [ ] Return confidence score and extracted fields list
+### 9.1 OpenAI Integration ✅
+- [x] Create `packages/crm/src/lib/ai/openai.ts`
+- [x] Configure OpenAI client with API key from settings/env
+- [x] Implement lead parsing system prompt
+- [x] Implement field extraction with gpt-4o-mini
+- [x] Implement budget/projectType mapping to predefined options
+- [x] Return confidence score and extracted fields list
 
-### 9.2 AI Lead Parsing Endpoint
-- [ ] Implement `POST /api/v1/leads/parse` in leads routes
-- [ ] Accept text input (max 5000 chars)
-- [ ] Return parsed lead data with confidence
-- [ ] Support `autoSave: true` option to create lead immediately
-- [ ] Store raw_input and set ai_parsed flag
+### 9.2 AI Lead Parsing Endpoint ✅
+- [x] Implement `POST /api/v1/leads/parse` in leads routes
+- [x] Accept text input (max 5000 chars)
+- [x] Return parsed lead data with confidence
+- [x] Support `autoSave: true` option to create lead immediately
+- [x] Store raw_input and set ai_parsed flag
+
+### 9.3 AI Tests ✅ (Added)
+- [x] Add comprehensive tests for budget mapping functions - 26 tests
+- [x] Add comprehensive tests for project type mapping functions - 23 tests
+- [x] Add comprehensive tests for OpenAI client creation and configuration - 4 tests
+- [x] Add comprehensive tests for parseLeadText function (mocked OpenAI) - 13 tests
+- [x] Add comprehensive tests for error classes - 3 tests
+- [x] Add comprehensive tests for parse endpoint (validation, autoSave, errors) - 19 tests
 
 ---
 
