@@ -11,6 +11,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
+import { authRoutes } from "./routes/auth";
 
 export const app = new Hono();
 
@@ -48,6 +49,9 @@ app.get("/api/v1/health", (c) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Auth routes (login, logout, me, change-password)
+app.route("/api/auth", authRoutes);
 
 // Root redirect to health check
 app.get("/", (c) => {
