@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("posts"))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title="Engineering Blog">
+  <div class="mb-12">
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Engineering Blog</h1>
+    <p class="text-white/70 text-lg">
+      Technical insights, tutorials, and lessons learned from the Octatech team.
+    </p>
+  </div>
+
+  {posts.length === 0 ? (
+    <p class="text-white/60">No posts yet. Check back soon!</p>
+  ) : (
+    <div class="space-y-8">
+      {posts.map((post) => {
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }).format(post.data.date);
+
+        return (
+          <article class="group">
+            <a href={`/posts/${post.slug}`} class="block p-6 -mx-6 rounded-xl hover:bg-white/[0.02] transition-colors">
+              <div class="flex flex-wrap gap-2 mb-2">
+                {post.data.tags.map((tag) => (
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <h2 class="text-xl font-semibold tracking-tight group-hover:text-indigo-400 transition-colors mb-2">
+                {post.data.title}
+              </h2>
+              <p class="text-white/60 text-sm mb-3">{post.data.description}</p>
+              <div class="text-xs text-white/40">
+                <time datetime={post.data.date.toISOString()}>{formattedDate}</time>
+                <span class="mx-2">•</span>
+                <span>{post.data.author}</span>
+              </div>
+            </a>
+          </article>
+        );
+      })}
+    </div>
+  )}
+</BaseLayout>

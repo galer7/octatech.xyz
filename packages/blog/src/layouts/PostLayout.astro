@@ -1,0 +1,84 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { title, description, date, tags, author } = post.data;
+
+const formattedDate = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+}).format(date);
+
+// Estimate reading time (200 words per minute)
+const content = post.body || "";
+const words = content.split(/\s+/).length;
+const readingTime = Math.ceil(words / 200);
+---
+
+<BaseLayout title={title} description={description}>
+  <article>
+    <header class="mb-8 pb-8 border-b border-white/10">
+      <div class="flex flex-wrap gap-2 mb-4">
+        {tags.map((tag) => (
+          <a
+            href={`/tags/${tag}`}
+            class="text-xs px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-4">{title}</h1>
+      <p class="text-white/70 text-lg mb-4">{description}</p>
+      <div class="flex items-center gap-4 text-sm text-white/60">
+        <span>{author}</span>
+        <span>•</span>
+        <time datetime={date.toISOString()}>{formattedDate}</time>
+        <span>•</span>
+        <span>{readingTime} min read</span>
+      </div>
+    </header>
+    <div class="prose prose-invert prose-lg max-w-none">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .prose :global(h2) {
+    @apply text-2xl font-semibold tracking-tight mt-10 mb-4;
+  }
+  .prose :global(h3) {
+    @apply text-xl font-semibold tracking-tight mt-8 mb-3;
+  }
+  .prose :global(p) {
+    @apply text-white/80 leading-relaxed mb-4;
+  }
+  .prose :global(a) {
+    @apply text-indigo-400 hover:text-indigo-300 underline;
+  }
+  .prose :global(code) {
+    @apply bg-white/10 px-1.5 py-0.5 rounded text-sm;
+  }
+  .prose :global(pre) {
+    @apply bg-neutral-900 border border-white/10 rounded-lg p-4 overflow-x-auto my-6;
+  }
+  .prose :global(pre code) {
+    @apply bg-transparent p-0;
+  }
+  .prose :global(ul), .prose :global(ol) {
+    @apply text-white/80 mb-4 pl-6;
+  }
+  .prose :global(li) {
+    @apply mb-2;
+  }
+  .prose :global(blockquote) {
+    @apply border-l-4 border-indigo-500 pl-4 italic text-white/70 my-6;
+  }
+</style>
