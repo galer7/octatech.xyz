@@ -53,26 +53,32 @@
 
 ---
 
-## Phase 2: Database Schema & Migrations
+## Phase 2: Database Schema & Migrations ✅ COMPLETED
 
-### 2.1 PostgreSQL Schema Setup
-- [ ] Create `packages/crm/src/db/schema.ts` with Drizzle schema definitions
-- [ ] Define `leads` table (id, name, email, company, phone, budget, project_type, message, source, status, notes, tags, raw_input, ai_parsed, timestamps)
-- [ ] Define `lead_activities` table (id, lead_id, type, description, old_status, new_status, timestamps)
-- [ ] Define `api_keys` table (id, name, key_hash, key_prefix, scopes, last_used_at, timestamps, revoked_at)
-- [ ] Define `webhooks` table (id, name, url, events, secret, enabled, tracking fields, timestamps)
-- [ ] Define `webhook_deliveries` table (id, webhook_id, event, payload, status_code, response_body, timing)
-- [ ] Define `notification_channels` table (id, type, name, config, events, enabled, timestamps)
-- [ ] Define `settings` table (key, value, updated_at)
-- [ ] Define `admin_user` table (id, email, password_hash, timestamps)
-- [ ] Define `sessions` table (id, user_id, token_hash, expires_at, metadata, timestamps)
+### 2.1 PostgreSQL Schema Setup ✅
+- [x] Create `packages/crm/src/db/schema.ts` with Drizzle schema definitions
+- [x] Define `leads` table (id, name, email, company, phone, budget, project_type, message, source, status, notes, tags, raw_input, ai_parsed, timestamps)
+- [x] Define `lead_activities` table (id, lead_id, type, description, old_status, new_status, timestamps)
+- [x] Define `api_keys` table (id, name, key_hash, key_prefix, scopes, last_used_at, timestamps, revoked_at)
+- [x] Define `webhooks` table (id, name, url, events, secret, enabled, tracking fields, timestamps)
+- [x] Define `webhook_deliveries` table (id, webhook_id, event, payload, status_code, response_body, timing)
+- [x] Define `notification_channels` table (id, type, name, config, events, enabled, timestamps)
+- [x] Define `settings` table (key, value, updated_at)
+- [x] Define `admin_user` table (id, email, password_hash, timestamps)
+- [x] Define `sessions` table (id, user_id, token_hash, expires_at, metadata, timestamps)
 
-### 2.2 Database Connection & Migrations
-- [ ] Create `packages/crm/src/db/connection.ts` with PostgreSQL pool
-- [ ] Create `packages/crm/drizzle.config.ts`
-- [ ] Generate initial migration files
-- [ ] Create seed script for initial admin user and default settings
-- [ ] Add npm scripts for running migrations
+### 2.2 Database Connection & Migrations ✅
+- [x] Create `packages/crm/src/db/connection.ts` with PostgreSQL pool
+- [x] Create `packages/crm/drizzle.config.ts`
+- [x] Generate initial migration files
+- [x] Create seed script for initial admin user and default settings
+- [x] Add npm scripts for running migrations (db:generate, db:migrate, db:push, db:seed)
+
+### 2.3 Database Tests ✅ (Added)
+- [x] Create vitest configuration
+- [x] Add comprehensive schema tests for constraints, foreign keys, cascades
+- [x] Add tests for indexes and relations
+- [x] Add unit tests for enum values and type exports
 
 ---
 
