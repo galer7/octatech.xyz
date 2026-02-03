@@ -18,6 +18,7 @@ import {
   type PublicLeadInput,
 } from "../../lib/validation";
 import { triggerLeadCreated } from "../../lib/webhooks";
+import { triggerLeadCreatedNotification } from "../../lib/notifications/dispatcher";
 
 /**
  * Public leads routes app instance.
@@ -107,8 +108,9 @@ publicLeadsRoutes.post("/", async (c) => {
     console.error("Failed to trigger lead.created webhook:", err);
   });
 
-  // TODO: Trigger notifications (Discord, Telegram, Email) - Phase 8
-  // This should notify the admin of the new lead
+  // Trigger notifications (Discord, Telegram, Email)
+  // Fire-and-forget - notifications should not block the response
+  triggerLeadCreatedNotification(newLead);
 
   // Return success response per spec
   return c.json(

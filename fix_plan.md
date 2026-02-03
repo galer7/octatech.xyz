@@ -561,6 +561,12 @@ CORS_ORIGIN=https://octatech.xyz
 CRM_BASE_URL=https://crm.octatech.xyz
 ```
 
+### Bug Fixes Applied
+- **2026-02-03**: Fixed notification trigger for public lead submissions
+  - File: `packages/crm/src/routes/api/public-leads.ts`
+  - Issue: Contact form submissions didn't trigger Discord/Telegram/Email notifications
+  - Fix: Added `triggerLeadCreatedNotification(newLead)` call after lead creation
+
 ### Browser Extension (Future)
 - Spec 13 (13-future-browser-extension.md) is explicitly marked as a future feature
 - Not included in this plan
