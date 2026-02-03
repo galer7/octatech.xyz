@@ -394,6 +394,14 @@
 - [x] Implement OpenAI API key setting (masked display)
 - [x] Implement change password form with validation
 
+### 10.10 Settings API ✅ (Added)
+- [x] Create `packages/crm/src/routes/admin/settings.ts` with GET/PATCH endpoints
+- [x] Implement settings retrieval with OpenAI API key masking
+- [x] Implement settings update with validation (cal_link format, sk- prefix, email format)
+- [x] Register settings routes in `packages/crm/src/app.ts`
+- [x] Add comprehensive tests for settings API (19 tests)
+- [x] Integrate settings form in SettingsPage UI component
+
 ### 10.9 Admin UI Build Integration ✅
 - [x] Configure Vite to build to `packages/crm/dist/admin`
 - [x] Serve admin UI from Hono backend at `/admin/*`
@@ -566,6 +574,12 @@ CRM_BASE_URL=https://crm.octatech.xyz
   - File: `packages/crm/src/routes/api/public-leads.ts`
   - Issue: Contact form submissions didn't trigger Discord/Telegram/Email notifications
   - Fix: Added `triggerLeadCreatedNotification(newLead)` call after lead creation
+
+- **2026-02-04**: Implemented Settings API endpoints (gap from initial implementation)
+  - Files: `packages/crm/src/routes/admin/settings.ts`, `packages/crm/admin/src/pages/SettingsPage.tsx`
+  - Issue: Settings management (Cal.com link, OpenAI API key, admin email) was missing backend API
+  - Fix: Created GET/PATCH `/api/admin/settings` endpoints with validation and masking
+  - Added 19 tests for settings API, increasing total to 1080 tests
 
 ### Browser Extension (Future)
 - Spec 13 (13-future-browser-extension.md) is explicitly marked as a future feature

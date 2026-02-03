@@ -1,9 +1,23 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { api, ApiError } from '@/lib/api';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+
+interface SettingsResponse {
+  settings: {
+    cal_link: string | null;
+    openai_api_key: string | null;
+    admin_email: string | null;
+  };
+}
+
+interface SettingsForm {
+  cal_link: string;
+  openai_api_key: string;
+  admin_email: string;
+}
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -15,6 +29,87 @@ export function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Integration settings state
+  const [settingsForm, setSettingsForm] = useState<SettingsForm>({
+    cal_link: '',
+    openai_api_key: '',
+    admin_email: '',
+  });
+  const [originalSettings, setOriginalSettings] = useState<SettingsForm>({
+    cal_link: '',
+    openai_api_key: '',
+    admin_email: '',
+  });
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await api.get<SettingsResponse>('/admin/settings');
+        const loaded: SettingsForm = {
+          cal_link: data.settings.cal_link || '',
+          openai_api_key: data.settings.openai_api_key || '',
+          admin_email: data.settings.admin_email || '',
+        };
+        setSettingsForm(loaded);
+        setOriginalSettings(loaded);
+      } catch (err) {
+        if (err instanceof ApiError) {
+          setSettingsError(err.message);
+        } else {
+          setSettingsError('Failed to load settings');
+        }
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSaveSettings = async (e: FormEvent) => {
+    e.preventDefault();
+    setSettingsError(null);
+    setSettingsSuccess(false);
+    setIsSavingSettings(true);
+
+    // Build object with only changed values
+    const changedSettings: Partial<SettingsForm> = {};
+    if (settingsForm.cal_link !== originalSettings.cal_link) {
+      changedSettings.cal_link = settingsForm.cal_link;
+    }
+    if (settingsForm.openai_api_key !== originalSettings.openai_api_key) {
+      changedSettings.openai_api_key = settingsForm.openai_api_key;
+    }
+    if (settingsForm.admin_email !== originalSettings.admin_email) {
+      changedSettings.admin_email = settingsForm.admin_email;
+    }
+
+    if (Object.keys(changedSettings).length === 0) {
+      setSettingsError('No changes to save');
+      setIsSavingSettings(false);
+      return;
+    }
+
+    try {
+      await api.patch('/admin/settings', changedSettings);
+      setSettingsSuccess(true);
+      setOriginalSettings({ ...originalSettings, ...changedSettings });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setSettingsError(err.message);
+      } else {
+        setSettingsError('Failed to save settings');
+      }
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const handleChangePassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -76,6 +171,67 @@ export function SettingsPage() {
               <p className="text-sm text-dark-500">Administrator</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Integration Settings */}
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold">Integration Settings</h2>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSettings ? (
+            <div className="text-dark-400">Loading settings...</div>
+          ) : (
+            <form onSubmit={handleSaveSettings} className="space-y-4 max-w-md">
+              {settingsError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {settingsError}
+                </div>
+              )}
+              {settingsSuccess && (
+                <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm">
+                  Settings saved successfully
+                </div>
+              )}
+
+              <Input
+                label="Cal.com Booking Link"
+                type="text"
+                value={settingsForm.cal_link}
+                onChange={(e) =>
+                  setSettingsForm({ ...settingsForm, cal_link: e.target.value })
+                }
+                placeholder="octatech/discovery"
+                hint="The Cal.com link for booking consultations (e.g., octatech/discovery)"
+              />
+
+              <Input
+                label="OpenAI API Key"
+                type="password"
+                value={settingsForm.openai_api_key}
+                onChange={(e) =>
+                  setSettingsForm({ ...settingsForm, openai_api_key: e.target.value })
+                }
+                placeholder="sk-..."
+                hint="Your OpenAI API key for AI lead parsing features"
+              />
+
+              <Input
+                label="Admin Email"
+                type="email"
+                value={settingsForm.admin_email}
+                onChange={(e) =>
+                  setSettingsForm({ ...settingsForm, admin_email: e.target.value })
+                }
+                hint="Email address for admin notifications"
+              />
+
+              <Button type="submit" isLoading={isSavingSettings}>
+                Save Settings
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
 
