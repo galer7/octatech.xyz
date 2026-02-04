@@ -1,51 +1,57 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { Lead, LeadStatus } from '@/lib/types';
+import type { LeadStatus } from '@/lib/types';
 
+/**
+ * Recent lead data returned by the dashboard stats endpoint.
+ */
+interface RecentLead {
+  id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  status: string;
+  createdAt: string;
+}
+
+/**
+ * Recent activity data returned by the dashboard stats endpoint.
+ */
+interface RecentActivity {
+  id: string;
+  leadId: string;
+  leadName: string;
+  type: string;
+  description: string;
+  createdAt: string;
+}
+
+/**
+ * Dashboard data returned by the optimized stats endpoint.
+ */
 interface DashboardData {
   stats: {
     total: number;
     byStatus: Record<LeadStatus, number>;
   };
-  recentLeads: Lead[];
+  recentLeads: RecentLead[];
+  recentActivity: RecentActivity[];
 }
 
+/**
+ * Hook to fetch dashboard statistics.
+ *
+ * Uses the dedicated /api/admin/dashboard/stats endpoint which performs
+ * efficient SQL aggregation on the server side, avoiding the need to
+ * fetch all leads to calculate status counts client-side.
+ */
 export function useDashboard() {
   return useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
-      // Fetch both stats and recent leads
-      const [leadsResponse, recentResponse] = await Promise.all([
-        api.get<{ data: Lead[]; pagination: { total: number } }>('/v1/leads', { limit: 1000 }),
-        api.get<{ data: Lead[] }>('/v1/leads', { limit: 5, sort: 'createdAt', order: 'desc' }),
-      ]);
-
-      // Calculate stats from leads
-      const leads = leadsResponse.data;
-      const byStatus: Record<LeadStatus, number> = {
-        new: 0,
-        contacted: 0,
-        qualified: 0,
-        proposal: 0,
-        won: 0,
-        lost: 0,
-      };
-
-      for (const lead of leads) {
-        if (lead.status in byStatus) {
-          byStatus[lead.status]++;
-        }
-      }
-
-      const data: DashboardData = {
-        stats: {
-          total: leadsResponse.pagination.total,
-          byStatus,
-        },
-        recentLeads: recentResponse.data,
-      };
-
-      return data;
+      // Use the dedicated dashboard stats endpoint for efficient aggregation
+      const response = await api.get<DashboardData>('/admin/dashboard/stats');
+      return response;
     },
     staleTime: 30000, // 30 seconds
   });

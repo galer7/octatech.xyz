@@ -581,6 +581,13 @@ CRM_BASE_URL=https://crm.octatech.xyz
   - Fix: Created GET/PATCH `/api/admin/settings` endpoints with validation and masking
   - Added 19 tests for settings API, increasing total to 1080 tests
 
+- **2026-02-04**: Added dedicated dashboard stats API endpoint for optimization
+  - Files: `packages/crm/src/routes/admin/dashboard.ts`, `packages/crm/admin/src/hooks/useDashboard.ts`
+  - Issue: Dashboard was fetching up to 1000 leads client-side just to calculate status counts
+  - Fix: Created `GET /api/admin/dashboard/stats` endpoint with efficient SQL aggregation
+  - Endpoint returns: stats (total, byStatus), recentLeads (5), recentActivity (10)
+  - Added 9 tests for dashboard API, increasing total to 1089 tests
+
 ### Browser Extension (Future)
 - Spec 13 (13-future-browser-extension.md) is explicitly marked as a future feature
 - Not included in this plan

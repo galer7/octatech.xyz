@@ -13,7 +13,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 import { authRoutes } from "./routes/auth";
-import { adminApiKeysRoutes, adminWebhooksRoutes, adminNotificationsRoutes, adminSettingsRoutes } from "./routes/admin";
+import { adminApiKeysRoutes, adminWebhooksRoutes, adminNotificationsRoutes, adminSettingsRoutes, adminDashboardRoutes } from "./routes/admin";
 import { leadsRoutes, publicLeadsRoutes, meRoutes, calWebhookRoutes } from "./routes/api";
 
 export const app = new Hono();
@@ -67,6 +67,9 @@ app.route("/api/admin/notifications", adminNotificationsRoutes);
 
 // Admin settings management routes
 app.route("/api/admin/settings", adminSettingsRoutes);
+
+// Admin dashboard routes (stats, recent activity)
+app.route("/api/admin/dashboard", adminDashboardRoutes);
 
 // Public leads endpoint (contact form) - no auth required
 // Rate limiting is applied via the /api/* pattern
