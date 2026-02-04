@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "dev:admin": "cd admin && npm run dev",
-    "build": "npm run build:admin && tsc",
+    "build": "npm run build:admin && tsup",
     "build:admin": "cd admin && npm install && npm run build",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
@@ -32,6 +32,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "drizzle-kit": "^0.30.0",
+    "tsup": "^8.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",

@@ -1,0 +1,21 @@
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/index.ts"],
+  format: ["esm"],
+  target: "node20",
+  outDir: "dist",
+  clean: true,
+  sourcemap: true,
+  // Don't bundle node_modules - they'll be installed separately
+  external: [
+    "hono",
+    "@hono/node-server",
+    "drizzle-orm",
+    "postgres",
+    "@node-rs/argon2",
+    "openai",
+    "resend",
+    "zod",
+  ],
+});
