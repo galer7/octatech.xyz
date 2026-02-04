@@ -99,7 +99,7 @@ export function validatePasswordStrength(
   // Check for special character
   if (
     PASSWORD_REQUIREMENTS.requireSpecial &&
-    !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)
+    !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password)
   ) {
     errors.push("Password must contain at least one special character");
   }

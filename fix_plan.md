@@ -588,6 +588,12 @@ CRM_BASE_URL=https://crm.octatech.xyz
   - Endpoint returns: stats (total, byStatus), recentLeads (5), recentActivity (10)
   - Added 9 tests for dashboard API, increasing total to 1089 tests
 
+- **2026-02-04**: Added ESLint configuration for CRM package
+  - Files: `packages/crm/eslint.config.js`, `packages/crm/src/lib/password.ts`
+  - Issue: ESLint v9 requires new flat config format, but config file was missing
+  - Fix: Created `eslint.config.js` with TypeScript-ESLint integration
+  - Also fixed unnecessary escape characters in password.ts regex
+
 ### Browser Extension (Future)
 - Spec 13 (13-future-browser-extension.md) is explicitly marked as a future feature
 - Not included in this plan
