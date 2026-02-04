@@ -4,7 +4,7 @@
 PROMPT_FILE="PROMPT.md"
 # -p runs in non-interactive mode (exits after response)
 # --dangerously-skip-permissions allows it to write files without asking you (REQUIRED for autonomy)
-AI_COMMAND="claude -p --dangerously-skip-permissions"
+AI_COMMAND="claude --dangerously-skip-permissions"
 
 echo "Starting Ralph Loop..."
 echo "Press [CTRL+C] to stop."
