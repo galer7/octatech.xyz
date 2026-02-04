@@ -594,6 +594,17 @@ CRM_BASE_URL=https://crm.octatech.xyz
   - Fix: Created `eslint.config.js` with TypeScript-ESLint integration
   - Also fixed unnecessary escape characters in password.ts regex
 
+- **2026-02-04**: Implemented admin notification on webhook auto-disable (per spec 08-webhooks.md)
+  - File: `packages/crm/src/lib/webhooks.ts`
+  - Issue: Spec (line 234) states "If failure_count > 10 consecutive, auto-disable webhook and notify admin"
+    - Webhooks were being auto-disabled but no admin notification was sent
+  - Fix: Added `notifyAdminWebhookDisabled()` function that:
+    - Fetches admin_email from settings table
+    - Sends HTML email via Resend API with webhook details and troubleshooting steps
+    - Fire-and-forget async delivery (doesn't block main operation)
+  - Updated `incrementFailureCount()`, `updateWebhookStatus()` to pass webhook info for notification
+  - Added 8 tests for the new functionality, increasing total to 1097 tests
+
 ### Browser Extension (Future)
 - Spec 13 (13-future-browser-extension.md) is explicitly marked as a future feature
 - Not included in this plan

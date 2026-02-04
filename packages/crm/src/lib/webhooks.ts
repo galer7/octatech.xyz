@@ -17,6 +17,7 @@ import {
   db,
   webhooks,
   webhookDeliveries,
+  settings,
   type Webhook,
   type WebhookEvent,
   type Lead,
@@ -704,16 +705,161 @@ export async function logDelivery(
 // ============================================================================
 
 /**
+ * Fetch the admin email from settings.
+ *
+ * @returns Admin email address or null if not configured
+ */
+async function getAdminEmail(): Promise<string | null> {
+  try {
+    const [setting] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, "admin_email"))
+      .limit(1);
+
+    return (setting?.value as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Send admin notification when a webhook is auto-disabled.
+ *
+ * Uses Resend API directly to send email notification.
+ * This is a fire-and-forget operation - errors are logged but not thrown.
+ *
+ * @param webhook - The webhook that was disabled
+ */
+async function notifyAdminWebhookDisabled(webhook: Webhook): Promise<void> {
+  const adminEmail = await getAdminEmail();
+  if (!adminEmail) {
+    console.log("Admin notification skipped: no admin_email configured");
+    return;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log("Admin notification skipped: RESEND_API_KEY not configured");
+    return;
+  }
+
+  const subject = `⚠️ Webhook Auto-Disabled: ${webhook.name}`;
+  const crmBaseUrl = process.env.CRM_BASE_URL || "https://crm.octatech.xyz";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+  <h2 style="color: #dc2626; margin-bottom: 24px;">⚠️ Webhook Auto-Disabled</h2>
+
+  <p style="margin-bottom: 16px;">
+    The webhook <strong>"${escapeHtml(webhook.name)}"</strong> has been automatically disabled after ${WEBHOOK_CONFIG.maxFailureCount} consecutive delivery failures.
+  </p>
+
+  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Webhook Name</strong></td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(webhook.name)}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>URL</strong></td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; word-break: break-all;">${escapeHtml(webhook.url)}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Events</strong></td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(webhook.events.join(", "))}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Failure Count</strong></td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${WEBHOOK_CONFIG.maxFailureCount} consecutive failures</td>
+    </tr>
+  </table>
+
+  <h3 style="color: #333; margin-bottom: 12px;">What to do:</h3>
+  <ol style="margin-bottom: 24px;">
+    <li>Check the webhook endpoint is accessible</li>
+    <li>Verify the endpoint returns 2xx status codes</li>
+    <li>Review delivery logs in the CRM admin panel</li>
+    <li>Re-enable the webhook once the issue is resolved</li>
+  </ol>
+
+  <p style="margin-bottom: 24px;">
+    <a href="${crmBaseUrl}/admin/webhooks"
+       style="display: inline-block; background: #6366f1; color: white;
+              padding: 12px 24px; text-decoration: none; border-radius: 8px;
+              font-weight: 500;">
+      View Webhooks in CRM
+    </a>
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+  <p style="color: #666; font-size: 12px;">
+    Octatech CRM • <a href="https://octatech.xyz" style="color: #6366f1;">octatech.xyz</a>
+  </p>
+</body>
+</html>
+  `.trim();
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: "Octatech CRM <crm@octatech.xyz>",
+        to: [adminEmail],
+        subject,
+        html,
+      }),
+    });
+
+    if (response.ok) {
+      console.log(`Admin notification sent for disabled webhook ${webhook.id}`);
+    } else {
+      console.error(
+        `Failed to send admin notification: ${response.status} ${response.statusText}`
+      );
+    }
+  } catch (error) {
+    console.error("Failed to send admin notification:", error);
+  }
+}
+
+/**
+ * Escape HTML special characters.
+ *
+ * @param text - Text to escape
+ * @returns Escaped text safe for HTML
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
  * Increment the failure count for a webhook.
  * Auto-disables the webhook if failure count exceeds threshold.
+ * Sends admin notification when webhook is auto-disabled per spec 08-webhooks.md.
  *
  * @param webhookId - The webhook ID
  * @param currentFailureCount - The current failure count
+ * @param webhookInfo - Optional webhook info for notification (name, url, events)
  * @returns Object indicating if webhook was disabled
  *
  * @example
  * ```ts
- * const { disabled } = await incrementFailureCount(webhook.id, webhook.failureCount);
+ * const { disabled } = await incrementFailureCount(webhook.id, webhook.failureCount, webhook);
  * if (disabled) {
  *   console.log("Webhook auto-disabled due to failures");
  * }
@@ -721,7 +867,8 @@ export async function logDelivery(
  */
 export async function incrementFailureCount(
   webhookId: string,
-  currentFailureCount: number
+  currentFailureCount: number,
+  webhookInfo?: Webhook
 ): Promise<{ disabled: boolean }> {
   const newFailureCount = currentFailureCount + 1;
   const shouldDisable = newFailureCount >= WEBHOOK_CONFIG.maxFailureCount;
@@ -735,6 +882,14 @@ export async function incrementFailureCount(
       updatedAt: new Date(),
     })
     .where(eq(webhooks.id, webhookId));
+
+  // Send admin notification if webhook was disabled
+  if (shouldDisable && webhookInfo) {
+    // Fire-and-forget notification - don't await
+    notifyAdminWebhookDisabled(webhookInfo).catch((err) => {
+      console.error("Error sending webhook disabled notification:", err);
+    });
+  }
 
   return { disabled: shouldDisable };
 }
@@ -772,18 +927,20 @@ export async function resetFailureCount(
  * @param webhookId - The webhook ID
  * @param result - The delivery result
  * @param currentFailureCount - Current failure count
+ * @param webhookInfo - Optional webhook info for notification
  * @returns Object with updated failure info
  */
 export async function updateWebhookStatus(
   webhookId: string,
   result: DeliveryResult,
-  currentFailureCount: number
+  currentFailureCount: number,
+  webhookInfo?: Webhook
 ): Promise<{ disabled: boolean }> {
   if (result.success) {
     await resetFailureCount(webhookId, result.statusCode!);
     return { disabled: false };
   } else {
-    return incrementFailureCount(webhookId, currentFailureCount);
+    return incrementFailureCount(webhookId, currentFailureCount, webhookInfo);
   }
 }
 
@@ -856,7 +1013,8 @@ export async function dispatchWebhookEvent(
     await logDelivery(webhook.id, event, payload, result);
 
     // Update webhook status (failure count, etc.)
-    await updateWebhookStatus(webhook.id, result, webhook.failureCount ?? 0);
+    // Pass webhook info for admin notification if auto-disabled
+    await updateWebhookStatus(webhook.id, result, webhook.failureCount ?? 0, webhook);
 
     // Schedule retry if failed and retries are not disabled
     if (!result.success && !options.noRetry) {
@@ -965,10 +1123,12 @@ async function executeRetry(
   await logDelivery(webhook.id, payload.event, payload, result);
 
   // Update webhook status
+  // Pass webhook info for admin notification if auto-disabled
   const { disabled } = await updateWebhookStatus(
     webhook.id,
     result,
-    webhook.failureCount ?? 0
+    webhook.failureCount ?? 0,
+    webhook
   );
 
   if (result.success) {
