@@ -21,13 +21,13 @@ const { title, description = "Engineering insights from Octatech" } = Astro.prop
     <header class="sticky top-0 z-30 backdrop-blur-md bg-neutral-950/70 border-b border-white/10">
       <div class="max-w-4xl mx-auto px-6">
         <div class="flex items-center justify-between h-16">
-          <a href="https://octatech.xyz" class="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
+          <a href="/" class="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
             ← Back to Octatech
           </a>
-          <a href="/" class="text-base font-semibold tracking-tight">
+          <a href="/blog" class="text-base font-semibold tracking-tight">
             Octatech Blog
           </a>
-          <a href="/rss.xml" class="text-white/70 hover:text-white transition-colors text-sm">
+          <a href="/blog/rss.xml" class="text-white/70 hover:text-white transition-colors text-sm">
             RSS
           </a>
         </div>
@@ -38,7 +38,7 @@ const { title, description = "Engineering insights from Octatech" } = Astro.prop
     </main>
     <footer class="border-t border-white/10 mt-16">
       <div class="max-w-4xl mx-auto px-6 py-8 text-center text-sm text-white/60">
-        © {new Date().getFullYear()} Octatech Inc. | <a href="https://octatech.xyz" class="hover:text-white">octatech.xyz</a>
+        © {new Date().getFullYear()} Octatech Inc. | <a href="/" class="hover:text-white">octatech.xyz</a>
       </div>
     </footer>
   </body>

@@ -159,7 +159,7 @@ describe("getCrmBaseUrl", () => {
 
   it("should return default URL if not set", () => {
     delete process.env.CRM_BASE_URL;
-    expect(getCrmBaseUrl()).toBe("https://crm.octatech.xyz");
+    expect(getCrmBaseUrl()).toBe("https://api.octatech.xyz");
   });
 });
 
@@ -177,7 +177,7 @@ describe("getLeadUrl", () => {
   it("should generate correct lead URL with default base", () => {
     delete process.env.CRM_BASE_URL;
     const url = getLeadUrl("abc-123");
-    expect(url).toBe("https://crm.octatech.xyz/leads/abc-123");
+    expect(url).toBe("https://api.octatech.xyz/leads/abc-123");
   });
 
   it("should use custom base URL from env", () => {

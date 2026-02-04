@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
@@ -19,7 +19,7 @@ const posts = (await getCollection("posts"))
 
 <BaseLayout title={`Posts tagged "${tag}"`}>
   <div class="mb-12">
-    <a href="/" class="text-white/60 hover:text-white text-sm mb-4 inline-block">← All posts</a>
+    <a href="/blog" class="text-white/60 hover:text-white text-sm mb-4 inline-block">← All posts</a>
     <h1 class="text-3xl font-semibold tracking-tight">
       Posts tagged <span class="text-indigo-400">"{tag}"</span>
     </h1>
@@ -35,7 +35,7 @@ const posts = (await getCollection("posts"))
 
       return (
         <article class="group">
-          <a href={`/posts/${post.slug}`} class="block p-6 -mx-6 rounded-xl hover:bg-white/[0.02] transition-colors">
+          <a href={`/blog/posts/${post.slug}`} class="block p-6 -mx-6 rounded-xl hover:bg-white/[0.02] transition-colors">
             <h2 class="text-xl font-semibold tracking-tight group-hover:text-indigo-400 transition-colors mb-2">
               {post.data.title}
             </h2>

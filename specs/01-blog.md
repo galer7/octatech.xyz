@@ -2,7 +2,7 @@
 
 ## Overview
 
-A static blog hosted on `blog.octatech.xyz` where articles are written in Markdown and automatically deployed when committed to the repository.
+A static blog hosted at `octatech.xyz/blog` where articles are written in Markdown and automatically deployed when committed to the repository. The blog is integrated into the main Astro site alongside the landing page.
 
 ## Requirements
 
@@ -19,16 +19,16 @@ A static blog hosted on `blog.octatech.xyz` where articles are written in Markdo
    - Fast page loads (no server-side rendering needed)
 
 3. **Blog Features**
-   - Article listing page with pagination
-   - Individual article pages with clean URLs (`/article-slug`)
-   - Tag/category filtering
-   - RSS feed generation
+   - Article listing page with pagination at `/blog`
+   - Individual article pages with clean URLs (`/blog/posts/article-slug`)
+   - Tag/category filtering at `/blog/tags/tag-name`
+   - RSS feed generation at `/blog/rss.xml`
    - SEO meta tags (Open Graph, Twitter cards)
 
 4. **Design**
    - Match the existing Octatech visual style (dark theme, indigo accents)
    - Responsive design
-   - Navigation back to main site (octatech.xyz)
+   - Navigation to landing page (`/`) and blog link in landing page nav
 
 ### Non-Functional Requirements
 
@@ -54,17 +54,23 @@ packages/blog/
 │   │       ├── my-first-article.md
 │   │       └── another-article.md
 │   ├── layouts/
-│   │   ├── BaseLayout.astro
-│   │   └── PostLayout.astro
+│   │   ├── BaseLayout.astro      # Shared layout for blog pages
+│   │   ├── PostLayout.astro      # Individual post layout
+│   │   └── LandingLayout.astro   # Landing page layout
 │   ├── pages/
-│   │   ├── index.astro          # Blog home / article list
-│   │   ├── posts/[slug].astro   # Individual article
-│   │   ├── tags/[tag].astro     # Articles by tag
-│   │   └── rss.xml.js           # RSS feed
+│   │   ├── index.astro           # Landing page (/)
+│   │   └── blog/
+│   │       ├── index.astro       # Blog home (/blog)
+│   │       ├── posts/
+│   │       │   └── [slug].astro  # Individual article (/blog/posts/slug)
+│   │       ├── tags/
+│   │       │   └── [tag].astro   # Articles by tag (/blog/tags/tag)
+│   │       └── rss.xml.ts        # RSS feed (/blog/rss.xml)
 │   └── styles/
 │       └── global.css
 ├── public/
-│   └── images/                  # Blog images
+│   ├── assets/                   # Landing page assets (images, etc.)
+│   └── images/                   # Blog images
 ├── astro.config.mjs
 └── package.json
 ```
@@ -96,7 +102,9 @@ image: "/images/article-cover.jpg"  # Optional cover image
 | Output | Description |
 |--------|-------------|
 | Static HTML | Built to `dist/` folder |
-| RSS Feed | Available at `/rss.xml` |
+| Landing Page | Available at `/` |
+| Blog | Available at `/blog` |
+| RSS Feed | Available at `/blog/rss.xml` |
 | Sitemap | Available at `/sitemap.xml` |
 
 ## Success Criteria
@@ -120,10 +128,11 @@ image: "/images/article-cover.jpg"  # Optional cover image
 
 ## Deployment
 
-1. On push to `main`, GitHub Action triggers
+1. On push to `main` (changes in `packages/blog/**`), GitHub Action triggers
 2. Action runs `npm run build` in `packages/blog/`
 3. Built `dist/` folder deployed to GitHub Pages
-4. `blog.octatech.xyz` CNAME configured to point to GitHub Pages
+4. `octatech.xyz` CNAME configured to point to GitHub Pages
+5. Both landing page and blog are deployed together as a single Astro site
 
 ## Future Considerations
 

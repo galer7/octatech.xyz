@@ -5,7 +5,7 @@
 Octatech is a consulting/services business that needs a modern web presence with lead management capabilities. The platform consists of:
 
 1. **Marketing Website** (octatech.xyz) - Landing page with contact form
-2. **Blog** (blog.octatech.xyz) - Markdown-based articles
+2. **Blog** (octatech.xyz/blog) - Markdown-based articles
 3. **CRM Backend** - Lead management, API, integrations (hosted on Railway)
 
 ## Architecture Overview
@@ -13,13 +13,17 @@ Octatech is a consulting/services business that needs a modern web presence with
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        GitHub Pages                              │
-│  ┌─────────────────────┐    ┌─────────────────────────────────┐ │
-│  │   octatech.xyz      │    │   blog.octatech.xyz             │ │
-│  │   (Landing Page)    │    │   (Astro Static Blog)           │ │
-│  │   - Contact Form    │    │   - Markdown Articles           │ │
-│  │   - Cal.com Embed   │    │   - Auto-deploy on commit       │ │
-│  └─────────┬───────────┘    └─────────────────────────────────┘ │
-└────────────┼────────────────────────────────────────────────────┘
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    octatech.xyz                              ││
+│  │         (Astro - Landing Page + Blog)                        ││
+│  │  ┌─────────────────────┐  ┌─────────────────────────────┐   ││
+│  │  │   /                 │  │   /blog                     │   ││
+│  │  │   (Landing Page)    │  │   (Blog Articles)           │   ││
+│  │  │   - Contact Form    │  │   - Markdown Articles       │   ││
+│  │  │   - Cal.com Embed   │  │   - Tags, RSS Feed          │   ││
+│  │  └─────────────────────┘  └─────────────────────────────┘   ││
+│  └─────────────────────────────────────────────────────────────┘│
+└────────────────────────────────────────────────────────────────┘
              │ POST /api/leads
              ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -31,7 +35,7 @@ Octatech is a consulting/services business that needs a modern web presence with
 │  │  - API Key Management                                       ││
 │  │  - Webhook Dispatch                                         ││
 │  │  - AI Lead Parsing (OpenAI)                                 ││
-│  │  - Admin Dashboard UI                                       ││
+│  │  - Admin Dashboard UI (/admin)                              ││
 │  └──────────────────────┬──────────────────────────────────────┘│
 │                         │                                        │
 │  ┌──────────────────────▼──────────────────────────────────────┐│
@@ -57,13 +61,15 @@ Octatech is a consulting/services business that needs a modern web presence with
 octatech.xyz/
 ├── specs/                    # Specifications (this folder)
 ├── packages/
-│   ├── web/                  # Landing page (current index.html, modernized)
-│   ├── blog/                 # Astro blog for blog.octatech.xyz
+│   ├── blog/                 # Astro site (landing page + blog)
+│   │   └── src/
+│   │       └── pages/
+│   │           ├── index.astro        # Landing page
+│   │           └── blog/              # Blog section
 │   └── crm/                  # CRM backend + admin UI (Railway)
 ├── .github/
 │   └── workflows/
-│       ├── deploy-web.yml    # Deploy landing page to GitHub Pages
-│       └── deploy-blog.yml   # Deploy blog to GitHub Pages
+│       └── deploy-site.yml   # Deploy Astro site to GitHub Pages
 └── README.md
 ```
 
@@ -71,8 +77,7 @@ octatech.xyz/
 
 | Component | Technology | Hosting |
 |-----------|------------|---------|
-| Landing Page | HTML/Tailwind (existing) | GitHub Pages |
-| Blog | Astro + Markdown | GitHub Pages |
+| Website (Landing + Blog) | Astro + Tailwind | GitHub Pages |
 | CRM Backend | Node.js + Hono | Railway |
 | CRM Database | PostgreSQL | Railway |
 | CRM Admin UI | React (served by backend) | Railway |
@@ -84,10 +89,8 @@ octatech.xyz/
 
 | Domain | Points To |
 |--------|-----------|
-| octatech.xyz | GitHub Pages (landing) |
-| blog.octatech.xyz | GitHub Pages (blog) |
-| api.octatech.xyz | Railway (CRM backend) |
-| crm.octatech.xyz | Railway (Admin UI) |
+| octatech.xyz | GitHub Pages (Astro site) |
+| api.octatech.xyz | Railway (CRM backend + Admin UI) |
 
 ## User Roles
 

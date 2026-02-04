@@ -745,7 +745,7 @@ async function notifyAdminWebhookDisabled(webhook: Webhook): Promise<void> {
   }
 
   const subject = `⚠️ Webhook Auto-Disabled: ${webhook.name}`;
-  const crmBaseUrl = process.env.CRM_BASE_URL || "https://crm.octatech.xyz";
+  const crmBaseUrl = process.env.CRM_BASE_URL || "https://api.octatech.xyz";
 
   const html = `
 <!DOCTYPE html>

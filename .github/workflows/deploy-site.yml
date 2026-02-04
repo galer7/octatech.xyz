@@ -1,11 +1,11 @@
-name: Deploy Blog
+name: Deploy Site
 
 on:
   push:
     branches: ["main"]
     paths:
       - "packages/blog/**"
-      - ".github/workflows/deploy-blog.yml"
+      - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages-blog"
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment:
-      name: github-pages-blog
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages

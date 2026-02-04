@@ -201,7 +201,7 @@ export function leadToNotificationData(lead: Lead): NotificationLeadData {
  * Defaults to environment variable or localhost for development.
  */
 export function getCrmBaseUrl(): string {
-  return process.env.CRM_BASE_URL || "https://crm.octatech.xyz";
+  return process.env.CRM_BASE_URL || "https://api.octatech.xyz";
 }
 
 /**
