@@ -89,7 +89,7 @@ const DEFAULT_SETTINGS = [
   },
   {
     key: "crm_base_url",
-    value: "https://crm.octatech.xyz",
+    value: "https://api.octatech.xyz",
     description: "Base URL for CRM links in notifications",
   },
 ] as const;
