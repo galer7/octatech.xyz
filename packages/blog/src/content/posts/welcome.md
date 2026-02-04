@@ -1,7 +1,7 @@
 ---
 title: "Welcome to the Octatech Engineering Blog"
 description: "Introducing our engineering blog where we share insights, tutorials, and lessons learned from building scalable software systems."
-date: 2025-01-15
+date: 2026-02-03
 tags: ["announcement", "engineering"]
 author: "Octatech Team"
 ---

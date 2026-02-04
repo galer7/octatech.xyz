@@ -825,17 +825,9 @@
             <label for="contact-name" class="text-sm font-medium text-white/90">
               Name <span class="text-red-400">*</span>
             </label>
-            <input
-              type="text"
-              id="contact-name"
-              name="name"
-              required
-              minlength="2"
-              placeholder="Your full name"
-              aria-required="true"
-              aria-describedby="name-error"
-              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition"
-            >
+            <input type="text" id="contact-name" name="name" required minlength="2" placeholder="Your full name"
+              aria-required="true" aria-describedby="name-error"
+              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition">
             <p id="name-error" class="text-red-400 text-xs hidden" role="alert"></p>
           </div>
 
@@ -844,52 +836,32 @@
             <label for="contact-email" class="text-sm font-medium text-white/90">
               Email <span class="text-red-400">*</span>
             </label>
-            <input
-              type="email"
-              id="contact-email"
-              name="email"
-              required
-              placeholder="you@company.com"
-              aria-required="true"
-              aria-describedby="email-error"
-              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition"
-            >
+            <input type="email" id="contact-email" name="email" required placeholder="you@company.com"
+              aria-required="true" aria-describedby="email-error"
+              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition">
             <p id="email-error" class="text-red-400 text-xs hidden" role="alert"></p>
           </div>
 
           <!-- Company Field -->
           <div class="flex flex-col gap-2">
             <label for="contact-company" class="text-sm font-medium text-white/90">Company</label>
-            <input
-              type="text"
-              id="contact-company"
-              name="company"
-              placeholder="Your company name"
-              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition"
-            >
+            <input type="text" id="contact-company" name="company" placeholder="Your company name"
+              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition">
           </div>
 
           <!-- Phone Field -->
           <div class="flex flex-col gap-2">
             <label for="contact-phone" class="text-sm font-medium text-white/90">Phone</label>
-            <input
-              type="tel"
-              id="contact-phone"
-              name="phone"
-              placeholder="+1 (555) 123-4567"
-              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition"
-            >
+            <input type="tel" id="contact-phone" name="phone" placeholder="+1 (555) 123-4567"
+              class="h-11 px-4 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition">
           </div>
 
           <!-- Budget Field -->
           <div class="flex flex-col gap-2">
             <label for="contact-budget" class="text-sm font-medium text-white/90">Budget Range</label>
-            <select
-              id="contact-budget"
-              name="budget"
+            <select id="contact-budget" name="budget"
               class="h-11 px-4 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition appearance-none cursor-pointer"
-              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;"
-            >
+              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
               <option value="">Select budget range</option>
               <option value="Not sure yet">Not sure yet</option>
               <option value="$5,000 - $15,000">$5,000 - $15,000</option>
@@ -902,12 +874,9 @@
           <!-- Project Type Field -->
           <div class="flex flex-col gap-2">
             <label for="contact-project-type" class="text-sm font-medium text-white/90">Project Type</label>
-            <select
-              id="contact-project-type"
-              name="projectType"
+            <select id="contact-project-type" name="projectType"
               class="h-11 px-4 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition appearance-none cursor-pointer"
-              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;"
-            >
+              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
               <option value="">Select project type</option>
               <option value="New Product / MVP">New Product / MVP</option>
               <option value="Staff Augmentation">Staff Augmentation</option>
@@ -922,12 +891,9 @@
           <!-- Source Field -->
           <div class="flex flex-col gap-2 md:col-span-2">
             <label for="contact-source" class="text-sm font-medium text-white/90">How did you hear about us?</label>
-            <select
-              id="contact-source"
-              name="source"
+            <select id="contact-source" name="source"
               class="h-11 px-4 rounded-xl border border-white/10 bg-neutral-900 text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition appearance-none cursor-pointer"
-              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;"
-            >
+              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.5)%22 stroke-width=%222%22%3E%3Cpath d=%22M6 9l6 6 6-6%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
               <option value="">Select an option</option>
               <option value="Google Search">Google Search</option>
               <option value="LinkedIn">LinkedIn</option>
@@ -943,17 +909,10 @@
             <label for="contact-message" class="text-sm font-medium text-white/90">
               Message <span class="text-red-400">*</span>
             </label>
-            <textarea
-              id="contact-message"
-              name="message"
-              required
-              minlength="10"
-              rows="5"
-              placeholder="Tell us about your project, timeline, and goals..."
-              aria-required="true"
+            <textarea id="contact-message" name="message" required minlength="10" rows="5"
+              placeholder="Tell us about your project, timeline, and goals..." aria-required="true"
               aria-describedby="message-error"
-              class="px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition resize-none"
-            ></textarea>
+              class="px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] text-white placeholder-white/40 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition resize-none"></textarea>
             <p id="message-error" class="text-red-400 text-xs hidden" role="alert"></p>
           </div>
         </div>
@@ -965,21 +924,22 @@
         </div>
 
         <!-- Form Error Message -->
-        <div id="form-error" class="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm hidden" role="alert">
+        <div id="form-error"
+          class="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm hidden" role="alert">
           <p id="form-error-text"></p>
         </div>
 
         <!-- Submit Button -->
         <div class="mt-8 flex justify-center">
-          <button
-            type="submit"
-            id="contact-submit"
-            class="inline-flex items-center justify-center h-12 px-8 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-neutral-950 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" id="contact-submit"
+            class="inline-flex items-center justify-center h-12 px-8 rounded-xl bg-indigo-500 text-white font-medium hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-neutral-950 transition disabled:opacity-50 disabled:cursor-not-allowed">
             <span id="submit-text">Send Message</span>
-            <svg id="submit-spinner" class="hidden ml-2 h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg id="submit-spinner" class="hidden ml-2 h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
             </svg>
           </button>
         </div>
@@ -987,10 +947,14 @@
 
       <!-- Success Message (hidden by default) -->
       <div id="contact-success" class="hidden max-w-xl mx-auto text-center py-12">
-        <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-6">
+        <div
+          class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-6">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fill-opacity="0.4"/>
-            <path d="M7 12L10 15L17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+              fill="currentColor" fill-opacity="0.4" />
+            <path d="M7 12L10 15L17 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </div>
         <h4 class="text-2xl font-semibold tracking-tight mb-2">Thank you!</h4>
@@ -1037,7 +1001,7 @@
   <footer class="border-t border-white/10">
     <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-2">
-        <span class="text-sm text-white/70">© 2025 Octatech Inc. | octatech.xyz</span>
+        <span class="text-sm text-white/70">© 2026 Octatech Inc. | octatech.xyz</span>
       </div>
       <div class="flex items-center gap-4 text-sm text-white/60">
         <a href="#expertise" class="hover:text-white">Services</a>
@@ -1114,7 +1078,7 @@
 
   <!-- Contact Form Handler -->
   <script>
-    (function() {
+    (function () {
       const form = document.getElementById('contactForm');
       const submitBtn = document.getElementById('contact-submit');
       const submitText = document.getElementById('submit-text');
@@ -1212,7 +1176,7 @@
       }
 
       // Handle form submission
-      form.addEventListener('submit', async function(e) {
+      form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         // Client-side validation
@@ -1290,7 +1254,7 @@
       });
 
       // Real-time validation on blur
-      nameInput.addEventListener('blur', function() {
+      nameInput.addEventListener('blur', function () {
         if (this.value.trim() && this.value.trim().length < 2) {
           showFieldError(nameError, nameInput, 'Please enter your name (at least 2 characters)');
         } else if (this.value.trim()) {
@@ -1298,7 +1262,7 @@
         }
       });
 
-      emailInput.addEventListener('blur', function() {
+      emailInput.addEventListener('blur', function () {
         if (this.value.trim() && !emailRegex.test(this.value.trim())) {
           showFieldError(emailError, emailInput, 'Please enter a valid email address');
         } else if (this.value.trim()) {
@@ -1306,7 +1270,7 @@
         }
       });
 
-      messageInput.addEventListener('blur', function() {
+      messageInput.addEventListener('blur', function () {
         if (this.value.trim() && this.value.trim().length < 10) {
           showFieldError(messageError, messageInput, 'Please enter a message (at least 10 characters)');
         } else if (this.value.trim()) {
@@ -1315,19 +1279,19 @@
       });
 
       // Clear errors on input
-      nameInput.addEventListener('input', function() {
+      nameInput.addEventListener('input', function () {
         if (nameError.textContent && this.value.trim().length >= 2) {
           clearFieldError(nameError, nameInput);
         }
       });
 
-      emailInput.addEventListener('input', function() {
+      emailInput.addEventListener('input', function () {
         if (emailError.textContent && emailRegex.test(this.value.trim())) {
           clearFieldError(emailError, emailInput);
         }
       });
 
-      messageInput.addEventListener('input', function() {
+      messageInput.addEventListener('input', function () {
         if (messageError.textContent && this.value.trim().length >= 10) {
           clearFieldError(messageError, messageInput);
         }
