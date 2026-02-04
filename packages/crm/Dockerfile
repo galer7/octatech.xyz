@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY admin/package*.json ./admin/
 
 # Install all dependencies (including dev)
-RUN npm ci
+RUN npm install
 
 # Copy source files
 COPY . .
@@ -23,7 +23,7 @@ WORKDIR /app
 
 # Copy package files and install production dependencies only
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built backend
 COPY --from=builder /app/dist ./dist
