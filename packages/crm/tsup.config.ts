@@ -5,7 +5,7 @@ export default defineConfig({
   format: ["esm"],
   target: "node20",
   outDir: "dist",
-  clean: true,
+  clean: false, // Don't clean - admin UI is already in dist/admin
   sourcemap: true,
   // Don't bundle node_modules - they'll be installed separately
   external: [
