@@ -13,8 +13,20 @@ import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
 import { authRoutes } from "./routes/auth";
-import { adminApiKeysRoutes, adminWebhooksRoutes, adminNotificationsRoutes, adminSettingsRoutes, adminDashboardRoutes } from "./routes/admin";
-import { leadsRoutes, publicLeadsRoutes, meRoutes, calWebhookRoutes } from "./routes/api";
+import {
+  adminApiKeysRoutes,
+  adminWebhooksRoutes,
+  adminNotificationsRoutes,
+  adminSettingsRoutes,
+  adminDashboardRoutes,
+  adminLeadsRoutes,
+} from "./routes/admin";
+import {
+  leadsRoutes,
+  publicLeadsRoutes,
+  meRoutes,
+  calWebhookRoutes,
+} from "./routes/api";
 
 export const app = new Hono();
 
@@ -37,7 +49,7 @@ app.use(
       "X-RateLimit-Remaining",
       "X-RateLimit-Reset",
     ],
-  })
+  }),
 );
 
 // Rate limiting (100/min authenticated, 10/min unauthenticated)
@@ -71,6 +83,9 @@ app.route("/api/admin/settings", adminSettingsRoutes);
 // Admin dashboard routes (stats, recent activity)
 app.route("/api/admin/dashboard", adminDashboardRoutes);
 
+// Admin leads management routes (session auth)
+app.route("/api/admin/leads", adminLeadsRoutes);
+
 // Public leads endpoint (contact form) - no auth required
 // Rate limiting is applied via the /api/* pattern
 app.use("/api/leads", rateLimiter);
@@ -97,7 +112,7 @@ app.use(
   serveStatic({
     root: "./dist/admin",
     rewriteRequestPath: (path) => path.replace(/^\/admin/, ""),
-  })
+  }),
 );
 
 // SPA fallback for admin routes - serve index.html for client-side routing
@@ -114,7 +129,12 @@ app.get("/admin/*", async (c) => {
   try {
     const fs = await import("node:fs/promises");
     const nodePath = await import("node:path");
-    const indexPath = nodePath.join(process.cwd(), "dist", "admin", "index.html");
+    const indexPath = nodePath.join(
+      process.cwd(),
+      "dist",
+      "admin",
+      "index.html",
+    );
     const html = await fs.readFile(indexPath, "utf-8");
     return c.html(html);
   } catch {

@@ -1,0 +1,691 @@
+/**
+ * Admin leads routes for the CRM admin UI.
+ *
+ * These routes mirror the v1 leads API functionality but use session-based
+ * authentication instead of API key authentication. This allows the admin UI
+ * to access leads without needing API keys.
+ *
+ * All routes require a valid admin session (via requireAuth middleware).
+ */
+
+import { Hono } from "hono";
+import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
+import {
+  db,
+  leads,
+  leadActivities,
+  type Lead,
+  type LeadActivity,
+} from "../../db";
+import { requireAuth, requireSession, requireCsrfHeader } from "../../middleware/auth";
+import {
+  ValidationError,
+  NotFoundError,
+  BadRequestError,
+} from "../../lib/errors";
+import {
+  createLeadSchema,
+  updateLeadSchema,
+  createActivitySchema,
+  listLeadsQuerySchema,
+  parseSortParam,
+  formatZodErrors,
+  isValidUuid,
+  parseLeadSchema,
+  type CreateLeadInput,
+  type UpdateLeadInput,
+  type CreateActivityInput,
+  type ParseLeadInput,
+} from "../../lib/validation";
+import {
+  triggerLeadCreated,
+  triggerLeadUpdated,
+  triggerLeadStatusChanged,
+  triggerLeadDeleted,
+  triggerLeadActivityAdded,
+} from "../../lib/webhooks";
+import {
+  parseLeadText,
+  AIServiceError,
+  ParseFailedError,
+  isOpenAIConfigured,
+} from "../../lib/ai";
+
+/**
+ * Admin leads routes app instance.
+ */
+export const adminLeadsRoutes = new Hono();
+
+// All routes require session authentication
+adminLeadsRoutes.use("*", requireAuth);
+
+// State-changing routes require CSRF header
+adminLeadsRoutes.use("*", requireCsrfHeader);
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Format a lead for API response.
+ * Converts Date objects to ISO strings and formats fields consistently.
+ */
+function formatLeadResponse(lead: Lead) {
+  return {
+    id: lead.id,
+    name: lead.name,
+    email: lead.email,
+    company: lead.company,
+    phone: lead.phone,
+    budget: lead.budget,
+    projectType: lead.projectType,
+    message: lead.message,
+    source: lead.source,
+    status: lead.status,
+    notes: lead.notes,
+    tags: lead.tags || [],
+    rawInput: lead.rawInput,
+    aiParsed: lead.aiParsed,
+    createdAt: lead.createdAt.toISOString(),
+    updatedAt: lead.updatedAt.toISOString(),
+    contactedAt: lead.contactedAt?.toISOString() || null,
+  };
+}
+
+/**
+ * Format an activity for API response.
+ */
+function formatActivityResponse(activity: LeadActivity) {
+  return {
+    id: activity.id,
+    leadId: activity.leadId,
+    type: activity.type,
+    description: activity.description,
+    oldStatus: activity.oldStatus,
+    newStatus: activity.newStatus,
+    createdAt: activity.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Get a lead by ID or throw NotFoundError.
+ */
+async function getLeadOrThrow(id: string): Promise<Lead> {
+  if (!isValidUuid(id)) {
+    throw new NotFoundError("Lead");
+  }
+
+  const [lead] = await db.select().from(leads).where(eq(leads.id, id)).limit(1);
+
+  if (!lead) {
+    throw new NotFoundError("Lead");
+  }
+
+  return lead;
+}
+
+/**
+ * Create a status change activity when lead status changes.
+ */
+async function logStatusChange(
+  leadId: string,
+  oldStatus: string,
+  newStatus: string
+): Promise<void> {
+  await db.insert(leadActivities).values({
+    leadId,
+    type: "status_change",
+    description: `Status changed from ${oldStatus} to ${newStatus}`,
+    oldStatus,
+    newStatus,
+  });
+}
+
+// ============================================================================
+// ROUTES
+// ============================================================================
+
+/**
+ * GET /api/admin/leads
+ *
+ * List leads with pagination, filtering, and search.
+ * Requires session authentication.
+ *
+ * Query Parameters:
+ * - page: Page number (default 1)
+ * - limit: Items per page (default 20, max 100)
+ * - status: Filter by status
+ * - search: Search name, email, company
+ * - sort: Sort field with optional - prefix for descending
+ */
+adminLeadsRoutes.get("/", async (c) => {
+  // Parse and validate query parameters
+  const query = c.req.query();
+  const parseResult = listLeadsQuerySchema.safeParse(query);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Invalid query parameters", formatZodErrors(parseResult.error));
+  }
+
+  const { page, limit, status, search, sort } = parseResult.data;
+  const { field, direction } = parseSortParam(sort);
+
+  // Build WHERE conditions
+  const conditions = [];
+
+  // Filter by status
+  if (status) {
+    conditions.push(eq(leads.status, status));
+  }
+
+  // Search by name, email, or company
+  if (search) {
+    const searchPattern = `%${search}%`;
+    conditions.push(
+      or(
+        ilike(leads.name, searchPattern),
+        ilike(leads.email, searchPattern),
+        ilike(leads.company, searchPattern)
+      )
+    );
+  }
+
+  // Calculate offset
+  const offset = (page - 1) * limit;
+
+  // Get total count
+  const countQuery = db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(leads);
+
+  if (conditions.length > 0) {
+    countQuery.where(and(...conditions));
+  }
+
+  const [countResult] = await countQuery;
+  const total = countResult?.count || 0;
+
+  // Build sort order
+  const sortColumn = {
+    createdAt: leads.createdAt,
+    updatedAt: leads.updatedAt,
+    name: leads.name,
+    email: leads.email,
+    company: leads.company,
+    status: leads.status,
+  }[field] || leads.createdAt;
+
+  const orderBy = direction === "desc" ? desc(sortColumn) : asc(sortColumn);
+
+  // Get leads with pagination
+  let leadsQuery = db
+    .select()
+    .from(leads)
+    .orderBy(orderBy)
+    .limit(limit)
+    .offset(offset);
+
+  if (conditions.length > 0) {
+    leadsQuery = leadsQuery.where(and(...conditions)) as typeof leadsQuery;
+  }
+
+  const leadsResult = await leadsQuery;
+
+  return c.json({
+    data: leadsResult.map(formatLeadResponse),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+});
+
+/**
+ * GET /api/admin/leads/:id
+ *
+ * Get a single lead by ID with activities.
+ * Requires session authentication.
+ */
+adminLeadsRoutes.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const lead = await getLeadOrThrow(id);
+
+  // Get lead activities
+  const activities = await db
+    .select()
+    .from(leadActivities)
+    .where(eq(leadActivities.leadId, id))
+    .orderBy(desc(leadActivities.createdAt));
+
+  return c.json({
+    data: {
+      ...formatLeadResponse(lead),
+      activities: activities.map(formatActivityResponse),
+    },
+  });
+});
+
+/**
+ * POST /api/admin/leads
+ *
+ * Create a new lead.
+ * Requires session authentication.
+ */
+adminLeadsRoutes.post("/", async (c) => {
+  // Get session for tracking who created the lead
+  const session = requireSession(c);
+
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}));
+  const parseResult = createLeadSchema.safeParse(body);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Validation failed", formatZodErrors(parseResult.error));
+  }
+
+  const input: CreateLeadInput = parseResult.data;
+
+  // Set source to Admin if not provided
+  const source = input.source || "Admin";
+
+  // Insert lead
+  const [newLead] = await db
+    .insert(leads)
+    .values({
+      name: input.name,
+      email: input.email,
+      company: input.company || null,
+      phone: input.phone || null,
+      budget: input.budget || null,
+      projectType: input.projectType || null,
+      message: input.message,
+      source,
+      status: input.status || "new",
+      notes: input.notes || null,
+      tags: input.tags || null,
+    })
+    .returning();
+
+  // Create initial activity
+  await db.insert(leadActivities).values({
+    leadId: newLead.id,
+    type: "note",
+    description: `Lead created via admin UI by ${session.user.email}`,
+  });
+
+  // Trigger webhooks (fire-and-forget, don't await)
+  triggerLeadCreated(newLead).catch((err) => {
+    console.error("Failed to trigger lead.created webhook:", err);
+  });
+
+  return c.json(
+    {
+      data: formatLeadResponse(newLead),
+    },
+    201
+  );
+});
+
+/**
+ * PATCH /api/admin/leads/:id
+ *
+ * Update a lead.
+ * Requires session authentication.
+ */
+adminLeadsRoutes.patch("/:id", async (c) => {
+  const id = c.req.param("id");
+  const existingLead = await getLeadOrThrow(id);
+
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}));
+  const parseResult = updateLeadSchema.safeParse(body);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Validation failed", formatZodErrors(parseResult.error));
+  }
+
+  const input: UpdateLeadInput = parseResult.data;
+
+  // Check if there's anything to update
+  if (Object.keys(input).length === 0) {
+    throw new BadRequestError("At least one field is required for update");
+  }
+
+  // Track status change for activity logging
+  const statusChanged =
+    input.status !== undefined && input.status !== existingLead.status;
+  const oldStatus = existingLead.status;
+  const newStatus = input.status;
+
+  // Build update object and track changes for webhooks
+  const updateData: Partial<typeof leads.$inferInsert> & { updatedAt: Date } = {
+    updatedAt: new Date(),
+  };
+  const changes: Record<string, { old: unknown; new: unknown }> = {};
+
+  if (input.name !== undefined) {
+    if (input.name !== existingLead.name) {
+      changes.name = { old: existingLead.name, new: input.name };
+    }
+    updateData.name = input.name;
+  }
+  if (input.email !== undefined) {
+    if (input.email !== existingLead.email) {
+      changes.email = { old: existingLead.email, new: input.email };
+    }
+    updateData.email = input.email;
+  }
+  if (input.company !== undefined) {
+    if (input.company !== existingLead.company) {
+      changes.company = { old: existingLead.company, new: input.company };
+    }
+    updateData.company = input.company;
+  }
+  if (input.phone !== undefined) {
+    if (input.phone !== existingLead.phone) {
+      changes.phone = { old: existingLead.phone, new: input.phone };
+    }
+    updateData.phone = input.phone;
+  }
+  if (input.budget !== undefined) {
+    if (input.budget !== existingLead.budget) {
+      changes.budget = { old: existingLead.budget, new: input.budget };
+    }
+    updateData.budget = input.budget;
+  }
+  if (input.projectType !== undefined) {
+    if (input.projectType !== existingLead.projectType) {
+      changes.projectType = { old: existingLead.projectType, new: input.projectType };
+    }
+    updateData.projectType = input.projectType;
+  }
+  if (input.message !== undefined) {
+    if (input.message !== existingLead.message) {
+      changes.message = { old: existingLead.message, new: input.message };
+    }
+    updateData.message = input.message;
+  }
+  if (input.source !== undefined) {
+    if (input.source !== existingLead.source) {
+      changes.source = { old: existingLead.source, new: input.source };
+    }
+    updateData.source = input.source;
+  }
+  if (input.status !== undefined) {
+    if (input.status !== existingLead.status) {
+      changes.status = { old: existingLead.status, new: input.status };
+    }
+    updateData.status = input.status;
+  }
+  if (input.notes !== undefined) {
+    if (input.notes !== existingLead.notes) {
+      changes.notes = { old: existingLead.notes, new: input.notes };
+    }
+    updateData.notes = input.notes;
+  }
+  if (input.tags !== undefined) {
+    const tagsChanged = JSON.stringify(input.tags) !== JSON.stringify(existingLead.tags);
+    if (tagsChanged) {
+      changes.tags = { old: existingLead.tags, new: input.tags };
+    }
+    updateData.tags = input.tags;
+  }
+
+  // Set contactedAt when status changes to 'contacted' for the first time
+  if (
+    statusChanged &&
+    newStatus === "contacted" &&
+    existingLead.contactedAt === null
+  ) {
+    updateData.contactedAt = new Date();
+  }
+
+  // Update lead
+  const [updatedLead] = await db
+    .update(leads)
+    .set(updateData)
+    .where(eq(leads.id, id))
+    .returning();
+
+  // Log status change as activity
+  if (statusChanged && oldStatus && newStatus) {
+    await logStatusChange(id, oldStatus, newStatus);
+  }
+
+  // Trigger webhooks (fire-and-forget, don't await)
+  if (Object.keys(changes).length > 0) {
+    triggerLeadUpdated(updatedLead, changes).catch((err) => {
+      console.error("Failed to trigger lead.updated webhook:", err);
+    });
+  }
+
+  // Trigger status changed webhook in addition to lead.updated when status changes
+  if (statusChanged && oldStatus && newStatus) {
+    triggerLeadStatusChanged(updatedLead, oldStatus, newStatus).catch((err) => {
+      console.error("Failed to trigger lead.status_changed webhook:", err);
+    });
+  }
+
+  return c.json({
+    data: formatLeadResponse(updatedLead),
+  });
+});
+
+/**
+ * DELETE /api/admin/leads/:id
+ *
+ * Delete a lead.
+ * Requires session authentication.
+ */
+adminLeadsRoutes.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+
+  // Verify lead exists and capture info before deletion
+  const lead = await getLeadOrThrow(id);
+  const { name, email } = lead;
+
+  // Delete lead (activities cascade automatically)
+  await db.delete(leads).where(eq(leads.id, id));
+
+  // Trigger webhook (fire-and-forget, don't await)
+  triggerLeadDeleted(id, name, email).catch((err) => {
+    console.error("Failed to trigger lead.deleted webhook:", err);
+  });
+
+  return c.json({
+    success: true,
+    message: "Lead deleted",
+  });
+});
+
+/**
+ * POST /api/admin/leads/:id/activities
+ *
+ * Add an activity to a lead.
+ * Requires session authentication.
+ */
+adminLeadsRoutes.post("/:id/activities", async (c) => {
+  const id = c.req.param("id");
+
+  // Verify lead exists and get lead data for webhook
+  const lead = await getLeadOrThrow(id);
+
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}));
+  const parseResult = createActivitySchema.safeParse(body);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Validation failed", formatZodErrors(parseResult.error));
+  }
+
+  const input: CreateActivityInput = parseResult.data;
+
+  // Insert activity
+  const [newActivity] = await db
+    .insert(leadActivities)
+    .values({
+      leadId: id,
+      type: input.type,
+      description: input.description,
+    })
+    .returning();
+
+  // Update lead's updatedAt timestamp
+  await db
+    .update(leads)
+    .set({ updatedAt: new Date() })
+    .where(eq(leads.id, id));
+
+  // Trigger webhook (fire-and-forget, don't await)
+  triggerLeadActivityAdded(lead, newActivity).catch((err) => {
+    console.error("Failed to trigger lead.activity_added webhook:", err);
+  });
+
+  return c.json(
+    {
+      data: formatActivityResponse(newActivity),
+    },
+    201
+  );
+});
+
+/**
+ * POST /api/admin/leads/parse
+ *
+ * Parse natural language text into structured lead data using AI.
+ * Optionally creates a lead immediately if autoSave is true.
+ * Requires session authentication.
+ *
+ * Request body:
+ * - text: Natural language text to parse (max 5000 chars)
+ * - autoSave: If true, create lead immediately (optional)
+ *
+ * Returns parsed lead data with confidence score and extracted fields list.
+ */
+adminLeadsRoutes.post("/parse", async (c) => {
+  // Get session for tracking who created the lead
+  const session = requireSession(c);
+
+  // Check if OpenAI is configured
+  if (!isOpenAIConfigured()) {
+    return c.json(
+      {
+        error: "AI service not configured",
+        code: "AI_SERVICE_ERROR",
+      },
+      503
+    );
+  }
+
+  // Parse and validate request body
+  const body = await c.req.json().catch(() => ({}));
+  const parseResult = parseLeadSchema.safeParse(body);
+
+  if (!parseResult.success) {
+    throw new ValidationError("Validation failed", formatZodErrors(parseResult.error));
+  }
+
+  const input: ParseLeadInput = parseResult.data;
+
+  try {
+    // Parse the text using AI
+    const result = await parseLeadText(input.text);
+
+    // If autoSave is true, create the lead
+    if (input.autoSave) {
+      // Validate we have minimum required fields
+      if (!result.parsed.name || !result.parsed.email) {
+        return c.json(
+          {
+            error: "Cannot auto-save: name and email are required",
+            code: "VALIDATION_ERROR",
+            parsed: result.parsed,
+            confidence: result.confidence,
+            extractedFields: result.extractedFields,
+          },
+          422
+        );
+      }
+
+      // Build a message if not extracted
+      const message =
+        result.parsed.message ||
+        `AI-parsed lead from text: "${input.text.substring(0, 100)}${input.text.length > 100 ? "..." : ""}"`;
+
+      // Insert lead
+      const [newLead] = await db
+        .insert(leads)
+        .values({
+          name: result.parsed.name,
+          email: result.parsed.email,
+          company: result.parsed.company,
+          phone: result.parsed.phone,
+          budget: result.parsed.budget,
+          projectType: result.parsed.projectType,
+          message,
+          source: result.parsed.source || "Admin",
+          status: "new",
+          rawInput: input.text,
+          aiParsed: true,
+        })
+        .returning();
+
+      // Create initial activity
+      await db.insert(leadActivities).values({
+        leadId: newLead.id,
+        type: "note",
+        description: `Lead created via AI parsing by ${session.user.email}. Confidence: ${Math.round(result.confidence * 100)}%`,
+      });
+
+      // Trigger webhooks (fire-and-forget, don't await)
+      triggerLeadCreated(newLead).catch((err) => {
+        console.error("Failed to trigger lead.created webhook:", err);
+      });
+
+      return c.json(
+        {
+          lead: formatLeadResponse(newLead),
+          parsed: result.parsed,
+          confidence: result.confidence,
+          extractedFields: result.extractedFields,
+        },
+        201
+      );
+    }
+
+    // Return parsed data without saving
+    return c.json({
+      parsed: result.parsed,
+      confidence: result.confidence,
+      extractedFields: result.extractedFields,
+    });
+  } catch (error) {
+    // Handle AI-specific errors
+    if (error instanceof ParseFailedError) {
+      return c.json(
+        {
+          error: error.message,
+          code: error.code,
+          confidence: error.confidence,
+          parsed: error.parsed,
+        },
+        422
+      );
+    }
+
+    if (error instanceof AIServiceError) {
+      return c.json(
+        {
+          error: error.message,
+          code: error.code,
+        },
+        503
+      );
+    }
+
+    // Re-throw unexpected errors
+    throw error;
+  }
+});

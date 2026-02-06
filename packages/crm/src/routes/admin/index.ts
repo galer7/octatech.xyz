@@ -9,3 +9,4 @@ export { adminWebhooksRoutes } from "./webhooks";
 export { adminNotificationsRoutes } from "./notifications";
 export { adminSettingsRoutes } from "./settings";
 export { adminDashboardRoutes } from "./dashboard";
+export { adminLeadsRoutes } from "./leads";
