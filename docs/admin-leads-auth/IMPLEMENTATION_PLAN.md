@@ -42,7 +42,7 @@ The admin CRM UI cannot access leads functionality because the leads API (`/api/
   - [x] Test authentication requirements (session, CSRF header)
   - [x] Test validation error handling
   - [x] Test invalid UUID handling
-  - [x] All 15 tests passing
+  - [x] All 32 tests passing
 
 ### Testing Strategy - Phase 1
 
@@ -114,7 +114,14 @@ npm run test -w @octatech/crm -- src/routes/admin/leads.test.ts
   - [x] Create `packages/crm/src/routes/admin/leads.test.ts`
   - [x] Test authentication requirements
   - [x] Test validation error responses
-  - [ ] Test webhook triggering on lead changes (requires DB integration tests)
+  - [x] Test webhook triggering on lead changes
+    - Note: 17 webhook integration tests added to leads.test.ts covering:
+      - triggerLeadCreated on POST
+      - triggerLeadUpdated on PATCH with field changes
+      - triggerLeadStatusChanged on status changes
+      - triggerLeadDeleted on DELETE
+      - triggerLeadActivityAdded on POST activities
+      - Webhook error handling (fire-and-forget pattern)
 
 - [ ] **3.2** End-to-end validation
   - [ ] Deploy to staging environment
