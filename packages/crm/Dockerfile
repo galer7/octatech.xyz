@@ -25,8 +25,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Copy built backend
+# Copy built backend and migrations
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/migrations ./migrations
 
 ENV NODE_ENV=production
 ENV PORT=3000
