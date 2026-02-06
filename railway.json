@@ -6,7 +6,8 @@
     "watchPatterns": ["packages/crm/**"]
   },
   "deploy": {
-    "startCommand": "node dist/db/migrate.js && node dist/db/seed.js && node dist/index.js",
+    "preDeployCommand": "node dist/db/migrate.js && node dist/db/seed.js",
+    "startCommand": "node dist/index.js",
     "healthcheckPath": "/api/v1/health",
     "healthcheckTimeout": 90,
     "restartPolicyType": "ON_FAILURE",
