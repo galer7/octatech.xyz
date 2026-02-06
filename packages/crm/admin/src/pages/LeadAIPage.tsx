@@ -83,8 +83,8 @@ export function LeadAIPage() {
         projectType: result.parsed.projectType || '',
         source: result.parsed.source || '',
         message: result.parsed.message || '',
-        confidence: result.parsed.confidence,
-        extractedFields: result.parsed.extractedFields,
+        confidence: result.confidence,
+        extractedFields: result.extractedFields,
       };
       setParsed(data);
       setEditedForm({

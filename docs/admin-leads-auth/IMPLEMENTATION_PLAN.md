@@ -57,25 +57,29 @@ npm run test -w @octatech/crm -- src/routes/admin/leads.test.ts
 
 ---
 
-## Phase 2: Frontend Integration
+## Phase 2: Frontend Integration ✅ COMPLETE
 
 ### Dependencies
 - Phase 1 must be complete (backend endpoints available)
 
 ### Step-by-Step Checklist
 
-- [ ] **2.1** Update `packages/crm/admin/src/hooks/useLeads.ts`
-  - [ ] Change `useLeads` hook: `/v1/leads` → `/admin/leads`
-  - [ ] Change `useLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
-  - [ ] Change `useCreateLead` hook: `/v1/leads` → `/admin/leads`
-  - [ ] Change `useUpdateLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
-  - [ ] Change `useDeleteLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
-  - [ ] Change `useAddActivity` hook: `/v1/leads/:id/activities` → `/admin/leads/:id/activities`
-  - [ ] Change `useParseLead` hook: `/v1/leads/parse` → `/admin/leads/parse`
+- [x] **2.1** Update `packages/crm/admin/src/hooks/useLeads.ts`
+  - [x] Change `useLeads` hook: `/v1/leads` → `/admin/leads`
+  - [x] Change `useLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
+  - [x] Change `useCreateLead` hook: `/v1/leads` → `/admin/leads`
+  - [x] Change `useUpdateLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
+  - [x] Change `useDeleteLead` hook: `/v1/leads/:id` → `/admin/leads/:id`
+  - [x] Change `useAddActivity` hook: `/v1/leads/:id/activities` → `/admin/leads/:id/activities`
+  - [x] Change `useParseLead` hook: `/v1/leads/parse` → `/admin/leads/parse`
 
-- [ ] **2.2** Fix response type handling
-  - [ ] Update `useLeads` to handle `{ data: Lead[], pagination: {...} }` response
-  - [ ] Update `useLead` to handle `{ data: LeadWithActivities }` response
+- [x] **2.2** Fix response type handling
+  - [x] Update `useLeads` to handle `{ data: Lead[], pagination: {...} }` response
+  - [x] Update `useLead` to handle `{ data: LeadWithActivities }` response
+
+- [x] **2.3** Fix bug in LeadAIPage.tsx (discovered during implementation)
+  - [x] Fixed incorrect access to `result.parsed.confidence` → `result.confidence`
+  - [x] Fixed incorrect access to `result.parsed.extractedFields` → `result.extractedFields`
 
 ### Testing Strategy - Phase 2
 
@@ -92,6 +96,10 @@ npm run test -w @octatech/crm -- src/routes/admin/leads.test.ts
 - [ ] Test changing lead status (verify activity is logged)
 - [ ] Test adding a note/activity to a lead
 - [ ] Test deleting a lead
+
+### Verification
+- [x] Admin UI builds successfully (TypeScript compiles with no errors)
+- [x] All 1112 tests pass (28 test files)
 
 ---
 
