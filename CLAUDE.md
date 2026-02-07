@@ -51,9 +51,67 @@ npm run db:studio    # Open Drizzle Studio
 
 ## Debugging Tools
 
-Use scripts from `~/.claude/scripts/` for debugging:
-<!-- TODO: Document specific scripts available -->
+### Namecheap DNS Management
+`./.claude/tools/namecheap-dns.sh` - Manage DNS records via Namecheap API
+
+```bash
+# List all records
+./.claude/tools/namecheap-dns.sh list --api-key KEY --api-user USER --domain example.com
+
+# Add a record
+./.claude/tools/namecheap-dns.sh add --api-key KEY --api-user USER --domain example.com \
+  --type A --host www --value 192.168.1.1
+
+# Update/delete records (use --record-id from list output)
+./.claude/tools/namecheap-dns.sh update --api-key KEY --api-user USER --domain example.com \
+  --record-id 12345 --value 192.168.1.2
+./.claude/tools/namecheap-dns.sh delete --api-key KEY --api-user USER --domain example.com \
+  --record-id 12345
+```
+
+### Railway Deployment Scripts
+Scripts in `./.claude/tools/railway/` for Railway infrastructure management:
+
+| Script | Description |
+|--------|-------------|
+| `railway-gql.sh` | Base GraphQL helper for Railway API |
+| `railway-workspaces.sh` | List Railway workspaces |
+| `railway-create-project.sh` | Create a new Railway project |
+| `railway-list-services.sh` | List services in a project |
+| `railway-create-service.sh` | Create a new service |
+| `railway-delete-service.sh` | Delete a service |
+| `railway-service-update.sh` | Update service configuration |
+| `railway-set-vars.sh` | Set environment variables |
+| `railway-deploy.sh` | Trigger a deployment |
+| `railway-redeploy.sh` | Redeploy an existing service |
+| `railway-deploy-status.sh` | Check deployment status |
+| `railway-tail-deploy.sh` | Tail deployment logs in real-time |
+| `railway-logs.sh` | View service logs |
+
+See `./.claude/tools/railway/README.md` for detailed usage
 
 ## Environment Variables
 
 CRM requires PostgreSQL connection. See `packages/crm/.env.example` for required variables.
+
+### Tool API Keys (`.env.claude`)
+
+Store API keys for debugging tools in `.env.claude` (gitignored):
+
+```bash
+# Namecheap DNS
+NAMECHEAP_API_KEY=your_api_key
+NAMECHEAP_API_USER=your_username
+
+# Railway
+RAILWAY_API_TOKEN=your_railway_token
+```
+
+Tools can be invoked with these env vars:
+```bash
+# Namecheap
+./.claude/tools/namecheap-dns.sh list --api-key $NAMECHEAP_API_KEY --api-user $NAMECHEAP_API_USER --domain octatech.xyz
+
+# Railway (scripts read RAILWAY_API_TOKEN automatically)
+./.claude/tools/railway/railway-list-services.sh --project-id $RAILWAY_PROJECT_ID
+```
