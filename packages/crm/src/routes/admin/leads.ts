@@ -16,13 +16,13 @@ import {
   leadActivities,
   type Lead,
   type LeadActivity,
-} from "../../db";
-import { requireAuth, requireSession, requireCsrfHeader } from "../../middleware/auth";
+} from "../../db/index.js";
+import { requireAuth, requireSession, requireCsrfHeader } from "../../middleware/auth.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -36,20 +36,20 @@ import {
   type UpdateLeadInput,
   type CreateActivityInput,
   type ParseLeadInput,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 import {
   triggerLeadCreated,
   triggerLeadUpdated,
   triggerLeadStatusChanged,
   triggerLeadDeleted,
   triggerLeadActivityAdded,
-} from "../../lib/webhooks";
+} from "../../lib/webhooks.js";
 import {
   parseLeadText,
   AIServiceError,
   ParseFailedError,
   isOpenAIConfigured,
-} from "../../lib/ai";
+} from "../../lib/ai/index.js";
 
 /**
  * Admin leads routes app instance.

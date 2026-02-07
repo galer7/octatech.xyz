@@ -7,8 +7,8 @@
 
 import { randomBytes, createHash } from "crypto";
 import { eq, lt, gt, and, ne } from "drizzle-orm";
-import { db } from "../db";
-import { sessions, adminUser } from "../db/schema";
+import { db } from "../db/index.js";
+import { sessions, adminUser } from "../db/schema.js";
 
 /**
  * Session configuration

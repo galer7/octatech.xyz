@@ -1,6 +1,6 @@
 import { hash } from "@node-rs/argon2";
-import { db, closeConnection } from "./connection";
-import { adminUser, settings } from "./schema";
+import { db, closeConnection } from "./connection.js";
+import { adminUser, settings } from "./schema.js";
 import { eq } from "drizzle-orm";
 
 /**

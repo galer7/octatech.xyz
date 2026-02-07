@@ -7,22 +7,22 @@
 
 import { Hono } from "hono";
 import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
-import { db } from "../../db/connection";
+import { db } from "../../db/connection.js";
 import {
   companies,
   contacts,
   type Company,
   type Contact,
-} from "../../db/schema";
+} from "../../db/schema.js";
 import {
   requireApiKey,
   requireScope,
-} from "../../middleware/api-key";
+} from "../../middleware/api-key.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createCompanySchema,
   updateCompanySchema,
@@ -32,7 +32,7 @@ import {
   isValidUuid,
   type CreateCompanyInput,
   type UpdateCompanyInput,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 
 /**
  * Companies API routes app instance.
@@ -219,7 +219,7 @@ companiesApiRoutes.get("/", requireScope("companies:read"), async (c) => {
 
   // Get contact counts for each company
   const companyIds = companiesResult.map((co) => co.id);
-  let contactCounts: Record<string, number> = {};
+  const contactCounts: Record<string, number> = {};
 
   if (companyIds.length > 0) {
     const contactCountRows = await db

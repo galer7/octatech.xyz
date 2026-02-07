@@ -67,7 +67,7 @@ octatech.xyz/
 
 - Node.js >= 20.0.0
 - PostgreSQL (local or remote)
-- npm
+- pnpm
 
 ## Local Development
 
@@ -76,7 +76,7 @@ octatech.xyz/
 ```bash
 git clone https://github.com/octatech/octatech.xyz.git
 cd octatech.xyz
-npm install
+pnpm install
 ```
 
 ### 2. Configure Environment
@@ -106,23 +106,23 @@ Required environment variables:
 
 ```bash
 # Push schema to database
-npm run db:push -w @octatech/crm
+pnpm --filter @octatech/crm db:push
 
 # Seed initial admin user and settings
-npm run db:seed -w @octatech/crm
+pnpm --filter @octatech/crm db:seed
 ```
 
 ### 4. Start Development Servers
 
 ```bash
 # CRM backend (http://localhost:3000)
-npm run dev:crm
+pnpm dev:crm
 
 # Admin UI (http://localhost:5173)
-npm run dev:admin
+pnpm dev:admin
 
 # Blog (http://localhost:4321)
-npm run dev:blog
+pnpm dev:blog
 ```
 
 ## Available Scripts
@@ -131,24 +131,26 @@ npm run dev:blog
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev:crm` | Start CRM backend in dev mode |
-| `npm run dev:admin` | Start admin UI in dev mode |
-| `npm run dev:blog` | Start blog in dev mode |
-| `npm run build` | Build all packages |
-| `npm run lint` | Lint all packages |
-| `npm run test` | Run tests in all packages |
+| `pnpm dev:crm` | Start CRM backend in dev mode |
+| `pnpm dev:admin` | Start admin UI in dev mode |
+| `pnpm dev:blog` | Start blog in dev mode |
+| `pnpm build` | Build all packages |
+| `pnpm lint` | Lint all packages |
+| `pnpm test` | Run tests in all packages |
+| `pnpm typecheck` | Type-check all packages |
+| `pnpm audit:security` | Check for moderate+ CVEs |
 
 ### CRM Package
 
 | Script | Description |
 |--------|-------------|
-| `npm run db:generate` | Generate Drizzle migrations |
-| `npm run db:migrate` | Run database migrations |
-| `npm run db:push` | Push schema changes directly |
-| `npm run db:seed` | Seed database with initial data |
-| `npm run db:studio` | Open Drizzle Studio |
-| `npm run test` | Run tests |
-| `npm run test:watch` | Run tests in watch mode |
+| `pnpm --filter @octatech/crm db:generate` | Generate Drizzle migrations |
+| `pnpm --filter @octatech/crm db:migrate` | Run database migrations |
+| `pnpm --filter @octatech/crm db:push` | Push schema changes directly |
+| `pnpm --filter @octatech/crm db:seed` | Seed database with initial data |
+| `pnpm --filter @octatech/crm db:studio` | Open Drizzle Studio |
+| `pnpm --filter @octatech/crm test` | Run tests |
+| `pnpm --filter @octatech/crm test:watch` | Run tests in watch mode |
 
 ## API Overview
 
@@ -201,8 +203,8 @@ Deploy to Railway:
 3. Add web service from this repo
 4. Configure:
    - Root directory: `packages/crm`
-   - Build command: `npm run build`
-   - Start command: `npm run start`
+   - Build command: `pnpm run build`
+   - Start command: `pnpm run start`
 5. Set environment variables
 6. Configure custom domains (api.octatech.xyz, crm.octatech.xyz)
 
@@ -210,13 +212,13 @@ Deploy to Railway:
 
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run CRM tests only
-npm test -w @octatech/crm
+pnpm --filter @octatech/crm test
 
 # Run with coverage
-cd packages/crm && npm run test -- --coverage
+pnpm --filter @octatech/crm test -- --coverage
 ```
 
 The CRM package has comprehensive test coverage including:

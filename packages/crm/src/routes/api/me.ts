@@ -6,7 +6,7 @@
  */
 
 import { Hono } from "hono";
-import { requireApiKey, requireApiKeyFromContext } from "../../middleware/api-key";
+import { requireApiKey, requireApiKeyFromContext } from "../../middleware/api-key.js";
 
 /**
  * API info routes app instance.

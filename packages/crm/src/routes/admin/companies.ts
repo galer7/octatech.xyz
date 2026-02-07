@@ -15,13 +15,13 @@ import {
   contacts,
   type Company,
   type Contact,
-} from "../../db";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
+} from "../../db/index.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createCompanySchema,
   updateCompanySchema,
@@ -29,7 +29,7 @@ import {
   parseCompanySortParam,
   formatZodErrors,
   isValidUuid,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 
 /**
  * Admin companies routes app instance.

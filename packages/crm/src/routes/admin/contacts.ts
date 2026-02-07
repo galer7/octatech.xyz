@@ -15,15 +15,14 @@ import {
   contacts,
   contactInteractions,
   type Contact,
-  type Company,
   type ContactInteraction,
-} from "../../db";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
+} from "../../db/index.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createContactSchema,
   updateContactSchema,
@@ -34,8 +33,8 @@ import {
   parseContactSortParam,
   formatZodErrors,
   isValidUuid,
-} from "../../lib/validation";
-import { parseContactText, isOpenAIConfigured } from "../../lib/ai";
+} from "../../lib/validation.js";
+import { parseContactText, isOpenAIConfigured } from "../../lib/ai/index.js";
 
 /**
  * Admin contacts routes app instance.
@@ -410,7 +409,7 @@ adminContactsRoutes.get("/:id", async (c) => {
   // Get linked lead if exists
   let lead: { id: string; name: string; status: string } | null = null;
   if (contact.leadId) {
-    const leadsTable = await import("../../db").then((m) => m.leads);
+    const leadsTable = await import("../../db/index.js").then((m) => m.leads);
     const [leadRow] = await db
       .select({
         id: leadsTable.id,
@@ -571,7 +570,7 @@ adminContactsRoutes.delete("/:id", async (c) => {
 
   // If contact is linked to a lead, unlink it
   if (contact.leadId) {
-    const leadsTable = await import("../../db").then((m) => m.leads);
+    const leadsTable = await import("../../db/index.js").then((m) => m.leads);
     await db
       .update(leadsTable)
       .set({ contactId: null })

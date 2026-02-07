@@ -5,7 +5,7 @@
  * and the dispatcher per specs/09-notifications.md.
  */
 
-import type { Lead } from "../../db";
+import type { Lead } from "../../db/index.js";
 
 // ============================================================================
 // CHANNEL TYPES

@@ -17,19 +17,19 @@ import {
   notificationChannelTypeEnum,
   type NewNotificationChannel,
   type NotificationConfig,
-} from "../../db";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
+} from "../../db/index.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   validateChannelConfig,
   sendTestNotification,
   notificationEventEnum,
   VALID_NOTIFICATION_EVENTS,
-} from "../../lib/notifications";
+} from "../../lib/notifications/index.js";
 
 /**
  * Admin notification routes app instance.
@@ -478,7 +478,7 @@ adminNotificationsRoutes.get("/events/list", async (c) => {
     "lead.status_changed": "Triggered when a lead's status changes",
   };
 
-  const events = notificationEventEnum.map((event) => ({
+  const events = notificationEventEnum.map((event: string) => ({
     event,
     description: eventDescriptions[event] || event,
     defaultEnabled: event === "lead.created",

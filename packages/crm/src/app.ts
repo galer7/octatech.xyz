@@ -11,8 +11,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { errorHandler, notFoundHandler, rateLimiter } from "./middleware";
-import { authRoutes } from "./routes/auth";
+import { errorHandler, notFoundHandler, rateLimiter } from "./middleware/index.js";
+import { authRoutes } from "./routes/auth.js";
 import {
   adminApiKeysRoutes,
   adminWebhooksRoutes,
@@ -22,7 +22,7 @@ import {
   adminLeadsRoutes,
   adminCompaniesRoutes,
   adminContactsRoutes,
-} from "./routes/admin";
+} from "./routes/admin/index.js";
 import {
   leadsRoutes,
   publicLeadsRoutes,
@@ -30,7 +30,7 @@ import {
   calWebhookRoutes,
   companiesApiRoutes,
   contactsApiRoutes,
-} from "./routes/api";
+} from "./routes/api/index.js";
 
 export const app = new Hono();
 

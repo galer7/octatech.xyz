@@ -14,10 +14,10 @@ import {
   updateApiKey,
   revokeApiKey,
   VALID_SCOPES,
-} from "../../lib/api-keys";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
-import { ValidationError, NotFoundError, BadRequestError } from "../../lib/errors";
-import { apiKeyScopeEnum, type ApiKeyScope } from "../../db/schema";
+} from "../../lib/api-keys.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
+import { ValidationError, NotFoundError, BadRequestError } from "../../lib/errors.js";
+import { apiKeyScopeEnum, type ApiKeyScope } from "../../db/schema.js";
 
 /**
  * Admin API keys routes app instance.

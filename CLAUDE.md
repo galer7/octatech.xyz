@@ -29,24 +29,27 @@ packages/
 
 ```bash
 # Development
-npm run dev:crm      # Start CRM backend (tsx watch)
-npm run dev:admin    # Start admin UI (Vite)
-npm run dev:blog     # Start blog (Astro)
+pnpm dev:crm      # Start CRM backend (tsx watch)
+pnpm dev:admin    # Start admin UI (Vite)
+pnpm dev:blog     # Start blog (Astro)
 
 # Build
-npm run build        # Build all workspaces
-npm run build:crm    # Build CRM only
-npm run build:admin  # Build admin UI only
+pnpm build        # Build all workspaces
+pnpm build:crm    # Build CRM only
+pnpm build:admin  # Build admin UI only
 
 # Testing
-npm run test         # Run all tests
-npm run test -w @octatech/crm  # Run CRM tests
+pnpm test         # Run all tests
+pnpm --filter @octatech/crm test  # Run CRM tests
+
+# Type checking
+pnpm typecheck    # Type-check all packages
 
 # Database (from packages/crm)
-npm run db:generate  # Generate migrations
-npm run db:migrate   # Run migrations
-npm run db:push      # Push schema changes
-npm run db:studio    # Open Drizzle Studio
+pnpm --filter @octatech/crm db:generate  # Generate migrations
+pnpm --filter @octatech/crm db:migrate   # Run migrations
+pnpm --filter @octatech/crm db:push      # Push schema changes
+pnpm --filter @octatech/crm db:studio    # Open Drizzle Studio
 ```
 
 ## Debugging Tools

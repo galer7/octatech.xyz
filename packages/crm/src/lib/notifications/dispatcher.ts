@@ -12,7 +12,7 @@
  */
 
 import { eq } from "drizzle-orm";
-import { db, notificationChannels, type Lead } from "../../db";
+import { db, notificationChannels, type Lead } from "../../db/index.js";
 import type {
   NotificationPayload,
   NotificationDeliveryResult,
@@ -20,11 +20,11 @@ import type {
   NotificationChannelType,
   NotificationConfig,
   NotificationLeadData,
-} from "./types";
-import { leadToNotificationData, VALID_NOTIFICATION_EVENTS } from "./types";
-import { discordProvider } from "./discord";
-import { telegramProvider } from "./telegram";
-import { emailProvider } from "./email";
+} from "./types.js";
+import { leadToNotificationData, VALID_NOTIFICATION_EVENTS } from "./types.js";
+import { discordProvider } from "./discord.js";
+import { telegramProvider } from "./telegram.js";
+import { emailProvider } from "./email.js";
 
 // ============================================================================
 // PROVIDER REGISTRY

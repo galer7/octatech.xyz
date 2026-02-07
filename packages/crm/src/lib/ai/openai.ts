@@ -11,7 +11,7 @@ import {
   projectTypeOptions,
   type BudgetOption,
   type ProjectTypeOption,
-} from "../validation";
+} from "../validation.js";
 
 // ============================================================================
 // TYPES

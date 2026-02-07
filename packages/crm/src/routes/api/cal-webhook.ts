@@ -16,10 +16,10 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db } from "../../db/connection";
-import { leads, leadActivities } from "../../db/schema";
-import { formatZodErrors } from "../../lib/validation";
-import { triggerLeadCreated } from "../../lib/webhooks";
+import { db } from "../../db/connection.js";
+import { leads, leadActivities } from "../../db/schema.js";
+import { formatZodErrors } from "../../lib/validation.js";
+import { triggerLeadCreated } from "../../lib/webhooks.js";
 
 // ============================================================================
 // VALIDATION SCHEMAS

@@ -10,8 +10,8 @@
 
 import { Hono } from "hono";
 import { desc, sql } from "drizzle-orm";
-import { db, leads, leadActivities, leadStatusEnum } from "../../db";
-import { requireAuth } from "../../middleware/auth";
+import { db, leads, leadActivities, leadStatusEnum } from "../../db/index.js";
+import { requireAuth } from "../../middleware/auth.js";
 
 /**
  * Admin dashboard routes app instance.

@@ -23,7 +23,7 @@ import {
   type Lead,
   type LeadActivity,
   webhookEventEnum,
-} from "../db";
+} from "../db/index.js";
 
 // ============================================================================
 // CONSTANTS

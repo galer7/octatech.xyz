@@ -15,4 +15,4 @@ export {
   type ParsedLeadData,
   type ParsedContactResult,
   type ParsedContactData,
-} from "./openai";
+} from "./openai.js";

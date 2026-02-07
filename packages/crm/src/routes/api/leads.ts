@@ -7,23 +7,23 @@
 
 import { Hono } from "hono";
 import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
-import { db } from "../../db/connection";
+import { db } from "../../db/connection.js";
 import {
   leads,
   leadActivities,
   type Lead,
   type LeadActivity,
-} from "../../db/schema";
+} from "../../db/schema.js";
 import {
   requireApiKey,
   requireScope,
   requireApiKeyFromContext,
-} from "../../middleware/api-key";
+} from "../../middleware/api-key.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -35,24 +35,24 @@ import {
   type CreateLeadInput,
   type UpdateLeadInput,
   type CreateActivityInput,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 import {
   triggerLeadCreated,
   triggerLeadUpdated,
   triggerLeadStatusChanged,
   triggerLeadDeleted,
   triggerLeadActivityAdded,
-} from "../../lib/webhooks";
+} from "../../lib/webhooks.js";
 import {
   parseLeadText,
   AIServiceError,
   ParseFailedError,
   isOpenAIConfigured,
-} from "../../lib/ai";
+} from "../../lib/ai/index.js";
 import {
   parseLeadSchema,
   type ParseLeadInput,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 
 /**
  * Leads API routes app instance.

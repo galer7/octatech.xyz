@@ -17,8 +17,8 @@ import type {
   NotificationPayload,
   NotificationDeliveryResult,
   NotificationProvider,
-} from "./types";
-import { isTelegramConfig, getLeadUrl } from "./types";
+} from "./types.js";
+import { isTelegramConfig, getLeadUrl } from "./types.js";
 
 // ============================================================================
 // CONSTANTS

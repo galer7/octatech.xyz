@@ -17,8 +17,8 @@ import type {
   NotificationPayload,
   NotificationDeliveryResult,
   NotificationProvider,
-} from "./types";
-import { isEmailConfig, getLeadUrl } from "./types";
+} from "./types.js";
+import { isEmailConfig, getLeadUrl } from "./types.js";
 
 // ============================================================================
 // CONSTANTS

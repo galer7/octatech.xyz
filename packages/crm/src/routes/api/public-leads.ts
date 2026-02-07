@@ -9,16 +9,16 @@
  */
 
 import { Hono } from "hono";
-import { db } from "../../db/connection";
-import { leads, leadActivities } from "../../db/schema";
+import { db } from "../../db/connection.js";
+import { leads, leadActivities } from "../../db/schema.js";
 import {
   publicLeadSchema,
   formatZodErrors,
   isHoneypotFilled,
   type PublicLeadInput,
-} from "../../lib/validation";
-import { triggerLeadCreated } from "../../lib/webhooks";
-import { triggerLeadCreatedNotification } from "../../lib/notifications/dispatcher";
+} from "../../lib/validation.js";
+import { triggerLeadCreated } from "../../lib/webhooks.js";
+import { triggerLeadCreatedNotification } from "../../lib/notifications/dispatcher.js";
 
 /**
  * Public leads routes app instance.

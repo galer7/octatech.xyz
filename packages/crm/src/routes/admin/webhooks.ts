@@ -17,13 +17,13 @@ import {
   webhookDeliveries,
   webhookEventEnum,
   type NewWebhook,
-} from "../../db";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
+} from "../../db/index.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 
 /**
  * Admin webhooks routes app instance.

@@ -13,8 +13,8 @@ import {
   shouldRefreshSession,
   SESSION_CONFIG,
   type SessionData,
-} from "../lib/session";
-import { UnauthorizedError } from "../lib/errors";
+} from "../lib/session.js";
+import { UnauthorizedError } from "../lib/errors.js";
 
 /**
  * Extended context with authenticated user data.

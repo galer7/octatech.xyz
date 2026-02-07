@@ -4,11 +4,11 @@
  * Exports all admin route handlers.
  */
 
-export { adminApiKeysRoutes } from "./api-keys";
-export { adminWebhooksRoutes } from "./webhooks";
-export { adminNotificationsRoutes } from "./notifications";
-export { adminSettingsRoutes } from "./settings";
-export { adminDashboardRoutes } from "./dashboard";
-export { adminLeadsRoutes } from "./leads";
-export { adminCompaniesRoutes } from "./companies";
-export { adminContactsRoutes } from "./contacts";
+export { adminApiKeysRoutes } from "./api-keys.js";
+export { adminWebhooksRoutes } from "./webhooks.js";
+export { adminNotificationsRoutes } from "./notifications.js";
+export { adminSettingsRoutes } from "./settings.js";
+export { adminDashboardRoutes } from "./dashboard.js";
+export { adminLeadsRoutes } from "./leads.js";
+export { adminCompaniesRoutes } from "./companies.js";
+export { adminContactsRoutes } from "./contacts.js";

@@ -8,33 +8,33 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import { adminUser } from "../db/schema";
+import { db } from "../db/index.js";
+import { adminUser } from "../db/schema.js";
 import {
   hashPassword,
   verifyPassword,
   validatePasswordStrength,
-} from "../lib/password";
+} from "../lib/password.js";
 import {
   createSession,
   deleteSessionByToken,
   deleteUserSessions,
   updateLastLogin,
   SESSION_CONFIG,
-} from "../lib/session";
+} from "../lib/session.js";
 import {
   requireAuth,
   setSessionCookie,
   clearSessionCookie,
   requireSession,
   requireCsrfHeader,
-} from "../middleware/auth";
-import { createLoginRateLimiter } from "../middleware/rate-limit";
+} from "../middleware/auth.js";
+import { createLoginRateLimiter } from "../middleware/rate-limit.js";
 import {
   ValidationError,
   UnauthorizedError,
   BadRequestError,
-} from "../lib/errors";
+} from "../lib/errors.js";
 import { getCookie } from "hono/cookie";
 
 /**

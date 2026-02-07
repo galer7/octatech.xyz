@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { formatDateTime, formatRelativeTime } from '@/lib/utils';
-import type { ContactTier, ContactRelationshipStatus } from '@/lib/types';
+import type { ContactTier, ContactRelationshipStatus, ContactInteractionType, InteractionDirection } from '@/lib/types';
 
 const interactionTypeOptions = [
   { value: 'linkedin_comment', label: 'LinkedIn Comment' },
@@ -64,7 +64,12 @@ export function ContactDetailPage() {
     notes: '',
     tags: '',
   });
-  const [interactionForm, setInteractionForm] = useState({
+  const [interactionForm, setInteractionForm] = useState<{
+    type: ContactInteractionType;
+    direction: InteractionDirection;
+    description: string;
+    url: string;
+  }>({
     type: 'linkedin_comment',
     direction: 'outbound',
     description: '',
@@ -647,7 +652,7 @@ export function ContactDetailPage() {
               options={interactionTypeOptions}
               value={interactionForm.type}
               onChange={(e) =>
-                setInteractionForm({ ...interactionForm, type: e.target.value })
+                setInteractionForm({ ...interactionForm, type: e.target.value as ContactInteractionType })
               }
             />
             <Select
@@ -655,7 +660,7 @@ export function ContactDetailPage() {
               options={directionOptions}
               value={interactionForm.direction}
               onChange={(e) =>
-                setInteractionForm({ ...interactionForm, direction: e.target.value })
+                setInteractionForm({ ...interactionForm, direction: e.target.value as InteractionDirection })
               }
             />
           </div>

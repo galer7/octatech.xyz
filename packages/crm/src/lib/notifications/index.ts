@@ -19,7 +19,7 @@ export type {
   NotificationDeliveryResult,
   NotificationChannelInfo,
   NotificationProvider,
-} from "./types";
+} from "./types.js";
 
 export {
   notificationEventEnum,
@@ -30,7 +30,7 @@ export {
   isDiscordConfig,
   isTelegramConfig,
   isEmailConfig,
-} from "./types";
+} from "./types.js";
 
 // Discord provider
 export {
@@ -41,7 +41,7 @@ export {
   formatLeadCreatedEmbed,
   formatLeadStatusChangedEmbed,
   DISCORD_CONFIG,
-} from "./discord";
+} from "./discord.js";
 
 // Telegram provider
 export {
@@ -53,7 +53,7 @@ export {
   formatLeadStatusChangedMessage,
   escapeHtml,
   TELEGRAM_CONFIG,
-} from "./telegram";
+} from "./telegram.js";
 
 // Email provider
 export {
@@ -65,10 +65,10 @@ export {
   formatLeadStatusChangedEmail,
   getResendApiKey,
   EMAIL_CONFIG,
-} from "./email";
+} from "./email.js";
 
 // Dispatcher
-export type { ChannelDispatchResult } from "./dispatcher";
+export type { ChannelDispatchResult } from "./dispatcher.js";
 
 export {
   dispatchNotification,
@@ -78,4 +78,4 @@ export {
   triggerLeadStatusChangedNotification,
   sendTestNotification,
   validateChannelConfig,
-} from "./dispatcher";
+} from "./dispatcher.js";

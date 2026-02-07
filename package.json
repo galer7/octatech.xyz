@@ -3,20 +3,18 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "packages/crm/admin"
-  ],
   "scripts": {
-    "dev:crm": "npm run dev -w @octatech/crm",
-    "dev:admin": "npm run dev -w @octatech/crm-admin",
-    "dev:blog": "npm run dev -w @octatech/blog",
-    "build:crm": "npm run build -w @octatech/crm",
-    "build:admin": "npm run build -w @octatech/crm-admin",
-    "build:blog": "npm run build -w @octatech/blog",
-    "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "dev:crm": "pnpm --filter @octatech/crm dev",
+    "dev:admin": "pnpm --filter @octatech/crm-admin dev",
+    "dev:blog": "pnpm --filter @octatech/blog dev",
+    "build:crm": "pnpm --filter @octatech/crm build",
+    "build:admin": "pnpm --filter @octatech/crm-admin build",
+    "build:blog": "pnpm --filter @octatech/blog build",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "pnpm -r --if-present run test",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "audit:security": "pnpm audit --audit-level=moderate"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "5.1.3",

@@ -13,8 +13,8 @@
 
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import { eq, isNull, and } from "drizzle-orm";
-import { db } from "../db";
-import { apiKeys, type ApiKey, type ApiKeyScope, apiKeyScopeEnum } from "../db/schema";
+import { db } from "../db/index.js";
+import { apiKeys, type ApiKey, type ApiKeyScope, apiKeyScopeEnum } from "../db/schema.js";
 
 /**
  * API key format constants.

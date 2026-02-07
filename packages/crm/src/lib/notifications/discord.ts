@@ -17,8 +17,8 @@ import type {
   NotificationPayload,
   NotificationDeliveryResult,
   NotificationProvider,
-} from "./types";
-import { isDiscordConfig, getLeadUrl } from "./types";
+} from "./types.js";
+import { isDiscordConfig, getLeadUrl } from "./types.js";
 
 // ============================================================================
 // CONSTANTS

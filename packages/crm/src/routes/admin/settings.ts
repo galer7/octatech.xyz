@@ -13,9 +13,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db, settings } from "../../db";
-import { requireAuth, requireCsrfHeader } from "../../middleware/auth";
-import { ValidationError, BadRequestError } from "../../lib/errors";
+import { db, settings } from "../../db/index.js";
+import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
+import { ValidationError, BadRequestError } from "../../lib/errors.js";
 
 /**
  * Admin settings routes app instance.

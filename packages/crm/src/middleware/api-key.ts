@@ -13,8 +13,8 @@ import {
   validateApiKey,
   hasScope,
   type ValidatedApiKey,
-} from "../lib/api-keys";
-import { InvalidApiKeyError, InsufficientScopeError } from "../lib/errors";
+} from "../lib/api-keys.js";
+import { InvalidApiKeyError, InsufficientScopeError } from "../lib/errors.js";
 
 /**
  * Extended context with API key data.

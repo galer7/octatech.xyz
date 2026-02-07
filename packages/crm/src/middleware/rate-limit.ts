@@ -13,7 +13,7 @@
  */
 
 import type { Context, MiddlewareHandler, Next } from "hono";
-import { RateLimitedError } from "../lib/errors";
+import { RateLimitedError } from "../lib/errors.js";
 
 /**
  * Rate limit configuration

@@ -2,7 +2,7 @@
  * Middleware exports for the CRM API.
  */
 
-export { errorHandler, notFoundHandler } from "./error-handler";
+export { errorHandler, notFoundHandler } from "./error-handler.js";
 export {
   rateLimiter,
   createRateLimiter,
@@ -10,7 +10,7 @@ export {
   RATE_LIMIT_CONFIG,
   clearRateLimitStore,
   getRateLimitEntry,
-} from "./rate-limit";
+} from "./rate-limit.js";
 export {
   requireApiKey,
   optionalApiKey,
@@ -20,4 +20,4 @@ export {
   requireApiKeyFromContext,
   hasCurrentScope,
   getRateLimitIdentifier,
-} from "./api-key";
+} from "./api-key.js";

@@ -13,7 +13,7 @@
 
 import type { Context, ErrorHandler } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { ApiError, ErrorCode, InternalError, ValidationError } from "../lib/errors";
+import { ApiError, ErrorCode, InternalError, ValidationError } from "../lib/errors.js";
 import type { ZodError } from "zod";
 
 /**

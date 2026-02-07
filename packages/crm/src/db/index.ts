@@ -19,8 +19,8 @@
  */
 
 // Database connection and utilities
-export { db, sql, closeConnection, checkDatabaseHealth } from "./connection";
-export type { Database } from "./connection";
+export { db, sql, closeConnection, checkDatabaseHealth } from "./connection.js";
+export type { Database } from "./connection.js";
 
 // Schema tables
 export {
@@ -38,7 +38,7 @@ export {
   contactInteractions,
   contentPosts,
   contentEngagements,
-} from "./schema";
+} from "./schema.js";
 
 // Relations
 export {
@@ -53,7 +53,7 @@ export {
   contactInteractionsRelations,
   contentPostsRelations,
   contentEngagementsRelations,
-} from "./schema";
+} from "./schema.js";
 
 // Enum values
 export {
@@ -72,7 +72,7 @@ export {
   interactionDirectionEnum,
   contentPlatformEnum,
   contentEngagementTypeEnum,
-} from "./schema";
+} from "./schema.js";
 
 // Types - Tables
 export type {
@@ -104,7 +104,7 @@ export type {
   NewContentPost,
   ContentEngagement,
   NewContentEngagement,
-} from "./schema";
+} from "./schema.js";
 
 // Types - Enums
 export type {
@@ -127,4 +127,4 @@ export type {
   InteractionDirection,
   ContentPlatform,
   ContentEngagementType,
-} from "./schema";
+} from "./schema.js";

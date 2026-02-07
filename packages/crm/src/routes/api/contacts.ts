@@ -7,33 +7,31 @@
 
 import { Hono } from "hono";
 import { eq, and, or, ilike, desc, asc, sql, lte } from "drizzle-orm";
-import { db } from "../../db/connection";
+import { db } from "../../db/connection.js";
 import {
-  companies,
   contacts,
   contactInteractions,
   type Contact,
   type ContactInteraction,
-} from "../../db/schema";
+} from "../../db/schema.js";
 import {
   requireApiKey,
   requireScope,
-} from "../../middleware/api-key";
+} from "../../middleware/api-key.js";
 import {
   ValidationError,
   NotFoundError,
   BadRequestError,
-} from "../../lib/errors";
+} from "../../lib/errors.js";
 import {
   createContactSchema,
   updateContactSchema,
   listContactsQuerySchema,
   createInteractionSchema,
-  listInteractionsQuerySchema,
   parseContactSortParam,
   formatZodErrors,
   isValidUuid,
-} from "../../lib/validation";
+} from "../../lib/validation.js";
 
 /**
  * Contacts API routes app instance.
