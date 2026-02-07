@@ -12,19 +12,19 @@
  */
 
 import { eq } from "drizzle-orm";
-import { db, notificationChannels, type Lead } from "../../db/index.js";
+import { db, type Lead, notificationChannels } from "../../db/index.js";
+import { discordProvider } from "./discord.js";
+import { emailProvider } from "./email.js";
+import { telegramProvider } from "./telegram.js";
 import type {
-  NotificationPayload,
-  NotificationDeliveryResult,
-  NotificationChannelInfo,
-  NotificationChannelType,
-  NotificationConfig,
-  NotificationLeadData,
+	NotificationChannelInfo,
+	NotificationChannelType,
+	NotificationConfig,
+	NotificationDeliveryResult,
+	NotificationLeadData,
+	NotificationPayload,
 } from "./types.js";
 import { leadToNotificationData, VALID_NOTIFICATION_EVENTS } from "./types.js";
-import { discordProvider } from "./discord.js";
-import { telegramProvider } from "./telegram.js";
-import { emailProvider } from "./email.js";
 
 // ============================================================================
 // PROVIDER REGISTRY
@@ -34,9 +34,9 @@ import { emailProvider } from "./email.js";
  * Map of channel types to their providers.
  */
 const providers = {
-  discord: discordProvider,
-  telegram: telegramProvider,
-  email: emailProvider,
+	discord: discordProvider,
+	telegram: telegramProvider,
+	email: emailProvider,
 } as const;
 
 // ============================================================================
@@ -55,25 +55,23 @@ const providers = {
  * // Returns all enabled channels with "lead.created" in their events array
  * ```
  */
-export async function getChannelsForEvent(
-  event: string
-): Promise<NotificationChannelInfo[]> {
-  const allChannels = await db
-    .select()
-    .from(notificationChannels)
-    .where(eq(notificationChannels.enabled, true));
+export async function getChannelsForEvent(event: string): Promise<NotificationChannelInfo[]> {
+	const allChannels = await db
+		.select()
+		.from(notificationChannels)
+		.where(eq(notificationChannels.enabled, true));
 
-  // Filter to channels that include this event
-  return allChannels
-    .filter((channel) => channel.events.includes(event))
-    .map((channel) => ({
-      id: channel.id,
-      type: channel.type as NotificationChannelType,
-      name: channel.name,
-      config: channel.config as NotificationConfig,
-      events: channel.events,
-      enabled: channel.enabled,
-    }));
+	// Filter to channels that include this event
+	return allChannels
+		.filter((channel) => channel.events.includes(event))
+		.map((channel) => ({
+			id: channel.id,
+			type: channel.type as NotificationChannelType,
+			name: channel.name,
+			config: channel.config as NotificationConfig,
+			events: channel.events,
+			enabled: channel.enabled,
+		}));
 }
 
 // ============================================================================
@@ -84,9 +82,9 @@ export async function getChannelsForEvent(
  * Result of dispatching a notification to a single channel.
  */
 export interface ChannelDispatchResult extends NotificationDeliveryResult {
-  channelId: string;
-  channelName: string;
-  channelType: NotificationChannelType;
+	channelId: string;
+	channelName: string;
+	channelType: NotificationChannelType;
 }
 
 /**
@@ -97,40 +95,40 @@ export interface ChannelDispatchResult extends NotificationDeliveryResult {
  * @returns Delivery result with channel info
  */
 async function sendToChannel(
-  channel: NotificationChannelInfo,
-  payload: NotificationPayload
+	channel: NotificationChannelInfo,
+	payload: NotificationPayload,
 ): Promise<ChannelDispatchResult> {
-  const provider = providers[channel.type];
+	const provider = providers[channel.type];
 
-  if (!provider) {
-    return {
-      channelId: channel.id,
-      channelName: channel.name,
-      channelType: channel.type,
-      success: false,
-      error: `Unknown channel type: ${channel.type}`,
-      durationMs: 0,
-    };
-  }
+	if (!provider) {
+		return {
+			channelId: channel.id,
+			channelName: channel.name,
+			channelType: channel.type,
+			success: false,
+			error: `Unknown channel type: ${channel.type}`,
+			durationMs: 0,
+		};
+	}
 
-  try {
-    const result = await provider.send(channel.config, payload);
-    return {
-      ...result,
-      channelId: channel.id,
-      channelName: channel.name,
-      channelType: channel.type,
-    };
-  } catch (error) {
-    return {
-      channelId: channel.id,
-      channelName: channel.name,
-      channelType: channel.type,
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-      durationMs: 0,
-    };
-  }
+	try {
+		const result = await provider.send(channel.config, payload);
+		return {
+			...result,
+			channelId: channel.id,
+			channelName: channel.name,
+			channelType: channel.type,
+		};
+	} catch (error) {
+		return {
+			channelId: channel.id,
+			channelName: channel.name,
+			channelType: channel.type,
+			success: false,
+			error: error instanceof Error ? error.message : "Unknown error",
+			durationMs: 0,
+		};
+	}
 }
 
 /**
@@ -160,41 +158,39 @@ async function sendToChannel(
  * ```
  */
 export async function dispatchNotification(
-  event: string,
-  payload: NotificationPayload
+	event: string,
+	payload: NotificationPayload,
 ): Promise<ChannelDispatchResult[]> {
-  // Validate event type
-  if (!VALID_NOTIFICATION_EVENTS.has(event)) {
-    console.warn(`Unknown notification event: ${event}`);
-    return [];
-  }
+	// Validate event type
+	if (!VALID_NOTIFICATION_EVENTS.has(event)) {
+		console.warn(`Unknown notification event: ${event}`);
+		return [];
+	}
 
-  // Get channels for this event
-  const channels = await getChannelsForEvent(event);
+	// Get channels for this event
+	const channels = await getChannelsForEvent(event);
 
-  if (channels.length === 0) {
-    return [];
-  }
+	if (channels.length === 0) {
+		return [];
+	}
 
-  // Dispatch to all channels in parallel
-  const results = await Promise.all(
-    channels.map((channel) => sendToChannel(channel, payload))
-  );
+	// Dispatch to all channels in parallel
+	const results = await Promise.all(channels.map((channel) => sendToChannel(channel, payload)));
 
-  // Log results for debugging
-  for (const result of results) {
-    if (result.success) {
-      console.log(
-        `Notification sent to ${result.channelType} "${result.channelName}" in ${result.durationMs}ms`
-      );
-    } else {
-      console.error(
-        `Notification to ${result.channelType} "${result.channelName}" failed: ${result.error}`
-      );
-    }
-  }
+	// Log results for debugging
+	for (const result of results) {
+		if (result.success) {
+			console.log(
+				`Notification sent to ${result.channelType} "${result.channelName}" in ${result.durationMs}ms`,
+			);
+		} else {
+			console.error(
+				`Notification to ${result.channelType} "${result.channelName}" failed: ${result.error}`,
+			);
+		}
+	}
 
-  return results;
+	return results;
 }
 
 /**
@@ -210,13 +206,10 @@ export async function dispatchNotification(
  * dispatchNotificationAsync("lead.created", payload);
  * ```
  */
-export function dispatchNotificationAsync(
-  event: string,
-  payload: NotificationPayload
-): void {
-  dispatchNotification(event, payload).catch((error) => {
-    console.error(`Failed to dispatch notification for ${event}:`, error);
-  });
+export function dispatchNotificationAsync(event: string, payload: NotificationPayload): void {
+	dispatchNotification(event, payload).catch((error) => {
+		console.error(`Failed to dispatch notification for ${event}:`, error);
+	});
 }
 
 // ============================================================================
@@ -238,12 +231,12 @@ export function dispatchNotificationAsync(
  * ```
  */
 export function triggerLeadCreatedNotification(lead: Lead): void {
-  const payload: NotificationPayload = {
-    event: "lead.created",
-    lead: leadToNotificationData(lead),
-  };
+	const payload: NotificationPayload = {
+		event: "lead.created",
+		lead: leadToNotificationData(lead),
+	};
 
-  dispatchNotificationAsync("lead.created", payload);
+	dispatchNotificationAsync("lead.created", payload);
 }
 
 /**
@@ -262,18 +255,18 @@ export function triggerLeadCreatedNotification(lead: Lead): void {
  * ```
  */
 export function triggerLeadStatusChangedNotification(
-  lead: Lead,
-  previousStatus: string,
-  newStatus: string
+	lead: Lead,
+	previousStatus: string,
+	newStatus: string,
 ): void {
-  const payload: NotificationPayload = {
-    event: "lead.status_changed",
-    lead: leadToNotificationData(lead),
-    previousStatus,
-    newStatus,
-  };
+	const payload: NotificationPayload = {
+		event: "lead.status_changed",
+		lead: leadToNotificationData(lead),
+		previousStatus,
+		newStatus,
+	};
 
-  dispatchNotificationAsync("lead.status_changed", payload);
+	dispatchNotificationAsync("lead.status_changed", payload);
 }
 
 // ============================================================================
@@ -298,50 +291,50 @@ export function triggerLeadStatusChangedNotification(
  * ```
  */
 export async function sendTestNotification(
-  channelId: string
+	channelId: string,
 ): Promise<ChannelDispatchResult | null> {
-  // Get the channel
-  const [channel] = await db
-    .select()
-    .from(notificationChannels)
-    .where(eq(notificationChannels.id, channelId))
-    .limit(1);
+	// Get the channel
+	const [channel] = await db
+		.select()
+		.from(notificationChannels)
+		.where(eq(notificationChannels.id, channelId))
+		.limit(1);
 
-  if (!channel) {
-    return null;
-  }
+	if (!channel) {
+		return null;
+	}
 
-  // Create test payload
-  const testLead: NotificationLeadData = {
-    id: "test-lead-00000000-0000-0000-0000-000000000000",
-    name: "Test Lead",
-    email: "test@example.com",
-    company: "Test Company Inc",
-    phone: "+1-555-0123",
-    budget: "$10,000 - $50,000",
-    projectType: "New Product / MVP",
-    message:
-      "This is a test notification to verify your channel configuration is working correctly.",
-    source: "Test",
-    status: "new",
-    createdAt: new Date(),
-  };
+	// Create test payload
+	const testLead: NotificationLeadData = {
+		id: "test-lead-00000000-0000-0000-0000-000000000000",
+		name: "Test Lead",
+		email: "test@example.com",
+		company: "Test Company Inc",
+		phone: "+1-555-0123",
+		budget: "$10,000 - $50,000",
+		projectType: "New Product / MVP",
+		message:
+			"This is a test notification to verify your channel configuration is working correctly.",
+		source: "Test",
+		status: "new",
+		createdAt: new Date(),
+	};
 
-  const testPayload: NotificationPayload = {
-    event: "lead.created",
-    lead: testLead,
-  };
+	const testPayload: NotificationPayload = {
+		event: "lead.created",
+		lead: testLead,
+	};
 
-  const channelInfo: NotificationChannelInfo = {
-    id: channel.id,
-    type: channel.type as NotificationChannelType,
-    name: channel.name,
-    config: channel.config as NotificationConfig,
-    events: channel.events,
-    enabled: channel.enabled,
-  };
+	const channelInfo: NotificationChannelInfo = {
+		id: channel.id,
+		type: channel.type as NotificationChannelType,
+		name: channel.name,
+		config: channel.config as NotificationConfig,
+		events: channel.events,
+		enabled: channel.enabled,
+	};
 
-  return sendToChannel(channelInfo, testPayload);
+	return sendToChannel(channelInfo, testPayload);
 }
 
 /**
@@ -352,14 +345,14 @@ export async function sendTestNotification(
  * @returns Validation result
  */
 export function validateChannelConfig(
-  type: NotificationChannelType,
-  config: unknown
+	type: NotificationChannelType,
+	config: unknown,
 ): { valid: boolean; error?: string } {
-  const provider = providers[type];
+	const provider = providers[type];
 
-  if (!provider) {
-    return { valid: false, error: `Unknown channel type: ${type}` };
-  }
+	if (!provider) {
+		return { valid: false, error: `Unknown channel type: ${type}` };
+	}
 
-  return provider.validateConfig(config);
+	return provider.validateConfig(config);
 }

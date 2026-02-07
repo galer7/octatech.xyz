@@ -7,17 +7,17 @@
 
 import { Hono } from "hono";
 import { z } from "zod";
+import { type ApiKeyScope, apiKeyScopeEnum } from "../../db/schema.js";
 import {
-  createApiKey,
-  listApiKeys,
-  getApiKey,
-  updateApiKey,
-  revokeApiKey,
-  VALID_SCOPES,
+	createApiKey,
+	getApiKey,
+	listApiKeys,
+	revokeApiKey,
+	updateApiKey,
+	VALID_SCOPES,
 } from "../../lib/api-keys.js";
+import { BadRequestError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { requireAuth, requireCsrfHeader } from "../../middleware/auth.js";
-import { ValidationError, NotFoundError, BadRequestError } from "../../lib/errors.js";
-import { apiKeyScopeEnum, type ApiKeyScope } from "../../db/schema.js";
 
 /**
  * Admin API keys routes app instance.
@@ -31,28 +31,20 @@ adminApiKeysRoutes.use("*", requireAuth);
  * Schema for creating an API key.
  */
 const createApiKeySchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(255, "Name must be at most 255 characters"),
-  scopes: z
-    .array(z.enum(apiKeyScopeEnum))
-    .min(1, "At least one scope is required"),
+	name: z.string().min(1, "Name is required").max(255, "Name must be at most 255 characters"),
+	scopes: z.array(z.enum(apiKeyScopeEnum)).min(1, "At least one scope is required"),
 });
 
 /**
  * Schema for updating an API key.
  */
 const updateApiKeySchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name cannot be empty")
-    .max(255, "Name must be at most 255 characters")
-    .optional(),
-  scopes: z
-    .array(z.enum(apiKeyScopeEnum))
-    .min(1, "At least one scope is required")
-    .optional(),
+	name: z
+		.string()
+		.min(1, "Name cannot be empty")
+		.max(255, "Name must be at most 255 characters")
+		.optional(),
+	scopes: z.array(z.enum(apiKeyScopeEnum)).min(1, "At least one scope is required").optional(),
 });
 
 /**
@@ -64,21 +56,21 @@ const updateApiKeySchema = z.object({
  * @response 200 - List of API keys
  */
 adminApiKeysRoutes.get("/", async (c) => {
-  const includeRevoked = c.req.query("includeRevoked") === "true";
+	const includeRevoked = c.req.query("includeRevoked") === "true";
 
-  const keys = await listApiKeys({ includeRevoked });
+	const keys = await listApiKeys({ includeRevoked });
 
-  return c.json({
-    keys: keys.map((key) => ({
-      id: key.id,
-      name: key.name,
-      keyPrefix: key.keyPrefix,
-      scopes: key.scopes,
-      lastUsedAt: key.lastUsedAt?.toISOString() || null,
-      createdAt: key.createdAt.toISOString(),
-      revokedAt: key.revokedAt?.toISOString() || null,
-    })),
-  });
+	return c.json({
+		keys: keys.map((key) => ({
+			id: key.id,
+			name: key.name,
+			keyPrefix: key.keyPrefix,
+			scopes: key.scopes,
+			lastUsedAt: key.lastUsedAt?.toISOString() || null,
+			createdAt: key.createdAt.toISOString(),
+			revokedAt: key.revokedAt?.toISOString() || null,
+		})),
+	});
 });
 
 /**
@@ -91,23 +83,23 @@ adminApiKeysRoutes.get("/", async (c) => {
  * @response 404 - API key not found
  */
 adminApiKeysRoutes.get("/:id", async (c) => {
-  const id = c.req.param("id");
+	const id = c.req.param("id");
 
-  const key = await getApiKey(id);
+	const key = await getApiKey(id);
 
-  if (!key) {
-    throw new NotFoundError("API key");
-  }
+	if (!key) {
+		throw new NotFoundError("API key");
+	}
 
-  return c.json({
-    id: key.id,
-    name: key.name,
-    keyPrefix: key.keyPrefix,
-    scopes: key.scopes,
-    lastUsedAt: key.lastUsedAt?.toISOString() || null,
-    createdAt: key.createdAt.toISOString(),
-    revokedAt: key.revokedAt?.toISOString() || null,
-  });
+	return c.json({
+		id: key.id,
+		name: key.name,
+		keyPrefix: key.keyPrefix,
+		scopes: key.scopes,
+		lastUsedAt: key.lastUsedAt?.toISOString() || null,
+		createdAt: key.createdAt.toISOString(),
+		revokedAt: key.revokedAt?.toISOString() || null,
+	});
 });
 
 /**
@@ -121,38 +113,38 @@ adminApiKeysRoutes.get("/:id", async (c) => {
  * @response 201 - Created key with full key value
  */
 adminApiKeysRoutes.post("/", requireCsrfHeader, async (c) => {
-  // Parse and validate request body
-  const body = await c.req.json().catch(() => ({}));
-  const parseResult = createApiKeySchema.safeParse(body);
+	// Parse and validate request body
+	const body = await c.req.json().catch(() => ({}));
+	const parseResult = createApiKeySchema.safeParse(body);
 
-  if (!parseResult.success) {
-    const errors: Record<string, string> = {};
-    for (const issue of parseResult.error.issues) {
-      const field = issue.path[0]?.toString() || "unknown";
-      errors[field] = issue.message;
-    }
-    throw new ValidationError("Invalid request", errors);
-  }
+	if (!parseResult.success) {
+		const errors: Record<string, string> = {};
+		for (const issue of parseResult.error.issues) {
+			const field = issue.path[0]?.toString() || "unknown";
+			errors[field] = issue.message;
+		}
+		throw new ValidationError("Invalid request", errors);
+	}
 
-  const { name, scopes } = parseResult.data;
+	const { name, scopes } = parseResult.data;
 
-  // Create the key
-  const result = await createApiKey({
-    name,
-    scopes: scopes as ApiKeyScope[],
-  });
+	// Create the key
+	const result = await createApiKey({
+		name,
+		scopes: scopes as ApiKeyScope[],
+	});
 
-  return c.json(
-    {
-      id: result.id,
-      name: result.name,
-      key: result.key, // Full key - only shown once!
-      keyPrefix: result.keyPrefix,
-      scopes: result.scopes,
-      createdAt: result.createdAt.toISOString(),
-    },
-    201
-  );
+	return c.json(
+		{
+			id: result.id,
+			name: result.name,
+			key: result.key, // Full key - only shown once!
+			keyPrefix: result.keyPrefix,
+			scopes: result.scopes,
+			createdAt: result.createdAt.toISOString(),
+		},
+		201,
+	);
 });
 
 /**
@@ -167,56 +159,56 @@ adminApiKeysRoutes.post("/", requireCsrfHeader, async (c) => {
  * @response 404 - API key not found
  */
 adminApiKeysRoutes.patch("/:id", requireCsrfHeader, async (c) => {
-  const id = c.req.param("id");
+	const id = c.req.param("id");
 
-  // Parse and validate request body
-  const body = await c.req.json().catch(() => ({}));
-  const parseResult = updateApiKeySchema.safeParse(body);
+	// Parse and validate request body
+	const body = await c.req.json().catch(() => ({}));
+	const parseResult = updateApiKeySchema.safeParse(body);
 
-  if (!parseResult.success) {
-    const errors: Record<string, string> = {};
-    for (const issue of parseResult.error.issues) {
-      const field = issue.path[0]?.toString() || "unknown";
-      errors[field] = issue.message;
-    }
-    throw new ValidationError("Invalid request", errors);
-  }
+	if (!parseResult.success) {
+		const errors: Record<string, string> = {};
+		for (const issue of parseResult.error.issues) {
+			const field = issue.path[0]?.toString() || "unknown";
+			errors[field] = issue.message;
+		}
+		throw new ValidationError("Invalid request", errors);
+	}
 
-  const { name, scopes } = parseResult.data;
+	const { name, scopes } = parseResult.data;
 
-  // Check if there's anything to update
-  if (name === undefined && scopes === undefined) {
-    throw new BadRequestError("At least one field (name or scopes) is required");
-  }
+	// Check if there's anything to update
+	if (name === undefined && scopes === undefined) {
+		throw new BadRequestError("At least one field (name or scopes) is required");
+	}
 
-  // Check if key exists and is not revoked
-  const existingKey = await getApiKey(id);
-  if (!existingKey) {
-    throw new NotFoundError("API key");
-  }
+	// Check if key exists and is not revoked
+	const existingKey = await getApiKey(id);
+	if (!existingKey) {
+		throw new NotFoundError("API key");
+	}
 
-  if (existingKey.revokedAt) {
-    throw new BadRequestError("Cannot update a revoked API key");
-  }
+	if (existingKey.revokedAt) {
+		throw new BadRequestError("Cannot update a revoked API key");
+	}
 
-  // Update the key
-  const updated = await updateApiKey(id, {
-    name,
-    scopes: scopes as ApiKeyScope[] | undefined,
-  });
+	// Update the key
+	const updated = await updateApiKey(id, {
+		name,
+		scopes: scopes as ApiKeyScope[] | undefined,
+	});
 
-  if (!updated) {
-    throw new NotFoundError("API key");
-  }
+	if (!updated) {
+		throw new NotFoundError("API key");
+	}
 
-  return c.json({
-    id: updated.id,
-    name: updated.name,
-    keyPrefix: updated.keyPrefix,
-    scopes: updated.scopes,
-    lastUsedAt: updated.lastUsedAt?.toISOString() || null,
-    createdAt: updated.createdAt.toISOString(),
-  });
+	return c.json({
+		id: updated.id,
+		name: updated.name,
+		keyPrefix: updated.keyPrefix,
+		scopes: updated.scopes,
+		lastUsedAt: updated.lastUsedAt?.toISOString() || null,
+		createdAt: updated.createdAt.toISOString(),
+	});
 });
 
 /**
@@ -230,23 +222,23 @@ adminApiKeysRoutes.patch("/:id", requireCsrfHeader, async (c) => {
  * @response 404 - API key not found or already revoked
  */
 adminApiKeysRoutes.delete("/:id", requireCsrfHeader, async (c) => {
-  const id = c.req.param("id");
+	const id = c.req.param("id");
 
-  const revoked = await revokeApiKey(id);
+	const revoked = await revokeApiKey(id);
 
-  if (!revoked) {
-    // Check if it exists but is already revoked
-    const key = await getApiKey(id);
-    if (key?.revokedAt) {
-      throw new BadRequestError("API key is already revoked");
-    }
-    throw new NotFoundError("API key");
-  }
+	if (!revoked) {
+		// Check if it exists but is already revoked
+		const key = await getApiKey(id);
+		if (key?.revokedAt) {
+			throw new BadRequestError("API key is already revoked");
+		}
+		throw new NotFoundError("API key");
+	}
 
-  return c.json({
-    success: true,
-    message: "API key revoked",
-  });
+	return c.json({
+		success: true,
+		message: "API key revoked",
+	});
 });
 
 /**
@@ -258,17 +250,17 @@ adminApiKeysRoutes.delete("/:id", requireCsrfHeader, async (c) => {
  * @response 200 - List of scopes with descriptions
  */
 adminApiKeysRoutes.get("/scopes/list", async (c) => {
-  const scopeDescriptions: Record<string, string> = {
-    "leads:read": "Read lead information",
-    "leads:write": "Create and update leads",
-    "leads:delete": "Delete leads",
-    "leads:*": "All lead permissions",
-  };
+	const scopeDescriptions: Record<string, string> = {
+		"leads:read": "Read lead information",
+		"leads:write": "Create and update leads",
+		"leads:delete": "Delete leads",
+		"leads:*": "All lead permissions",
+	};
 
-  const scopes = Array.from(VALID_SCOPES).map((scope) => ({
-    scope,
-    description: scopeDescriptions[scope] || scope,
-  }));
+	const scopes = Array.from(VALID_SCOPES).map((scope) => ({
+		scope,
+		description: scopeDescriptions[scope] || scope,
+	}));
 
-  return c.json({ scopes });
+	return c.json({ scopes });
 });

@@ -6,50 +6,50 @@
  */
 
 import type { Context, MiddlewareHandler, Next } from "hono";
-import { getCookie, setCookie, deleteCookie } from "hono/cookie";
-import {
-  validateSession,
-  refreshSession,
-  shouldRefreshSession,
-  SESSION_CONFIG,
-  type SessionData,
-} from "../lib/session.js";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { UnauthorizedError } from "../lib/errors.js";
+import {
+	refreshSession,
+	SESSION_CONFIG,
+	type SessionData,
+	shouldRefreshSession,
+	validateSession,
+} from "../lib/session.js";
 
 /**
  * Extended context with authenticated user data.
  */
 export interface AuthContext {
-  session: SessionData;
+	session: SessionData;
 }
 
 /**
  * Type helper to extend Hono context with auth data.
  */
 declare module "hono" {
-  interface ContextVariableMap {
-    session: SessionData;
-  }
+	interface ContextVariableMap {
+		session: SessionData;
+	}
 }
 
 /**
  * Cookie options for session cookies per security spec.
  */
 const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "Lax" as const,
-  path: "/",
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "Lax" as const,
+	path: "/",
 };
 
 /**
  * Get the session cookie options with expiration.
  */
 function getSessionCookieOptions(expiresAt: Date) {
-  return {
-    ...COOKIE_OPTIONS,
-    expires: expiresAt,
-  };
+	return {
+		...COOKIE_OPTIONS,
+		expires: expiresAt,
+	};
 }
 
 /**
@@ -62,50 +62,42 @@ function getSessionCookieOptions(expiresAt: Date) {
  *
  * @throws UnauthorizedError if no valid session
  */
-export const requireAuth: MiddlewareHandler = async (
-  c: Context,
-  next: Next
-) => {
-  // Get session token from cookie
-  const token = getCookie(c, SESSION_CONFIG.cookieName);
+export const requireAuth: MiddlewareHandler = async (c: Context, next: Next) => {
+	// Get session token from cookie
+	const token = getCookie(c, SESSION_CONFIG.cookieName);
 
-  if (!token) {
-    throw new UnauthorizedError("Not authenticated");
-  }
+	if (!token) {
+		throw new UnauthorizedError("Not authenticated");
+	}
 
-  // Validate session
-  const session = await validateSession(token);
+	// Validate session
+	const session = await validateSession(token);
 
-  if (!session) {
-    // Clear invalid cookie
-    deleteCookie(c, SESSION_CONFIG.cookieName, COOKIE_OPTIONS);
-    throw new UnauthorizedError("Session expired or invalid");
-  }
+	if (!session) {
+		// Clear invalid cookie
+		deleteCookie(c, SESSION_CONFIG.cookieName, COOKIE_OPTIONS);
+		throw new UnauthorizedError("Session expired or invalid");
+	}
 
-  // Check if session should be refreshed (sliding expiration)
-  if (shouldRefreshSession(session.expiresAt)) {
-    // Determine if this is a "remember me" session based on original duration
-    const isRememberMe =
-      session.expiresAt.getTime() - session.createdAt.getTime() >
-      SESSION_CONFIG.defaultDurationMs * 1.5;
+	// Check if session should be refreshed (sliding expiration)
+	if (shouldRefreshSession(session.expiresAt)) {
+		// Determine if this is a "remember me" session based on original duration
+		const isRememberMe =
+			session.expiresAt.getTime() - session.createdAt.getTime() >
+			SESSION_CONFIG.defaultDurationMs * 1.5;
 
-    const newExpiresAt = await refreshSession(session.sessionId, isRememberMe);
-    if (newExpiresAt) {
-      session.expiresAt = newExpiresAt;
-      // Update cookie with new expiration
-      setCookie(
-        c,
-        SESSION_CONFIG.cookieName,
-        token,
-        getSessionCookieOptions(newExpiresAt)
-      );
-    }
-  }
+		const newExpiresAt = await refreshSession(session.sessionId, isRememberMe);
+		if (newExpiresAt) {
+			session.expiresAt = newExpiresAt;
+			// Update cookie with new expiration
+			setCookie(c, SESSION_CONFIG.cookieName, token, getSessionCookieOptions(newExpiresAt));
+		}
+	}
 
-  // Inject session data into context
-  c.set("session", session);
+	// Inject session data into context
+	c.set("session", session);
 
-  await next();
+	await next();
 };
 
 /**
@@ -113,40 +105,29 @@ export const requireAuth: MiddlewareHandler = async (
  * Does not throw if not authenticated, but injects session if present.
  * Useful for routes that behave differently based on auth state.
  */
-export const optionalAuth: MiddlewareHandler = async (
-  c: Context,
-  next: Next
-) => {
-  const token = getCookie(c, SESSION_CONFIG.cookieName);
+export const optionalAuth: MiddlewareHandler = async (c: Context, next: Next) => {
+	const token = getCookie(c, SESSION_CONFIG.cookieName);
 
-  if (token) {
-    const session = await validateSession(token);
-    if (session) {
-      c.set("session", session);
+	if (token) {
+		const session = await validateSession(token);
+		if (session) {
+			c.set("session", session);
 
-      // Refresh if needed
-      if (shouldRefreshSession(session.expiresAt)) {
-        const isRememberMe =
-          session.expiresAt.getTime() - session.createdAt.getTime() >
-          SESSION_CONFIG.defaultDurationMs * 1.5;
+			// Refresh if needed
+			if (shouldRefreshSession(session.expiresAt)) {
+				const isRememberMe =
+					session.expiresAt.getTime() - session.createdAt.getTime() >
+					SESSION_CONFIG.defaultDurationMs * 1.5;
 
-        const newExpiresAt = await refreshSession(
-          session.sessionId,
-          isRememberMe
-        );
-        if (newExpiresAt) {
-          setCookie(
-            c,
-            SESSION_CONFIG.cookieName,
-            token,
-            getSessionCookieOptions(newExpiresAt)
-          );
-        }
-      }
-    }
-  }
+				const newExpiresAt = await refreshSession(session.sessionId, isRememberMe);
+				if (newExpiresAt) {
+					setCookie(c, SESSION_CONFIG.cookieName, token, getSessionCookieOptions(newExpiresAt));
+				}
+			}
+		}
+	}
 
-  await next();
+	await next();
 };
 
 /**
@@ -156,17 +137,8 @@ export const optionalAuth: MiddlewareHandler = async (
  * @param token - The session token
  * @param expiresAt - When the session expires
  */
-export function setSessionCookie(
-  c: Context,
-  token: string,
-  expiresAt: Date
-): void {
-  setCookie(
-    c,
-    SESSION_CONFIG.cookieName,
-    token,
-    getSessionCookieOptions(expiresAt)
-  );
+export function setSessionCookie(c: Context, token: string, expiresAt: Date): void {
+	setCookie(c, SESSION_CONFIG.cookieName, token, getSessionCookieOptions(expiresAt));
 }
 
 /**
@@ -175,7 +147,7 @@ export function setSessionCookie(
  * @param c - Hono context
  */
 export function clearSessionCookie(c: Context): void {
-  deleteCookie(c, SESSION_CONFIG.cookieName, COOKIE_OPTIONS);
+	deleteCookie(c, SESSION_CONFIG.cookieName, COOKIE_OPTIONS);
 }
 
 /**
@@ -186,7 +158,7 @@ export function clearSessionCookie(c: Context): void {
  * @returns Session data or undefined
  */
 export function getSession(c: Context): SessionData | undefined {
-  return c.get("session");
+	return c.get("session");
 }
 
 /**
@@ -198,11 +170,11 @@ export function getSession(c: Context): SessionData | undefined {
  * @throws UnauthorizedError if not authenticated
  */
 export function requireSession(c: Context): SessionData {
-  const session = c.get("session");
-  if (!session) {
-    throw new UnauthorizedError("Not authenticated");
-  }
-  return session;
+	const session = c.get("session");
+	if (!session) {
+		throw new UnauthorizedError("Not authenticated");
+	}
+	return session;
 }
 
 /**
@@ -212,20 +184,17 @@ export function requireSession(c: Context): SessionData {
  * This is in addition to SameSite=Lax cookies.
  * Only applied to state-changing requests (POST, PATCH, DELETE).
  */
-export const requireCsrfHeader: MiddlewareHandler = async (
-  c: Context,
-  next: Next
-) => {
-  const method = c.req.method;
+export const requireCsrfHeader: MiddlewareHandler = async (c: Context, next: Next) => {
+	const method = c.req.method;
 
-  // Only check state-changing methods
-  if (["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
-    const xRequestedWith = c.req.header("X-Requested-With");
+	// Only check state-changing methods
+	if (["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
+		const xRequestedWith = c.req.header("X-Requested-With");
 
-    if (xRequestedWith !== "XMLHttpRequest") {
-      throw new UnauthorizedError("Invalid request");
-    }
-  }
+		if (xRequestedWith !== "XMLHttpRequest") {
+			throw new UnauthorizedError("Invalid request");
+		}
+	}
 
-  await next();
+	await next();
 };

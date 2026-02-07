@@ -1,29 +1,29 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
-  Contact,
-  ContactWithDetails,
-  ContactInteraction,
-  ContactParseResult,
-  PaginatedResponse,
+	Contact,
+	ContactInteraction,
+	ContactParseResult,
+	ContactWithDetails,
+	PaginatedResponse,
 } from "@/lib/types";
 
 interface ContactsQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  relationshipStatus?: string;
-  warmth?: string;
-  tier?: string;
-  companyId?: string;
-  followUpDue?: boolean;
-  sort?: string;
+	page?: number;
+	limit?: number;
+	search?: string;
+	relationshipStatus?: string;
+	warmth?: string;
+	tier?: string;
+	companyId?: string;
+	followUpDue?: boolean;
+	sort?: string;
 }
 
 interface InteractionsQueryParams {
-  page?: number;
-  limit?: number;
-  type?: string;
+	page?: number;
+	limit?: number;
+	type?: string;
 }
 
 /**
@@ -31,7 +31,7 @@ interface InteractionsQueryParams {
  * Admin endpoints wrap single objects in { data: T }.
  */
 interface ApiResponse<T> {
-  data: T;
+	data: T;
 }
 
 /**
@@ -41,16 +41,16 @@ interface ApiResponse<T> {
  * The admin API returns { data: Contact[], pagination: {...} }.
  */
 export function useContacts(params: ContactsQueryParams = {}) {
-  return useQuery({
-    queryKey: ["contacts", params],
-    queryFn: async () => {
-      const response = await api.get<PaginatedResponse<Contact>>(
-        "/admin/contacts",
-        params as Record<string, string | number | boolean | undefined>,
-      );
-      return response;
-    },
-  });
+	return useQuery({
+		queryKey: ["contacts", params],
+		queryFn: async () => {
+			const response = await api.get<PaginatedResponse<Contact>>(
+				"/admin/contacts",
+				params as Record<string, string | number | boolean | undefined>,
+			);
+			return response;
+		},
+	});
 }
 
 /**
@@ -60,17 +60,15 @@ export function useContacts(params: ContactsQueryParams = {}) {
  * Returns the contact with company, lead, and interactions attached.
  */
 export function useContact(id: string | undefined) {
-  return useQuery({
-    queryKey: ["contact", id],
-    queryFn: async () => {
-      if (!id) throw new Error("Contact ID required");
-      const response = await api.get<ApiResponse<ContactWithDetails>>(
-        `/admin/contacts/${id}`,
-      );
-      return response.data;
-    },
-    enabled: !!id,
-  });
+	return useQuery({
+		queryKey: ["contact", id],
+		queryFn: async () => {
+			if (!id) throw new Error("Contact ID required");
+			const response = await api.get<ApiResponse<ContactWithDetails>>(`/admin/contacts/${id}`);
+			return response.data;
+		},
+		enabled: !!id,
+	});
 }
 
 /**
@@ -80,20 +78,17 @@ export function useContact(id: string | undefined) {
  * Invalidates contacts list cache on success.
  */
 export function useCreateContact() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: Partial<Contact>) => {
-      const response = await api.post<ApiResponse<Contact>>(
-        "/admin/contacts",
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    },
-  });
+	return useMutation({
+		mutationFn: async (data: Partial<Contact>) => {
+			const response = await api.post<ApiResponse<Contact>>("/admin/contacts", data);
+			return response.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["contacts"] });
+		},
+	});
 }
 
 /**
@@ -103,27 +98,18 @@ export function useCreateContact() {
  * Invalidates contacts list and single contact caches on success.
  */
 export function useUpdateContact() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: Partial<Contact>;
-    }) => {
-      const response = await api.patch<ApiResponse<Contact>>(
-        `/admin/contacts/${id}`,
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: (contact) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
-    },
-  });
+	return useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: Partial<Contact> }) => {
+			const response = await api.patch<ApiResponse<Contact>>(`/admin/contacts/${id}`, data);
+			return response.data;
+		},
+		onSuccess: (contact) => {
+			queryClient.invalidateQueries({ queryKey: ["contacts"] });
+			queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+		},
+	});
 }
 
 /**
@@ -133,17 +119,17 @@ export function useUpdateContact() {
  * Invalidates contacts list cache on success.
  */
 export function useDeleteContact() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/admin/contacts/${id}`);
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    },
-  });
+	return useMutation({
+		mutationFn: async (id: string) => {
+			await api.delete(`/admin/contacts/${id}`);
+			return id;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["contacts"] });
+		},
+	});
 }
 
 /**
@@ -153,24 +139,24 @@ export function useDeleteContact() {
  * Invalidates contact detail, contacts list, and interactions caches on success.
  */
 export function useCreateInteraction(contactId: string) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: Partial<ContactInteraction>) => {
-      const response = await api.post<ApiResponse<ContactInteraction>>(
-        `/admin/contacts/${contactId}/interactions`,
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({
-        queryKey: ["contactInteractions", contactId],
-      });
-    },
-  });
+	return useMutation({
+		mutationFn: async (data: Partial<ContactInteraction>) => {
+			const response = await api.post<ApiResponse<ContactInteraction>>(
+				`/admin/contacts/${contactId}/interactions`,
+				data,
+			);
+			return response.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+			queryClient.invalidateQueries({ queryKey: ["contacts"] });
+			queryClient.invalidateQueries({
+				queryKey: ["contactInteractions", contactId],
+			});
+		},
+	});
 }
 
 /**
@@ -180,21 +166,21 @@ export function useCreateInteraction(contactId: string) {
  * The admin API returns { data: ContactInteraction[], pagination: {...} }.
  */
 export function useContactInteractions(
-  contactId: string | undefined,
-  params: InteractionsQueryParams = {},
+	contactId: string | undefined,
+	params: InteractionsQueryParams = {},
 ) {
-  return useQuery({
-    queryKey: ["contactInteractions", contactId, params],
-    queryFn: async () => {
-      if (!contactId) throw new Error("Contact ID required");
-      const response = await api.get<PaginatedResponse<ContactInteraction>>(
-        `/admin/contacts/${contactId}/interactions`,
-        params as Record<string, string | number | boolean | undefined>,
-      );
-      return response;
-    },
-    enabled: !!contactId,
-  });
+	return useQuery({
+		queryKey: ["contactInteractions", contactId, params],
+		queryFn: async () => {
+			if (!contactId) throw new Error("Contact ID required");
+			const response = await api.get<PaginatedResponse<ContactInteraction>>(
+				`/admin/contacts/${contactId}/interactions`,
+				params as Record<string, string | number | boolean | undefined>,
+			);
+			return response;
+		},
+		enabled: !!contactId,
+	});
 }
 
 /**
@@ -204,18 +190,18 @@ export function useContactInteractions(
  * Invalidates contacts list cache on success.
  */
 export function useParseContact() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: { text: string; autoSave?: boolean }) => {
-      const response = await api.post<ApiResponse<ContactParseResult>>(
-        "/admin/contacts/parse",
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-    },
-  });
+	return useMutation({
+		mutationFn: async (data: { text: string; autoSave?: boolean }) => {
+			const response = await api.post<ApiResponse<ContactParseResult>>(
+				"/admin/contacts/parse",
+				data,
+			);
+			return response.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["contacts"] });
+		},
+	});
 }

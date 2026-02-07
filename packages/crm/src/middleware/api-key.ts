@@ -9,27 +9,23 @@
  */
 
 import type { Context, MiddlewareHandler, Next } from "hono";
-import {
-  validateApiKey,
-  hasScope,
-  type ValidatedApiKey,
-} from "../lib/api-keys.js";
-import { InvalidApiKeyError, InsufficientScopeError } from "../lib/errors.js";
+import { hasScope, type ValidatedApiKey, validateApiKey } from "../lib/api-keys.js";
+import { InsufficientScopeError, InvalidApiKeyError } from "../lib/errors.js";
 
 /**
  * Extended context with API key data.
  */
 export interface ApiKeyContext {
-  apiKey: ValidatedApiKey;
+	apiKey: ValidatedApiKey;
 }
 
 /**
  * Type helper to extend Hono context with API key data.
  */
 declare module "hono" {
-  interface ContextVariableMap {
-    apiKey: ValidatedApiKey;
-  }
+	interface ContextVariableMap {
+		apiKey: ValidatedApiKey;
+	}
 }
 
 /**
@@ -46,21 +42,21 @@ declare module "hono" {
  * ```
  */
 export function extractBearerToken(c: Context): string | null {
-  const authHeader = c.req.header("Authorization");
+	const authHeader = c.req.header("Authorization");
 
-  if (!authHeader) {
-    return null;
-  }
+	if (!authHeader) {
+		return null;
+	}
 
-  // Check for Bearer prefix (case-insensitive)
-  if (!authHeader.toLowerCase().startsWith("bearer ")) {
-    return null;
-  }
+	// Check for Bearer prefix (case-insensitive)
+	if (!authHeader.toLowerCase().startsWith("bearer ")) {
+		return null;
+	}
 
-  // Extract token after "Bearer "
-  const token = authHeader.substring(7).trim();
+	// Extract token after "Bearer "
+	const token = authHeader.substring(7).trim();
 
-  return token || null;
+	return token || null;
 }
 
 /**
@@ -78,26 +74,23 @@ export function extractBearerToken(c: Context): string | null {
  * app.use("/api/v1/*", requireApiKey);
  * ```
  */
-export const requireApiKey: MiddlewareHandler = async (
-  c: Context,
-  next: Next
-) => {
-  const token = extractBearerToken(c);
+export const requireApiKey: MiddlewareHandler = async (c: Context, next: Next) => {
+	const token = extractBearerToken(c);
 
-  if (!token) {
-    throw new InvalidApiKeyError("Missing API key");
-  }
+	if (!token) {
+		throw new InvalidApiKeyError("Missing API key");
+	}
 
-  const apiKey = await validateApiKey(token);
+	const apiKey = await validateApiKey(token);
 
-  if (!apiKey) {
-    throw new InvalidApiKeyError("Invalid or revoked API key");
-  }
+	if (!apiKey) {
+		throw new InvalidApiKeyError("Invalid or revoked API key");
+	}
 
-  // Inject API key data into context
-  c.set("apiKey", apiKey);
+	// Inject API key data into context
+	c.set("apiKey", apiKey);
 
-  await next();
+	await next();
 };
 
 /**
@@ -117,20 +110,20 @@ export const requireApiKey: MiddlewareHandler = async (
  * ```
  */
 export function requireScope(requiredScope: string): MiddlewareHandler {
-  return async (c: Context, next: Next) => {
-    const apiKey = c.get("apiKey");
+	return async (c: Context, next: Next) => {
+		const apiKey = c.get("apiKey");
 
-    if (!apiKey) {
-      // This should not happen if requireApiKey ran first
-      throw new InvalidApiKeyError("API key not authenticated");
-    }
+		if (!apiKey) {
+			// This should not happen if requireApiKey ran first
+			throw new InvalidApiKeyError("API key not authenticated");
+		}
 
-    if (!hasScope(apiKey.scopes, requiredScope)) {
-      throw new InsufficientScopeError(requiredScope);
-    }
+		if (!hasScope(apiKey.scopes, requiredScope)) {
+			throw new InsufficientScopeError(requiredScope);
+		}
 
-    await next();
-  };
+		await next();
+	};
 }
 
 /**
@@ -152,22 +145,19 @@ export function requireScope(requiredScope: string): MiddlewareHandler {
  * }
  * ```
  */
-export const optionalApiKey: MiddlewareHandler = async (
-  c: Context,
-  next: Next
-) => {
-  const token = extractBearerToken(c);
+export const optionalApiKey: MiddlewareHandler = async (c: Context, next: Next) => {
+	const token = extractBearerToken(c);
 
-  if (token) {
-    const apiKey = await validateApiKey(token);
+	if (token) {
+		const apiKey = await validateApiKey(token);
 
-    if (apiKey) {
-      c.set("apiKey", apiKey);
-    }
-    // If token is present but invalid, we still proceed (optional auth)
-  }
+		if (apiKey) {
+			c.set("apiKey", apiKey);
+		}
+		// If token is present but invalid, we still proceed (optional auth)
+	}
 
-  await next();
+	await next();
 };
 
 /**
@@ -186,7 +176,7 @@ export const optionalApiKey: MiddlewareHandler = async (
  * ```
  */
 export function getApiKeyFromContext(c: Context): ValidatedApiKey | undefined {
-  return c.get("apiKey");
+	return c.get("apiKey");
 }
 
 /**
@@ -207,13 +197,13 @@ export function getApiKeyFromContext(c: Context): ValidatedApiKey | undefined {
  * ```
  */
 export function requireApiKeyFromContext(c: Context): ValidatedApiKey {
-  const apiKey = c.get("apiKey");
+	const apiKey = c.get("apiKey");
 
-  if (!apiKey) {
-    throw new InvalidApiKeyError("API key not authenticated");
-  }
+	if (!apiKey) {
+		throw new InvalidApiKeyError("API key not authenticated");
+	}
 
-  return apiKey;
+	return apiKey;
 }
 
 /**
@@ -234,13 +224,13 @@ export function requireApiKeyFromContext(c: Context): ValidatedApiKey {
  * ```
  */
 export function hasCurrentScope(c: Context, scope: string): boolean {
-  const apiKey = getApiKeyFromContext(c);
+	const apiKey = getApiKeyFromContext(c);
 
-  if (!apiKey) {
-    return false;
-  }
+	if (!apiKey) {
+		return false;
+	}
 
-  return hasScope(apiKey.scopes, scope);
+	return hasScope(apiKey.scopes, scope);
 }
 
 /**
@@ -259,18 +249,18 @@ export function hasCurrentScope(c: Context, scope: string): boolean {
  * ```
  */
 export function getRateLimitIdentifier(c: Context): string {
-  const apiKey = getApiKeyFromContext(c);
+	const apiKey = getApiKeyFromContext(c);
 
-  if (apiKey) {
-    return `apikey:${apiKey.keyPrefix}`;
-  }
+	if (apiKey) {
+		return `apikey:${apiKey.keyPrefix}`;
+	}
 
-  // Fall back to IP address
-  const ip =
-    c.req.header("CF-Connecting-IP") ||
-    c.req.header("X-Real-IP") ||
-    c.req.header("X-Forwarded-For")?.split(",")[0].trim() ||
-    "unknown";
+	// Fall back to IP address
+	const ip =
+		c.req.header("CF-Connecting-IP") ||
+		c.req.header("X-Real-IP") ||
+		c.req.header("X-Forwarded-For")?.split(",")[0].trim() ||
+		"unknown";
 
-  return `ip:${ip}`;
+	return `ip:${ip}`;
 }

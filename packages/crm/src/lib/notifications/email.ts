@@ -12,13 +12,13 @@
  */
 
 import type {
-  EmailConfig,
-  NotificationConfig,
-  NotificationPayload,
-  NotificationDeliveryResult,
-  NotificationProvider,
+	EmailConfig,
+	NotificationConfig,
+	NotificationDeliveryResult,
+	NotificationPayload,
+	NotificationProvider,
 } from "./types.js";
-import { isEmailConfig, getLeadUrl } from "./types.js";
+import { getLeadUrl, isEmailConfig } from "./types.js";
 
 // ============================================================================
 // CONSTANTS
@@ -28,12 +28,12 @@ import { isEmailConfig, getLeadUrl } from "./types.js";
  * Email notification configuration.
  */
 export const EMAIL_CONFIG = {
-  /** HTTP request timeout in milliseconds */
-  timeoutMs: 10_000,
-  /** Resend API base URL */
-  apiBaseUrl: "https://api.resend.com",
-  /** Default sender email if not configured */
-  defaultFrom: "Octatech CRM <crm@octatech.xyz>",
+	/** HTTP request timeout in milliseconds */
+	timeoutMs: 10_000,
+	/** Resend API base URL */
+	apiBaseUrl: "https://api.resend.com",
+	/** Default sender email if not configured */
+	defaultFrom: "Octatech CRM <crm@octatech.xyz>",
 } as const;
 
 /**
@@ -52,12 +52,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * @returns Escaped text safe for HTML
  */
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+	return text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
 }
 
 /**
@@ -67,52 +67,52 @@ function escapeHtml(text: string): string {
  * @returns HTML email content
  */
 export function formatLeadCreatedEmail(
-  payload: Extract<NotificationPayload, { event: "lead.created" }>
+	payload: Extract<NotificationPayload, { event: "lead.created" }>,
 ): { subject: string; html: string } {
-  const { lead } = payload;
+	const { lead } = payload;
 
-  const subject = lead.company
-    ? `New Lead: ${lead.name} - ${lead.company}`
-    : `New Lead: ${lead.name}`;
+	const subject = lead.company
+		? `New Lead: ${lead.name} - ${lead.company}`
+		: `New Lead: ${lead.name}`;
 
-  // Build table rows for lead fields
-  const rows: Array<{ label: string; value: string }> = [
-    { label: "Name", value: lead.name },
-    { label: "Email", value: lead.email },
-  ];
+	// Build table rows for lead fields
+	const rows: Array<{ label: string; value: string }> = [
+		{ label: "Name", value: lead.name },
+		{ label: "Email", value: lead.email },
+	];
 
-  if (lead.company) {
-    rows.push({ label: "Company", value: lead.company });
-  }
+	if (lead.company) {
+		rows.push({ label: "Company", value: lead.company });
+	}
 
-  if (lead.phone) {
-    rows.push({ label: "Phone", value: lead.phone });
-  }
+	if (lead.phone) {
+		rows.push({ label: "Phone", value: lead.phone });
+	}
 
-  if (lead.budget) {
-    rows.push({ label: "Budget", value: lead.budget });
-  }
+	if (lead.budget) {
+		rows.push({ label: "Budget", value: lead.budget });
+	}
 
-  if (lead.projectType) {
-    rows.push({ label: "Project Type", value: lead.projectType });
-  }
+	if (lead.projectType) {
+		rows.push({ label: "Project Type", value: lead.projectType });
+	}
 
-  if (lead.source) {
-    rows.push({ label: "Source", value: lead.source });
-  }
+	if (lead.source) {
+		rows.push({ label: "Source", value: lead.source });
+	}
 
-  const tableRows = rows
-    .map(
-      (row) => `
+	const tableRows = rows
+		.map(
+			(row) => `
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${escapeHtml(row.label)}</strong></td>
           <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(row.value)}</td>
         </tr>
-      `
-    )
-    .join("");
+      `,
+		)
+		.join("");
 
-  const html = `
+	const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -148,7 +148,7 @@ ${escapeHtml(lead.message)}
 </html>
   `.trim();
 
-  return { subject, html };
+	return { subject, html };
 }
 
 /**
@@ -158,15 +158,15 @@ ${escapeHtml(lead.message)}
  * @returns HTML email content
  */
 export function formatLeadStatusChangedEmail(
-  payload: Extract<NotificationPayload, { event: "lead.status_changed" }>
+	payload: Extract<NotificationPayload, { event: "lead.status_changed" }>,
 ): { subject: string; html: string } {
-  const { lead, previousStatus, newStatus } = payload;
+	const { lead, previousStatus, newStatus } = payload;
 
-  const subject = lead.company
-    ? `Status Changed: ${lead.name} - ${lead.company} (${previousStatus} → ${newStatus})`
-    : `Status Changed: ${lead.name} (${previousStatus} → ${newStatus})`;
+	const subject = lead.company
+		? `Status Changed: ${lead.name} - ${lead.company} (${previousStatus} → ${newStatus})`
+		: `Status Changed: ${lead.name} (${previousStatus} → ${newStatus})`;
 
-  const html = `
+	const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -186,15 +186,15 @@ export function formatLeadStatusChangedEmail(
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(lead.email)}</td>
     </tr>
     ${
-      lead.company
-        ? `
+			lead.company
+				? `
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Company</strong></td>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(lead.company)}</td>
     </tr>
     `
-        : ""
-    }
+				: ""
+		}
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Previous Status</strong></td>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(previousStatus)}</td>
@@ -222,7 +222,7 @@ export function formatLeadStatusChangedEmail(
 </html>
   `.trim();
 
-  return { subject, html };
+	return { subject, html };
 }
 
 /**
@@ -232,14 +232,14 @@ export function formatLeadStatusChangedEmail(
  * @returns Subject and HTML body
  */
 export function formatEmail(payload: NotificationPayload): {
-  subject: string;
-  html: string;
+	subject: string;
+	html: string;
 } {
-  if (payload.event === "lead.created") {
-    return formatLeadCreatedEmail(payload);
-  } else {
-    return formatLeadStatusChangedEmail(payload);
-  }
+	if (payload.event === "lead.created") {
+		return formatLeadCreatedEmail(payload);
+	} else {
+		return formatLeadStatusChangedEmail(payload);
+	}
 }
 
 // ============================================================================
@@ -261,50 +261,50 @@ export function formatEmail(payload: NotificationPayload): {
  * ```
  */
 export function validateEmailConfig(config: unknown): {
-  valid: boolean;
-  error?: string;
+	valid: boolean;
+	error?: string;
 } {
-  if (!config || typeof config !== "object") {
-    return { valid: false, error: "Configuration is required" };
-  }
+	if (!config || typeof config !== "object") {
+		return { valid: false, error: "Configuration is required" };
+	}
 
-  const cfg = config as Record<string, unknown>;
+	const cfg = config as Record<string, unknown>;
 
-  if (!cfg.to || typeof cfg.to !== "string") {
-    return { valid: false, error: "to is required and must be a string" };
-  }
+	if (!cfg.to || typeof cfg.to !== "string") {
+		return { valid: false, error: "to is required and must be a string" };
+	}
 
-  // Validate each email in the "to" field (comma-separated)
-  const toEmails = cfg.to.split(",").map((e) => e.trim());
-  for (const email of toEmails) {
-    // Extract email from "Name <email>" format if present
-    const match = email.match(/<([^>]+)>/) || [null, email];
-    const cleanEmail = match[1];
+	// Validate each email in the "to" field (comma-separated)
+	const toEmails = cfg.to.split(",").map((e) => e.trim());
+	for (const email of toEmails) {
+		// Extract email from "Name <email>" format if present
+		const match = email.match(/<([^>]+)>/) || [null, email];
+		const cleanEmail = match[1];
 
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return {
-        valid: false,
-        error: `Invalid email address in 'to' field: ${email}`,
-      };
-    }
-  }
+		if (!EMAIL_REGEX.test(cleanEmail)) {
+			return {
+				valid: false,
+				error: `Invalid email address in 'to' field: ${email}`,
+			};
+		}
+	}
 
-  if (!cfg.from || typeof cfg.from !== "string") {
-    return { valid: false, error: "from is required and must be a string" };
-  }
+	if (!cfg.from || typeof cfg.from !== "string") {
+		return { valid: false, error: "from is required and must be a string" };
+	}
 
-  // Extract email from "Name <email>" format if present
-  const fromMatch = cfg.from.match(/<([^>]+)>/) || [null, cfg.from];
-  const fromEmail = fromMatch[1];
+	// Extract email from "Name <email>" format if present
+	const fromMatch = cfg.from.match(/<([^>]+)>/) || [null, cfg.from];
+	const fromEmail = fromMatch[1];
 
-  if (!EMAIL_REGEX.test(fromEmail)) {
-    return {
-      valid: false,
-      error: `Invalid email address in 'from' field: ${cfg.from}`,
-    };
-  }
+	if (!EMAIL_REGEX.test(fromEmail)) {
+		return {
+			valid: false,
+			error: `Invalid email address in 'from' field: ${cfg.from}`,
+		};
+	}
 
-  return { valid: true };
+	return { valid: true };
 }
 
 // ============================================================================
@@ -315,9 +315,9 @@ export function validateEmailConfig(config: unknown): {
  * Resend API response structure.
  */
 interface ResendApiResponse {
-  id?: string;
-  message?: string;
-  statusCode?: number;
+	id?: string;
+	message?: string;
+	statusCode?: number;
 }
 
 /**
@@ -326,7 +326,7 @@ interface ResendApiResponse {
  * @returns API key or null if not configured
  */
 export function getResendApiKey(): string | null {
-  return process.env.RESEND_API_KEY || null;
+	return process.env.RESEND_API_KEY || null;
 }
 
 /**
@@ -349,124 +349,124 @@ export function getResendApiKey(): string | null {
  * ```
  */
 export async function sendEmailNotification(
-  config: EmailConfig,
-  payload: NotificationPayload
+	config: EmailConfig,
+	payload: NotificationPayload,
 ): Promise<NotificationDeliveryResult> {
-  const startTime = Date.now();
+	const startTime = Date.now();
 
-  // Validate configuration
-  const validation = validateEmailConfig(config);
-  if (!validation.valid) {
-    return {
-      success: false,
-      error: validation.error,
-      durationMs: Date.now() - startTime,
-    };
-  }
+	// Validate configuration
+	const validation = validateEmailConfig(config);
+	if (!validation.valid) {
+		return {
+			success: false,
+			error: validation.error,
+			durationMs: Date.now() - startTime,
+		};
+	}
 
-  // Get API key
-  const apiKey = getResendApiKey();
-  if (!apiKey) {
-    return {
-      success: false,
-      error: "RESEND_API_KEY environment variable is not configured",
-      durationMs: Date.now() - startTime,
-    };
-  }
+	// Get API key
+	const apiKey = getResendApiKey();
+	if (!apiKey) {
+		return {
+			success: false,
+			error: "RESEND_API_KEY environment variable is not configured",
+			durationMs: Date.now() - startTime,
+		};
+	}
 
-  // Format the email
-  const { subject, html } = formatEmail(payload);
+	// Format the email
+	const { subject, html } = formatEmail(payload);
 
-  // Build request body
-  const body = JSON.stringify({
-    from: config.from,
-    to: config.to.split(",").map((e) => e.trim()),
-    subject,
-    html,
-  });
+	// Build request body
+	const body = JSON.stringify({
+		from: config.from,
+		to: config.to.split(",").map((e) => e.trim()),
+		subject,
+		html,
+	});
 
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, EMAIL_CONFIG.timeoutMs);
+	// Create AbortController for timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => {
+		controller.abort();
+	}, EMAIL_CONFIG.timeoutMs);
 
-  try {
-    const response = await fetch(`${EMAIL_CONFIG.apiBaseUrl}/emails`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body,
-      signal: controller.signal,
-    });
+	try {
+		const response = await fetch(`${EMAIL_CONFIG.apiBaseUrl}/emails`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${apiKey}`,
+			},
+			body,
+			signal: controller.signal,
+		});
 
-    clearTimeout(timeoutId);
-    const durationMs = Date.now() - startTime;
+		clearTimeout(timeoutId);
+		const durationMs = Date.now() - startTime;
 
-    // Parse response
-    let apiResponse: ResendApiResponse;
-    try {
-      apiResponse = (await response.json()) as ResendApiResponse;
-    } catch {
-      return {
-        success: false,
-        error: "Invalid JSON response from Resend API",
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		// Parse response
+		let apiResponse: ResendApiResponse;
+		try {
+			apiResponse = (await response.json()) as ResendApiResponse;
+		} catch {
+			return {
+				success: false,
+				error: "Invalid JSON response from Resend API",
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    if (response.ok && apiResponse.id) {
-      return {
-        success: true,
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		if (response.ok && apiResponse.id) {
+			return {
+				success: true,
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    // Handle rate limiting
-    if (response.status === 429) {
-      return {
-        success: false,
-        error: "Resend rate limited. Try again later.",
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		// Handle rate limiting
+		if (response.status === 429) {
+			return {
+				success: false,
+				error: "Resend rate limited. Try again later.",
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    return {
-      success: false,
-      error: `Resend API error: ${apiResponse.message || "Unknown error"}`,
-      statusCode: response.status,
-      durationMs,
-    };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    const durationMs = Date.now() - startTime;
+		return {
+			success: false,
+			error: `Resend API error: ${apiResponse.message || "Unknown error"}`,
+			statusCode: response.status,
+			durationMs,
+		};
+	} catch (error) {
+		clearTimeout(timeoutId);
+		const durationMs = Date.now() - startTime;
 
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        return {
-          success: false,
-          error: `Request timeout after ${EMAIL_CONFIG.timeoutMs}ms`,
-          durationMs,
-        };
-      }
-      return {
-        success: false,
-        error: `Network error: ${error.message}`,
-        durationMs,
-      };
-    }
+		if (error instanceof Error) {
+			if (error.name === "AbortError") {
+				return {
+					success: false,
+					error: `Request timeout after ${EMAIL_CONFIG.timeoutMs}ms`,
+					durationMs,
+				};
+			}
+			return {
+				success: false,
+				error: `Network error: ${error.message}`,
+				durationMs,
+			};
+		}
 
-    return {
-      success: false,
-      error: "Unknown error occurred",
-      durationMs,
-    };
-  }
+		return {
+			success: false,
+			error: "Unknown error occurred",
+			durationMs,
+		};
+	}
 }
 
 // ============================================================================
@@ -477,21 +477,21 @@ export async function sendEmailNotification(
  * Email notification provider implementation.
  */
 export const emailProvider: NotificationProvider = {
-  async send(
-    config: NotificationConfig,
-    payload: NotificationPayload
-  ): Promise<NotificationDeliveryResult> {
-    if (!isEmailConfig(config)) {
-      return {
-        success: false,
-        error: "Invalid Email configuration",
-        durationMs: 0,
-      };
-    }
-    return sendEmailNotification(config, payload);
-  },
+	async send(
+		config: NotificationConfig,
+		payload: NotificationPayload,
+	): Promise<NotificationDeliveryResult> {
+		if (!isEmailConfig(config)) {
+			return {
+				success: false,
+				error: "Invalid Email configuration",
+				durationMs: 0,
+			};
+		}
+		return sendEmailNotification(config, payload);
+	},
 
-  validateConfig(config: unknown): { valid: boolean; error?: string } {
-    return validateEmailConfig(config);
-  },
+	validateConfig(config: unknown): { valid: boolean; error?: string } {
+		return validateEmailConfig(config);
+	},
 };

@@ -12,13 +12,13 @@
  */
 
 import type {
-  TelegramConfig,
-  NotificationConfig,
-  NotificationPayload,
-  NotificationDeliveryResult,
-  NotificationProvider,
+	NotificationConfig,
+	NotificationDeliveryResult,
+	NotificationPayload,
+	NotificationProvider,
+	TelegramConfig,
 } from "./types.js";
-import { isTelegramConfig, getLeadUrl } from "./types.js";
+import { getLeadUrl, isTelegramConfig } from "./types.js";
 
 // ============================================================================
 // CONSTANTS
@@ -28,10 +28,10 @@ import { isTelegramConfig, getLeadUrl } from "./types.js";
  * Telegram notification configuration.
  */
 export const TELEGRAM_CONFIG = {
-  /** HTTP request timeout in milliseconds */
-  timeoutMs: 10_000,
-  /** Telegram Bot API base URL */
-  apiBaseUrl: "https://api.telegram.org",
+	/** HTTP request timeout in milliseconds */
+	timeoutMs: 10_000,
+	/** Telegram Bot API base URL */
+	apiBaseUrl: "https://api.telegram.org",
 } as const;
 
 // ============================================================================
@@ -45,10 +45,7 @@ export const TELEGRAM_CONFIG = {
  * @returns Escaped text safe for HTML
  */
 export function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /**
@@ -68,52 +65,52 @@ export function escapeHtml(text: string): string {
  * ```
  */
 export function formatLeadCreatedMessage(
-  payload: Extract<NotificationPayload, { event: "lead.created" }>
+	payload: Extract<NotificationPayload, { event: "lead.created" }>,
 ): string {
-  const { lead } = payload;
-  const lines: string[] = [];
+	const { lead } = payload;
+	const lines: string[] = [];
 
-  // Title
-  lines.push(`<b>🆕 New Lead: ${escapeHtml(lead.name)}</b>`);
-  lines.push("");
+	// Title
+	lines.push(`<b>🆕 New Lead: ${escapeHtml(lead.name)}</b>`);
+	lines.push("");
 
-  // Contact info
-  lines.push(`<b>Email:</b> ${escapeHtml(lead.email)}`);
+	// Contact info
+	lines.push(`<b>Email:</b> ${escapeHtml(lead.email)}`);
 
-  if (lead.company) {
-    lines.push(`<b>Company:</b> ${escapeHtml(lead.company)}`);
-  }
+	if (lead.company) {
+		lines.push(`<b>Company:</b> ${escapeHtml(lead.company)}`);
+	}
 
-  if (lead.phone) {
-    lines.push(`<b>Phone:</b> ${escapeHtml(lead.phone)}`);
-  }
+	if (lead.phone) {
+		lines.push(`<b>Phone:</b> ${escapeHtml(lead.phone)}`);
+	}
 
-  if (lead.budget) {
-    lines.push(`<b>Budget:</b> ${escapeHtml(lead.budget)}`);
-  }
+	if (lead.budget) {
+		lines.push(`<b>Budget:</b> ${escapeHtml(lead.budget)}`);
+	}
 
-  if (lead.projectType) {
-    lines.push(`<b>Project:</b> ${escapeHtml(lead.projectType)}`);
-  }
+	if (lead.projectType) {
+		lines.push(`<b>Project:</b> ${escapeHtml(lead.projectType)}`);
+	}
 
-  if (lead.source) {
-    lines.push(`<b>Source:</b> ${escapeHtml(lead.source)}`);
-  }
+	if (lead.source) {
+		lines.push(`<b>Source:</b> ${escapeHtml(lead.source)}`);
+	}
 
-  // Message (truncate if too long)
-  lines.push("");
-  const maxMessageLength = 500;
-  const truncatedMessage =
-    lead.message.length > maxMessageLength
-      ? lead.message.substring(0, maxMessageLength) + "..."
-      : lead.message;
-  lines.push(`<i>${escapeHtml(truncatedMessage)}</i>`);
+	// Message (truncate if too long)
+	lines.push("");
+	const maxMessageLength = 500;
+	const truncatedMessage =
+		lead.message.length > maxMessageLength
+			? `${lead.message.substring(0, maxMessageLength)}...`
+			: lead.message;
+	lines.push(`<i>${escapeHtml(truncatedMessage)}</i>`);
 
-  // CRM link
-  lines.push("");
-  lines.push(`<a href="${getLeadUrl(lead.id)}">View in CRM →</a>`);
+	// CRM link
+	lines.push("");
+	lines.push(`<a href="${getLeadUrl(lead.id)}">View in CRM →</a>`);
 
-  return lines.join("\n");
+	return lines.join("\n");
 }
 
 /**
@@ -123,32 +120,30 @@ export function formatLeadCreatedMessage(
  * @returns HTML formatted message string
  */
 export function formatLeadStatusChangedMessage(
-  payload: Extract<NotificationPayload, { event: "lead.status_changed" }>
+	payload: Extract<NotificationPayload, { event: "lead.status_changed" }>,
 ): string {
-  const { lead, previousStatus, newStatus } = payload;
-  const lines: string[] = [];
+	const { lead, previousStatus, newStatus } = payload;
+	const lines: string[] = [];
 
-  // Title
-  lines.push(`<b>📊 Status Changed: ${escapeHtml(lead.name)}</b>`);
-  lines.push("");
+	// Title
+	lines.push(`<b>📊 Status Changed: ${escapeHtml(lead.name)}</b>`);
+	lines.push("");
 
-  // Status change info
-  lines.push(`<b>Email:</b> ${escapeHtml(lead.email)}`);
+	// Status change info
+	lines.push(`<b>Email:</b> ${escapeHtml(lead.email)}`);
 
-  if (lead.company) {
-    lines.push(`<b>Company:</b> ${escapeHtml(lead.company)}`);
-  }
+	if (lead.company) {
+		lines.push(`<b>Company:</b> ${escapeHtml(lead.company)}`);
+	}
 
-  lines.push("");
-  lines.push(
-    `<b>Status:</b> ${escapeHtml(previousStatus)} → ${escapeHtml(newStatus)}`
-  );
+	lines.push("");
+	lines.push(`<b>Status:</b> ${escapeHtml(previousStatus)} → ${escapeHtml(newStatus)}`);
 
-  // CRM link
-  lines.push("");
-  lines.push(`<a href="${getLeadUrl(lead.id)}">View in CRM →</a>`);
+	// CRM link
+	lines.push("");
+	lines.push(`<a href="${getLeadUrl(lead.id)}">View in CRM →</a>`);
 
-  return lines.join("\n");
+	return lines.join("\n");
 }
 
 /**
@@ -158,11 +153,11 @@ export function formatLeadStatusChangedMessage(
  * @returns HTML formatted message string
  */
 export function formatTelegramMessage(payload: NotificationPayload): string {
-  if (payload.event === "lead.created") {
-    return formatLeadCreatedMessage(payload);
-  } else {
-    return formatLeadStatusChangedMessage(payload);
-  }
+	if (payload.event === "lead.created") {
+		return formatLeadCreatedMessage(payload);
+	} else {
+		return formatLeadStatusChangedMessage(payload);
+	}
 }
 
 // ============================================================================
@@ -184,42 +179,42 @@ export function formatTelegramMessage(payload: NotificationPayload): string {
  * ```
  */
 export function validateTelegramConfig(config: unknown): {
-  valid: boolean;
-  error?: string;
+	valid: boolean;
+	error?: string;
 } {
-  if (!config || typeof config !== "object") {
-    return { valid: false, error: "Configuration is required" };
-  }
+	if (!config || typeof config !== "object") {
+		return { valid: false, error: "Configuration is required" };
+	}
 
-  const cfg = config as Record<string, unknown>;
+	const cfg = config as Record<string, unknown>;
 
-  if (!cfg.bot_token || typeof cfg.bot_token !== "string") {
-    return { valid: false, error: "bot_token is required and must be a string" };
-  }
+	if (!cfg.bot_token || typeof cfg.bot_token !== "string") {
+		return { valid: false, error: "bot_token is required and must be a string" };
+	}
 
-  // Bot token format: {bot_id}:{token}
-  const botTokenRegex = /^\d+:[\w-]+$/;
-  if (!botTokenRegex.test(cfg.bot_token)) {
-    return {
-      valid: false,
-      error: "Invalid bot_token format. Expected format: {bot_id}:{token}",
-    };
-  }
+	// Bot token format: {bot_id}:{token}
+	const botTokenRegex = /^\d+:[\w-]+$/;
+	if (!botTokenRegex.test(cfg.bot_token)) {
+		return {
+			valid: false,
+			error: "Invalid bot_token format. Expected format: {bot_id}:{token}",
+		};
+	}
 
-  if (!cfg.chat_id || typeof cfg.chat_id !== "string") {
-    return { valid: false, error: "chat_id is required and must be a string" };
-  }
+	if (!cfg.chat_id || typeof cfg.chat_id !== "string") {
+		return { valid: false, error: "chat_id is required and must be a string" };
+	}
 
-  // Chat ID should be numeric (can be negative for groups)
-  const chatIdRegex = /^-?\d+$/;
-  if (!chatIdRegex.test(cfg.chat_id)) {
-    return {
-      valid: false,
-      error: "Invalid chat_id format. Must be a numeric string (can be negative for groups)",
-    };
-  }
+	// Chat ID should be numeric (can be negative for groups)
+	const chatIdRegex = /^-?\d+$/;
+	if (!chatIdRegex.test(cfg.chat_id)) {
+		return {
+			valid: false,
+			error: "Invalid chat_id format. Must be a numeric string (can be negative for groups)",
+		};
+	}
 
-  return { valid: true };
+	return { valid: true };
 }
 
 // ============================================================================
@@ -230,12 +225,12 @@ export function validateTelegramConfig(config: unknown): {
  * Telegram sendMessage API response.
  */
 interface TelegramApiResponse {
-  ok: boolean;
-  description?: string;
-  error_code?: number;
-  result?: {
-    message_id: number;
-  };
+	ok: boolean;
+	description?: string;
+	error_code?: number;
+	result?: {
+		message_id: number;
+	};
 }
 
 /**
@@ -258,116 +253,116 @@ interface TelegramApiResponse {
  * ```
  */
 export async function sendTelegramNotification(
-  config: TelegramConfig,
-  payload: NotificationPayload
+	config: TelegramConfig,
+	payload: NotificationPayload,
 ): Promise<NotificationDeliveryResult> {
-  const startTime = Date.now();
+	const startTime = Date.now();
 
-  // Validate configuration
-  const validation = validateTelegramConfig(config);
-  if (!validation.valid) {
-    return {
-      success: false,
-      error: validation.error,
-      durationMs: Date.now() - startTime,
-    };
-  }
+	// Validate configuration
+	const validation = validateTelegramConfig(config);
+	if (!validation.valid) {
+		return {
+			success: false,
+			error: validation.error,
+			durationMs: Date.now() - startTime,
+		};
+	}
 
-  // Format the message
-  const message = formatTelegramMessage(payload);
+	// Format the message
+	const message = formatTelegramMessage(payload);
 
-  // Build API URL
-  const apiUrl = `${TELEGRAM_CONFIG.apiBaseUrl}/bot${config.bot_token}/sendMessage`;
+	// Build API URL
+	const apiUrl = `${TELEGRAM_CONFIG.apiBaseUrl}/bot${config.bot_token}/sendMessage`;
 
-  // Build request body
-  const body = JSON.stringify({
-    chat_id: config.chat_id,
-    text: message,
-    parse_mode: "HTML",
-    disable_web_page_preview: true,
-  });
+	// Build request body
+	const body = JSON.stringify({
+		chat_id: config.chat_id,
+		text: message,
+		parse_mode: "HTML",
+		disable_web_page_preview: true,
+	});
 
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, TELEGRAM_CONFIG.timeoutMs);
+	// Create AbortController for timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => {
+		controller.abort();
+	}, TELEGRAM_CONFIG.timeoutMs);
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body,
-      signal: controller.signal,
-    });
+	try {
+		const response = await fetch(apiUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body,
+			signal: controller.signal,
+		});
 
-    clearTimeout(timeoutId);
-    const durationMs = Date.now() - startTime;
+		clearTimeout(timeoutId);
+		const durationMs = Date.now() - startTime;
 
-    // Parse response
-    let apiResponse: TelegramApiResponse;
-    try {
-      apiResponse = (await response.json()) as TelegramApiResponse;
-    } catch {
-      return {
-        success: false,
-        error: `Invalid JSON response from Telegram API`,
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		// Parse response
+		let apiResponse: TelegramApiResponse;
+		try {
+			apiResponse = (await response.json()) as TelegramApiResponse;
+		} catch {
+			return {
+				success: false,
+				error: `Invalid JSON response from Telegram API`,
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    if (apiResponse.ok) {
-      return {
-        success: true,
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		if (apiResponse.ok) {
+			return {
+				success: true,
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    // Handle specific Telegram API errors
-    if (apiResponse.error_code === 429) {
-      return {
-        success: false,
-        error: `Telegram rate limited: ${apiResponse.description}`,
-        statusCode: response.status,
-        durationMs,
-      };
-    }
+		// Handle specific Telegram API errors
+		if (apiResponse.error_code === 429) {
+			return {
+				success: false,
+				error: `Telegram rate limited: ${apiResponse.description}`,
+				statusCode: response.status,
+				durationMs,
+			};
+		}
 
-    return {
-      success: false,
-      error: `Telegram API error: ${apiResponse.description || "Unknown error"}`,
-      statusCode: response.status,
-      durationMs,
-    };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    const durationMs = Date.now() - startTime;
+		return {
+			success: false,
+			error: `Telegram API error: ${apiResponse.description || "Unknown error"}`,
+			statusCode: response.status,
+			durationMs,
+		};
+	} catch (error) {
+		clearTimeout(timeoutId);
+		const durationMs = Date.now() - startTime;
 
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        return {
-          success: false,
-          error: `Request timeout after ${TELEGRAM_CONFIG.timeoutMs}ms`,
-          durationMs,
-        };
-      }
-      return {
-        success: false,
-        error: `Network error: ${error.message}`,
-        durationMs,
-      };
-    }
+		if (error instanceof Error) {
+			if (error.name === "AbortError") {
+				return {
+					success: false,
+					error: `Request timeout after ${TELEGRAM_CONFIG.timeoutMs}ms`,
+					durationMs,
+				};
+			}
+			return {
+				success: false,
+				error: `Network error: ${error.message}`,
+				durationMs,
+			};
+		}
 
-    return {
-      success: false,
-      error: "Unknown error occurred",
-      durationMs,
-    };
-  }
+		return {
+			success: false,
+			error: "Unknown error occurred",
+			durationMs,
+		};
+	}
 }
 
 // ============================================================================
@@ -378,21 +373,21 @@ export async function sendTelegramNotification(
  * Telegram notification provider implementation.
  */
 export const telegramProvider: NotificationProvider = {
-  async send(
-    config: NotificationConfig,
-    payload: NotificationPayload
-  ): Promise<NotificationDeliveryResult> {
-    if (!isTelegramConfig(config)) {
-      return {
-        success: false,
-        error: "Invalid Telegram configuration",
-        durationMs: 0,
-      };
-    }
-    return sendTelegramNotification(config, payload);
-  },
+	async send(
+		config: NotificationConfig,
+		payload: NotificationPayload,
+	): Promise<NotificationDeliveryResult> {
+		if (!isTelegramConfig(config)) {
+			return {
+				success: false,
+				error: "Invalid Telegram configuration",
+				durationMs: 0,
+			};
+		}
+		return sendTelegramNotification(config, payload);
+	},
 
-  validateConfig(config: unknown): { valid: boolean; error?: string } {
-    return validateTelegramConfig(config);
-  },
+	validateConfig(config: unknown): { valid: boolean; error?: string } {
+		return validateTelegramConfig(config);
+	},
 };

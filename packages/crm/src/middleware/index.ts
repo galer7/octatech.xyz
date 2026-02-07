@@ -2,22 +2,22 @@
  * Middleware exports for the CRM API.
  */
 
+export {
+	extractBearerToken,
+	getApiKeyFromContext,
+	getRateLimitIdentifier,
+	hasCurrentScope,
+	optionalApiKey,
+	requireApiKey,
+	requireApiKeyFromContext,
+	requireScope,
+} from "./api-key.js";
 export { errorHandler, notFoundHandler } from "./error-handler.js";
 export {
-  rateLimiter,
-  createRateLimiter,
-  createLoginRateLimiter,
-  RATE_LIMIT_CONFIG,
-  clearRateLimitStore,
-  getRateLimitEntry,
+	clearRateLimitStore,
+	createLoginRateLimiter,
+	createRateLimiter,
+	getRateLimitEntry,
+	RATE_LIMIT_CONFIG,
+	rateLimiter,
 } from "./rate-limit.js";
-export {
-  requireApiKey,
-  optionalApiKey,
-  requireScope,
-  extractBearerToken,
-  getApiKeyFromContext,
-  requireApiKeyFromContext,
-  hasCurrentScope,
-  getRateLimitIdentifier,
-} from "./api-key.js";

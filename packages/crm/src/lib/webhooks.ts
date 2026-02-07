@@ -11,18 +11,18 @@
  * - Webhooks are auto-disabled after 10 consecutive failures
  */
 
-import { createHmac, randomUUID, timingSafeEqual } from "crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import {
-  db,
-  webhooks,
-  webhookDeliveries,
-  settings,
-  type Webhook,
-  type WebhookEvent,
-  type Lead,
-  type LeadActivity,
-  webhookEventEnum,
+	db,
+	type Lead,
+	type LeadActivity,
+	settings,
+	type Webhook,
+	type WebhookEvent,
+	webhookDeliveries,
+	webhookEventEnum,
+	webhooks,
 } from "../db/index.js";
 
 // ============================================================================
@@ -33,14 +33,14 @@ import {
  * Webhook delivery configuration.
  */
 export const WEBHOOK_CONFIG = {
-  /** HTTP request timeout in milliseconds */
-  timeoutMs: 30_000,
-  /** User-Agent header value */
-  userAgent: "Octatech-Webhook/1.0",
-  /** Maximum consecutive failures before auto-disable */
-  maxFailureCount: 10,
-  /** Maximum response body size to store (bytes) */
-  maxResponseBodySize: 10_000,
+	/** HTTP request timeout in milliseconds */
+	timeoutMs: 30_000,
+	/** User-Agent header value */
+	userAgent: "Octatech-Webhook/1.0",
+	/** Maximum consecutive failures before auto-disable */
+	maxFailureCount: 10,
+	/** Maximum response body size to store (bytes) */
+	maxResponseBodySize: 10_000,
 } as const;
 
 /**
@@ -53,28 +53,28 @@ export const WEBHOOK_CONFIG = {
  * Attempt 6: 24 hours (final)
  */
 export const RETRY_DELAYS_MS = [
-  0,                    // Attempt 1: Immediate
-  60_000,               // Attempt 2: 1 minute
-  300_000,              // Attempt 3: 5 minutes
-  1_800_000,            // Attempt 4: 30 minutes
-  7_200_000,            // Attempt 5: 2 hours
-  86_400_000,           // Attempt 6: 24 hours
+	0, // Attempt 1: Immediate
+	60_000, // Attempt 2: 1 minute
+	300_000, // Attempt 3: 5 minutes
+	1_800_000, // Attempt 4: 30 minutes
+	7_200_000, // Attempt 5: 2 hours
+	86_400_000, // Attempt 6: 24 hours
 ] as const;
 
 /**
  * Private IP address patterns to block.
  */
 const PRIVATE_IP_PATTERNS = [
-  /^10\./,
-  /^192\.168\./,
-  /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-  /^127\./,
-  /^0\./,
-  /^169\.254\./,
-  /^::1$/,
-  /^fc00:/i,
-  /^fe80:/i,
-  /^localhost$/i,
+	/^10\./,
+	/^192\.168\./,
+	/^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+	/^127\./,
+	/^0\./,
+	/^169\.254\./,
+	/^::1$/,
+	/^fc00:/i,
+	/^fe80:/i,
+	/^localhost$/i,
 ];
 
 /**
@@ -90,119 +90,119 @@ export const VALID_WEBHOOK_EVENTS = new Set<string>(webhookEventEnum);
  * Base webhook payload structure.
  */
 export interface WebhookPayload {
-  id: string;
-  event: WebhookEvent;
-  timestamp: string;
-  data: WebhookEventData;
+	id: string;
+	event: WebhookEvent;
+	timestamp: string;
+	data: WebhookEventData;
 }
 
 /**
  * Event-specific data types.
  */
 export type WebhookEventData =
-  | LeadCreatedData
-  | LeadUpdatedData
-  | LeadStatusChangedData
-  | LeadDeletedData
-  | LeadActivityAddedData;
+	| LeadCreatedData
+	| LeadUpdatedData
+	| LeadStatusChangedData
+	| LeadDeletedData
+	| LeadActivityAddedData;
 
 /**
  * Data for lead.created event.
  */
 export interface LeadCreatedData {
-  lead: LeadPayload;
+	lead: LeadPayload;
 }
 
 /**
  * Data for lead.updated event.
  */
 export interface LeadUpdatedData {
-  lead: LeadPayload;
-  changes: Record<string, { old: unknown; new: unknown }>;
+	lead: LeadPayload;
+	changes: Record<string, { old: unknown; new: unknown }>;
 }
 
 /**
  * Data for lead.status_changed event.
  */
 export interface LeadStatusChangedData {
-  lead: LeadSummaryPayload;
-  previousStatus: string;
-  newStatus: string;
+	lead: LeadSummaryPayload;
+	previousStatus: string;
+	newStatus: string;
 }
 
 /**
  * Data for lead.deleted event.
  */
 export interface LeadDeletedData {
-  leadId: string;
-  name: string;
-  email: string;
+	leadId: string;
+	name: string;
+	email: string;
 }
 
 /**
  * Data for lead.activity_added event.
  */
 export interface LeadActivityAddedData {
-  lead: LeadSummaryPayload;
-  activity: ActivityPayload;
+	lead: LeadSummaryPayload;
+	activity: ActivityPayload;
 }
 
 /**
  * Full lead payload for webhook events.
  */
 export interface LeadPayload {
-  id: string;
-  name: string;
-  email: string;
-  company: string | null;
-  phone: string | null;
-  budget: string | null;
-  projectType: string | null;
-  message: string;
-  source: string | null;
-  status: string;
-  createdAt: string;
+	id: string;
+	name: string;
+	email: string;
+	company: string | null;
+	phone: string | null;
+	budget: string | null;
+	projectType: string | null;
+	message: string;
+	source: string | null;
+	status: string;
+	createdAt: string;
 }
 
 /**
  * Summary lead payload for webhook events.
  */
 export interface LeadSummaryPayload {
-  id: string;
-  name: string;
-  email: string;
-  status?: string;
+	id: string;
+	name: string;
+	email: string;
+	status?: string;
 }
 
 /**
  * Activity payload for webhook events.
  */
 export interface ActivityPayload {
-  id: string;
-  type: string;
-  description: string;
-  createdAt: string;
+	id: string;
+	type: string;
+	description: string;
+	createdAt: string;
 }
 
 /**
  * Webhook delivery result.
  */
 export interface DeliveryResult {
-  success: boolean;
-  statusCode: number | null;
-  responseBody: string | null;
-  durationMs: number;
-  error?: string;
+	success: boolean;
+	statusCode: number | null;
+	responseBody: string | null;
+	durationMs: number;
+	error?: string;
 }
 
 /**
  * Options for dispatching webhooks.
  */
 export interface DispatchOptions {
-  /** Skip retry logic and deliver once */
-  noRetry?: boolean;
-  /** Custom delivery ID (for testing) */
-  deliveryId?: string;
+	/** Skip retry logic and deliver once */
+	noRetry?: boolean;
+	/** Custom delivery ID (for testing) */
+	deliveryId?: string;
 }
 
 // ============================================================================
@@ -222,14 +222,14 @@ export interface DispatchOptions {
  * ```
  */
 export function formatLeadCreatedPayload(lead: Lead): WebhookPayload {
-  return {
-    id: randomUUID(),
-    event: "lead.created",
-    timestamp: new Date().toISOString(),
-    data: {
-      lead: formatLeadPayload(lead),
-    },
-  };
+	return {
+		id: randomUUID(),
+		event: "lead.created",
+		timestamp: new Date().toISOString(),
+		data: {
+			lead: formatLeadPayload(lead),
+		},
+	};
 }
 
 /**
@@ -247,18 +247,18 @@ export function formatLeadCreatedPayload(lead: Lead): WebhookPayload {
  * ```
  */
 export function formatLeadUpdatedPayload(
-  lead: Lead,
-  changes: Record<string, { old: unknown; new: unknown }>
+	lead: Lead,
+	changes: Record<string, { old: unknown; new: unknown }>,
 ): WebhookPayload {
-  return {
-    id: randomUUID(),
-    event: "lead.updated",
-    timestamp: new Date().toISOString(),
-    data: {
-      lead: formatLeadPayload(lead),
-      changes,
-    },
-  };
+	return {
+		id: randomUUID(),
+		event: "lead.updated",
+		timestamp: new Date().toISOString(),
+		data: {
+			lead: formatLeadPayload(lead),
+			changes,
+		},
+	};
 }
 
 /**
@@ -275,25 +275,25 @@ export function formatLeadUpdatedPayload(
  * ```
  */
 export function formatLeadStatusChangedPayload(
-  lead: Lead,
-  previousStatus: string,
-  newStatus: string
+	lead: Lead,
+	previousStatus: string,
+	newStatus: string,
 ): WebhookPayload {
-  return {
-    id: randomUUID(),
-    event: "lead.status_changed",
-    timestamp: new Date().toISOString(),
-    data: {
-      lead: {
-        id: lead.id,
-        name: lead.name,
-        email: lead.email,
-        status: lead.status,
-      },
-      previousStatus,
-      newStatus,
-    },
-  };
+	return {
+		id: randomUUID(),
+		event: "lead.status_changed",
+		timestamp: new Date().toISOString(),
+		data: {
+			lead: {
+				id: lead.id,
+				name: lead.name,
+				email: lead.email,
+				status: lead.status,
+			},
+			previousStatus,
+			newStatus,
+		},
+	};
 }
 
 /**
@@ -310,20 +310,20 @@ export function formatLeadStatusChangedPayload(
  * ```
  */
 export function formatLeadDeletedPayload(
-  leadId: string,
-  name: string,
-  email: string
+	leadId: string,
+	name: string,
+	email: string,
 ): WebhookPayload {
-  return {
-    id: randomUUID(),
-    event: "lead.deleted",
-    timestamp: new Date().toISOString(),
-    data: {
-      leadId,
-      name,
-      email,
-    },
-  };
+	return {
+		id: randomUUID(),
+		event: "lead.deleted",
+		timestamp: new Date().toISOString(),
+		data: {
+			leadId,
+			name,
+			email,
+		},
+	};
 }
 
 /**
@@ -338,28 +338,25 @@ export function formatLeadDeletedPayload(
  * const payload = formatLeadActivityAddedPayload(lead, activity);
  * ```
  */
-export function formatLeadActivityAddedPayload(
-  lead: Lead,
-  activity: LeadActivity
-): WebhookPayload {
-  return {
-    id: randomUUID(),
-    event: "lead.activity_added",
-    timestamp: new Date().toISOString(),
-    data: {
-      lead: {
-        id: lead.id,
-        name: lead.name,
-        email: lead.email,
-      },
-      activity: {
-        id: activity.id,
-        type: activity.type,
-        description: activity.description,
-        createdAt: activity.createdAt.toISOString(),
-      },
-    },
-  };
+export function formatLeadActivityAddedPayload(lead: Lead, activity: LeadActivity): WebhookPayload {
+	return {
+		id: randomUUID(),
+		event: "lead.activity_added",
+		timestamp: new Date().toISOString(),
+		data: {
+			lead: {
+				id: lead.id,
+				name: lead.name,
+				email: lead.email,
+			},
+			activity: {
+				id: activity.id,
+				type: activity.type,
+				description: activity.description,
+				createdAt: activity.createdAt.toISOString(),
+			},
+		},
+	};
 }
 
 /**
@@ -369,21 +366,20 @@ export function formatLeadActivityAddedPayload(
  * @returns Formatted lead payload
  */
 function formatLeadPayload(lead: Lead): LeadPayload {
-  return {
-    id: lead.id,
-    name: lead.name,
-    email: lead.email,
-    company: lead.company,
-    phone: lead.phone,
-    budget: lead.budget,
-    projectType: lead.projectType,
-    message: lead.message,
-    source: lead.source,
-    status: lead.status,
-    createdAt: lead.createdAt instanceof Date
-      ? lead.createdAt.toISOString()
-      : String(lead.createdAt),
-  };
+	return {
+		id: lead.id,
+		name: lead.name,
+		email: lead.email,
+		company: lead.company,
+		phone: lead.phone,
+		budget: lead.budget,
+		projectType: lead.projectType,
+		message: lead.message,
+		source: lead.source,
+		status: lead.status,
+		createdAt:
+			lead.createdAt instanceof Date ? lead.createdAt.toISOString() : String(lead.createdAt),
+	};
 }
 
 // ============================================================================
@@ -404,9 +400,9 @@ function formatLeadPayload(lead: Lead): LeadPayload {
  * ```
  */
 export function generateSignature(secret: string, body: string): string {
-  const hmac = createHmac("sha256", secret);
-  hmac.update(body);
-  return `sha256=${hmac.digest("hex")}`;
+	const hmac = createHmac("sha256", secret);
+	hmac.update(body);
+	return `sha256=${hmac.digest("hex")}`;
 }
 
 /**
@@ -423,20 +419,16 @@ export function generateSignature(secret: string, body: string): string {
  * if (!isValid) throw new Error("Invalid signature");
  * ```
  */
-export function verifyWebhookSignature(
-  body: string,
-  signature: string,
-  secret: string
-): boolean {
-  const expected = generateSignature(secret, body);
-  const expectedBuffer = Buffer.from(expected);
-  const signatureBuffer = Buffer.from(signature);
+export function verifyWebhookSignature(body: string, signature: string, secret: string): boolean {
+	const expected = generateSignature(secret, body);
+	const expectedBuffer = Buffer.from(expected);
+	const signatureBuffer = Buffer.from(signature);
 
-  if (expectedBuffer.length !== signatureBuffer.length) {
-    return false;
-  }
+	if (expectedBuffer.length !== signatureBuffer.length) {
+		return false;
+	}
 
-  return timingSafeEqual(expectedBuffer, signatureBuffer);
+	return timingSafeEqual(expectedBuffer, signatureBuffer);
 }
 
 // ============================================================================
@@ -461,35 +453,35 @@ export function verifyWebhookSignature(
  * ```
  */
 export function validateWebhookUrl(url: string): {
-  valid: boolean;
-  error?: string;
+	valid: boolean;
+	error?: string;
 } {
-  let parsedUrl: URL;
+	let parsedUrl: URL;
 
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    return { valid: false, error: "Invalid URL format" };
-  }
+	try {
+		parsedUrl = new URL(url);
+	} catch {
+		return { valid: false, error: "Invalid URL format" };
+	}
 
-  // Must be HTTPS
-  if (parsedUrl.protocol !== "https:") {
-    return { valid: false, error: "URL must use HTTPS protocol" };
-  }
+	// Must be HTTPS
+	if (parsedUrl.protocol !== "https:") {
+		return { valid: false, error: "URL must use HTTPS protocol" };
+	}
 
-  const hostname = parsedUrl.hostname;
+	const hostname = parsedUrl.hostname;
 
-  // Check for private IPs and localhost
-  for (const pattern of PRIVATE_IP_PATTERNS) {
-    if (pattern.test(hostname)) {
-      return {
-        valid: false,
-        error: "Webhooks to private IP addresses or localhost are not allowed",
-      };
-    }
-  }
+	// Check for private IPs and localhost
+	for (const pattern of PRIVATE_IP_PATTERNS) {
+		if (pattern.test(hostname)) {
+			return {
+				valid: false,
+				error: "Webhooks to private IP addresses or localhost are not allowed",
+			};
+		}
+	}
 
-  return { valid: true };
+	return { valid: true };
 }
 
 /**
@@ -502,25 +494,25 @@ export function validateWebhookUrl(url: string): {
  * @returns true if hostname resolves to a private IP
  */
 export async function resolvesToPrivateIp(hostname: string): Promise<boolean> {
-  try {
-    // Use dynamic import for dns/promises to avoid issues in non-Node environments
-    const dns = await import("dns/promises");
-    const addresses = await dns.lookup(hostname, { all: true });
+	try {
+		// Use dynamic import for dns/promises to avoid issues in non-Node environments
+		const dns = await import("node:dns/promises");
+		const addresses = await dns.lookup(hostname, { all: true });
 
-    for (const addr of addresses) {
-      for (const pattern of PRIVATE_IP_PATTERNS) {
-        if (pattern.test(addr.address)) {
-          return true;
-        }
-      }
-    }
+		for (const addr of addresses) {
+			for (const pattern of PRIVATE_IP_PATTERNS) {
+				if (pattern.test(addr.address)) {
+					return true;
+				}
+			}
+		}
 
-    return false;
-  } catch {
-    // If DNS lookup fails, allow the request to proceed
-    // The HTTP request will fail naturally
-    return false;
-  }
+		return false;
+	} catch {
+		// If DNS lookup fails, allow the request to proceed
+		// The HTTP request will fail naturally
+		return false;
+	}
 }
 
 // ============================================================================
@@ -551,114 +543,114 @@ export async function resolvesToPrivateIp(hostname: string): Promise<boolean> {
  * ```
  */
 export async function deliverWebhook(
-  webhook: Webhook,
-  payload: WebhookPayload,
-  options: DispatchOptions = {}
+	webhook: Webhook,
+	payload: WebhookPayload,
+	options: DispatchOptions = {},
 ): Promise<DeliveryResult> {
-  const deliveryId = options.deliveryId ?? payload.id;
-  const body = JSON.stringify(payload);
-  const startTime = Date.now();
+	const deliveryId = options.deliveryId ?? payload.id;
+	const body = JSON.stringify(payload);
+	const startTime = Date.now();
 
-  // Validate URL security
-  const urlValidation = validateWebhookUrl(webhook.url);
-  if (!urlValidation.valid) {
-    return {
-      success: false,
-      statusCode: null,
-      responseBody: null,
-      durationMs: Date.now() - startTime,
-      error: urlValidation.error,
-    };
-  }
+	// Validate URL security
+	const urlValidation = validateWebhookUrl(webhook.url);
+	if (!urlValidation.valid) {
+		return {
+			success: false,
+			statusCode: null,
+			responseBody: null,
+			durationMs: Date.now() - startTime,
+			error: urlValidation.error,
+		};
+	}
 
-  // Check for DNS rebinding attacks (resolve to private IP)
-  try {
-    const parsedUrl = new URL(webhook.url);
-    const isPrivate = await resolvesToPrivateIp(parsedUrl.hostname);
-    if (isPrivate) {
-      return {
-        success: false,
-        statusCode: null,
-        responseBody: null,
-        durationMs: Date.now() - startTime,
-        error: "URL resolves to a private IP address",
-      };
-    }
-  } catch {
-    // Continue if DNS check fails - the HTTP request will fail naturally
-  }
+	// Check for DNS rebinding attacks (resolve to private IP)
+	try {
+		const parsedUrl = new URL(webhook.url);
+		const isPrivate = await resolvesToPrivateIp(parsedUrl.hostname);
+		if (isPrivate) {
+			return {
+				success: false,
+				statusCode: null,
+				responseBody: null,
+				durationMs: Date.now() - startTime,
+				error: "URL resolves to a private IP address",
+			};
+		}
+	} catch {
+		// Continue if DNS check fails - the HTTP request will fail naturally
+	}
 
-  // Build headers
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "User-Agent": WEBHOOK_CONFIG.userAgent,
-    "X-Webhook-ID": deliveryId,
-    "X-Webhook-Event": payload.event,
-    "X-Webhook-Timestamp": Math.floor(Date.now() / 1000).toString(),
-  };
+	// Build headers
+	const headers: Record<string, string> = {
+		"Content-Type": "application/json",
+		"User-Agent": WEBHOOK_CONFIG.userAgent,
+		"X-Webhook-ID": deliveryId,
+		"X-Webhook-Event": payload.event,
+		"X-Webhook-Timestamp": Math.floor(Date.now() / 1000).toString(),
+	};
 
-  // Add signature if secret is configured
-  if (webhook.secret) {
-    headers["X-Webhook-Signature"] = generateSignature(webhook.secret, body);
-  }
+	// Add signature if secret is configured
+	if (webhook.secret) {
+		headers["X-Webhook-Signature"] = generateSignature(webhook.secret, body);
+	}
 
-  // Create AbortController for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, WEBHOOK_CONFIG.timeoutMs);
+	// Create AbortController for timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => {
+		controller.abort();
+	}, WEBHOOK_CONFIG.timeoutMs);
 
-  try {
-    const response = await fetch(webhook.url, {
-      method: "POST",
-      headers,
-      body,
-      signal: controller.signal,
-    });
+	try {
+		const response = await fetch(webhook.url, {
+			method: "POST",
+			headers,
+			body,
+			signal: controller.signal,
+		});
 
-    clearTimeout(timeoutId);
+		clearTimeout(timeoutId);
 
-    // Read response body (truncate if too large)
-    let responseBody: string | null = null;
-    try {
-      const text = await response.text();
-      responseBody = text.substring(0, WEBHOOK_CONFIG.maxResponseBodySize);
-    } catch {
-      // Ignore response body read errors
-    }
+		// Read response body (truncate if too large)
+		let responseBody: string | null = null;
+		try {
+			const text = await response.text();
+			responseBody = text.substring(0, WEBHOOK_CONFIG.maxResponseBodySize);
+		} catch {
+			// Ignore response body read errors
+		}
 
-    const durationMs = Date.now() - startTime;
-    const success = response.ok;
+		const durationMs = Date.now() - startTime;
+		const success = response.ok;
 
-    return {
-      success,
-      statusCode: response.status,
-      responseBody,
-      durationMs,
-      error: success ? undefined : `HTTP ${response.status} ${response.statusText}`,
-    };
-  } catch (error) {
-    clearTimeout(timeoutId);
+		return {
+			success,
+			statusCode: response.status,
+			responseBody,
+			durationMs,
+			error: success ? undefined : `HTTP ${response.status} ${response.statusText}`,
+		};
+	} catch (error) {
+		clearTimeout(timeoutId);
 
-    const durationMs = Date.now() - startTime;
-    let errorMessage = "Unknown error";
+		const durationMs = Date.now() - startTime;
+		let errorMessage = "Unknown error";
 
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        errorMessage = `Request timeout after ${WEBHOOK_CONFIG.timeoutMs}ms`;
-      } else {
-        errorMessage = error.message;
-      }
-    }
+		if (error instanceof Error) {
+			if (error.name === "AbortError") {
+				errorMessage = `Request timeout after ${WEBHOOK_CONFIG.timeoutMs}ms`;
+			} else {
+				errorMessage = error.message;
+			}
+		}
 
-    return {
-      success: false,
-      statusCode: null,
-      responseBody: null,
-      durationMs,
-      error: errorMessage,
-    };
-  }
+		return {
+			success: false,
+			statusCode: null,
+			responseBody: null,
+			durationMs,
+			error: errorMessage,
+		};
+	}
 }
 
 // ============================================================================
@@ -680,24 +672,24 @@ export async function deliverWebhook(
  * ```
  */
 export async function logDelivery(
-  webhookId: string,
-  event: WebhookEvent,
-  payload: WebhookPayload,
-  result: DeliveryResult
+	webhookId: string,
+	event: WebhookEvent,
+	payload: WebhookPayload,
+	result: DeliveryResult,
 ): Promise<string> {
-  const [delivery] = await db
-    .insert(webhookDeliveries)
-    .values({
-      webhookId,
-      event,
-      payload: payload as unknown as Record<string, unknown>,
-      statusCode: result.statusCode,
-      responseBody: result.responseBody,
-      durationMs: result.durationMs,
-    })
-    .returning({ id: webhookDeliveries.id });
+	const [delivery] = await db
+		.insert(webhookDeliveries)
+		.values({
+			webhookId,
+			event,
+			payload: payload as unknown as Record<string, unknown>,
+			statusCode: result.statusCode,
+			responseBody: result.responseBody,
+			durationMs: result.durationMs,
+		})
+		.returning({ id: webhookDeliveries.id });
 
-  return delivery.id;
+	return delivery.id;
 }
 
 // ============================================================================
@@ -710,17 +702,17 @@ export async function logDelivery(
  * @returns Admin email address or null if not configured
  */
 async function getAdminEmail(): Promise<string | null> {
-  try {
-    const [setting] = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, "admin_email"))
-      .limit(1);
+	try {
+		const [setting] = await db
+			.select()
+			.from(settings)
+			.where(eq(settings.key, "admin_email"))
+			.limit(1);
 
-    return (setting?.value as string) ?? null;
-  } catch {
-    return null;
-  }
+		return (setting?.value as string) ?? null;
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -732,22 +724,22 @@ async function getAdminEmail(): Promise<string | null> {
  * @param webhook - The webhook that was disabled
  */
 async function notifyAdminWebhookDisabled(webhook: Webhook): Promise<void> {
-  const adminEmail = await getAdminEmail();
-  if (!adminEmail) {
-    console.log("Admin notification skipped: no admin_email configured");
-    return;
-  }
+	const adminEmail = await getAdminEmail();
+	if (!adminEmail) {
+		console.log("Admin notification skipped: no admin_email configured");
+		return;
+	}
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.log("Admin notification skipped: RESEND_API_KEY not configured");
-    return;
-  }
+	const apiKey = process.env.RESEND_API_KEY;
+	if (!apiKey) {
+		console.log("Admin notification skipped: RESEND_API_KEY not configured");
+		return;
+	}
 
-  const subject = `⚠️ Webhook Auto-Disabled: ${webhook.name}`;
-  const crmBaseUrl = process.env.CRM_BASE_URL || "https://api.octatech.xyz";
+	const subject = `⚠️ Webhook Auto-Disabled: ${webhook.name}`;
+	const crmBaseUrl = process.env.CRM_BASE_URL || "https://api.octatech.xyz";
 
-  const html = `
+	const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -805,31 +797,29 @@ async function notifyAdminWebhookDisabled(webhook: Webhook): Promise<void> {
 </html>
   `.trim();
 
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: "Octatech CRM <crm@octatech.xyz>",
-        to: [adminEmail],
-        subject,
-        html,
-      }),
-    });
+	try {
+		const response = await fetch("https://api.resend.com/emails", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${apiKey}`,
+			},
+			body: JSON.stringify({
+				from: "Octatech CRM <crm@octatech.xyz>",
+				to: [adminEmail],
+				subject,
+				html,
+			}),
+		});
 
-    if (response.ok) {
-      console.log(`Admin notification sent for disabled webhook ${webhook.id}`);
-    } else {
-      console.error(
-        `Failed to send admin notification: ${response.status} ${response.statusText}`
-      );
-    }
-  } catch (error) {
-    console.error("Failed to send admin notification:", error);
-  }
+		if (response.ok) {
+			console.log(`Admin notification sent for disabled webhook ${webhook.id}`);
+		} else {
+			console.error(`Failed to send admin notification: ${response.status} ${response.statusText}`);
+		}
+	} catch (error) {
+		console.error("Failed to send admin notification:", error);
+	}
 }
 
 /**
@@ -839,12 +829,12 @@ async function notifyAdminWebhookDisabled(webhook: Webhook): Promise<void> {
  * @returns Escaped text safe for HTML
  */
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+	return text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
 }
 
 /**
@@ -866,32 +856,32 @@ function escapeHtml(text: string): string {
  * ```
  */
 export async function incrementFailureCount(
-  webhookId: string,
-  currentFailureCount: number,
-  webhookInfo?: Webhook
+	webhookId: string,
+	currentFailureCount: number,
+	webhookInfo?: Webhook,
 ): Promise<{ disabled: boolean }> {
-  const newFailureCount = currentFailureCount + 1;
-  const shouldDisable = newFailureCount >= WEBHOOK_CONFIG.maxFailureCount;
+	const newFailureCount = currentFailureCount + 1;
+	const shouldDisable = newFailureCount >= WEBHOOK_CONFIG.maxFailureCount;
 
-  await db
-    .update(webhooks)
-    .set({
-      failureCount: newFailureCount,
-      enabled: shouldDisable ? false : undefined,
-      lastTriggeredAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(webhooks.id, webhookId));
+	await db
+		.update(webhooks)
+		.set({
+			failureCount: newFailureCount,
+			enabled: shouldDisable ? false : undefined,
+			lastTriggeredAt: new Date(),
+			updatedAt: new Date(),
+		})
+		.where(eq(webhooks.id, webhookId));
 
-  // Send admin notification if webhook was disabled
-  if (shouldDisable && webhookInfo) {
-    // Fire-and-forget notification - don't await
-    notifyAdminWebhookDisabled(webhookInfo).catch((err) => {
-      console.error("Error sending webhook disabled notification:", err);
-    });
-  }
+	// Send admin notification if webhook was disabled
+	if (shouldDisable && webhookInfo) {
+		// Fire-and-forget notification - don't await
+		notifyAdminWebhookDisabled(webhookInfo).catch((err) => {
+			console.error("Error sending webhook disabled notification:", err);
+		});
+	}
 
-  return { disabled: shouldDisable };
+	return { disabled: shouldDisable };
 }
 
 /**
@@ -906,19 +896,16 @@ export async function incrementFailureCount(
  * await resetFailureCount(webhook.id, 200);
  * ```
  */
-export async function resetFailureCount(
-  webhookId: string,
-  statusCode: number
-): Promise<void> {
-  await db
-    .update(webhooks)
-    .set({
-      failureCount: 0,
-      lastTriggeredAt: new Date(),
-      lastStatusCode: statusCode,
-      updatedAt: new Date(),
-    })
-    .where(eq(webhooks.id, webhookId));
+export async function resetFailureCount(webhookId: string, statusCode: number): Promise<void> {
+	await db
+		.update(webhooks)
+		.set({
+			failureCount: 0,
+			lastTriggeredAt: new Date(),
+			lastStatusCode: statusCode,
+			updatedAt: new Date(),
+		})
+		.where(eq(webhooks.id, webhookId));
 }
 
 /**
@@ -931,17 +918,17 @@ export async function resetFailureCount(
  * @returns Object with updated failure info
  */
 export async function updateWebhookStatus(
-  webhookId: string,
-  result: DeliveryResult,
-  currentFailureCount: number,
-  webhookInfo?: Webhook
+	webhookId: string,
+	result: DeliveryResult,
+	currentFailureCount: number,
+	webhookInfo?: Webhook,
 ): Promise<{ disabled: boolean }> {
-  if (result.success) {
-    await resetFailureCount(webhookId, result.statusCode!);
-    return { disabled: false };
-  } else {
-    return incrementFailureCount(webhookId, currentFailureCount, webhookInfo);
-  }
+	if (result.success) {
+		await resetFailureCount(webhookId, result.statusCode!);
+		return { disabled: false };
+	} else {
+		return incrementFailureCount(webhookId, currentFailureCount, webhookInfo);
+	}
 }
 
 // ============================================================================
@@ -960,13 +947,10 @@ export async function updateWebhookStatus(
  * ```
  */
 export async function getWebhooksForEvent(event: WebhookEvent): Promise<Webhook[]> {
-  const allWebhooks = await db
-    .select()
-    .from(webhooks)
-    .where(eq(webhooks.enabled, true));
+	const allWebhooks = await db.select().from(webhooks).where(eq(webhooks.enabled, true));
 
-  // Filter to webhooks that include this event
-  return allWebhooks.filter((webhook) => webhook.events.includes(event));
+	// Filter to webhooks that include this event
+	return allWebhooks.filter((webhook) => webhook.events.includes(event));
 }
 
 /**
@@ -998,44 +982,44 @@ export async function getWebhooksForEvent(event: WebhookEvent): Promise<Webhook[
  * ```
  */
 export async function dispatchWebhookEvent(
-  event: WebhookEvent,
-  payload: WebhookPayload,
-  options: DispatchOptions = {}
+	event: WebhookEvent,
+	payload: WebhookPayload,
+	options: DispatchOptions = {},
 ): Promise<Array<DeliveryResult & { webhookId: string }>> {
-  const eventWebhooks = await getWebhooksForEvent(event);
-  const results: Array<DeliveryResult & { webhookId: string }> = [];
+	const eventWebhooks = await getWebhooksForEvent(event);
+	const results: Array<DeliveryResult & { webhookId: string }> = [];
 
-  // Deliver to all webhooks in parallel
-  const deliveryPromises = eventWebhooks.map(async (webhook) => {
-    const result = await deliverWebhook(webhook, payload, options);
+	// Deliver to all webhooks in parallel
+	const deliveryPromises = eventWebhooks.map(async (webhook) => {
+		const result = await deliverWebhook(webhook, payload, options);
 
-    // Log the delivery
-    await logDelivery(webhook.id, event, payload, result);
+		// Log the delivery
+		await logDelivery(webhook.id, event, payload, result);
 
-    // Update webhook status (failure count, etc.)
-    // Pass webhook info for admin notification if auto-disabled
-    await updateWebhookStatus(webhook.id, result, webhook.failureCount ?? 0, webhook);
+		// Update webhook status (failure count, etc.)
+		// Pass webhook info for admin notification if auto-disabled
+		await updateWebhookStatus(webhook.id, result, webhook.failureCount ?? 0, webhook);
 
-    // Schedule retry if failed and retries are not disabled
-    if (!result.success && !options.noRetry) {
-      scheduleRetry(webhook, payload, 1);
-    }
+		// Schedule retry if failed and retries are not disabled
+		if (!result.success && !options.noRetry) {
+			scheduleRetry(webhook, payload, 1);
+		}
 
-    return { ...result, webhookId: webhook.id };
-  });
+		return { ...result, webhookId: webhook.id };
+	});
 
-  const settledResults = await Promise.allSettled(deliveryPromises);
+	const settledResults = await Promise.allSettled(deliveryPromises);
 
-  for (const settled of settledResults) {
-    if (settled.status === "fulfilled") {
-      results.push(settled.value);
-    } else {
-      // This shouldn't happen but handle it gracefully
-      console.error("Webhook dispatch error:", settled.reason);
-    }
-  }
+	for (const settled of settledResults) {
+		if (settled.status === "fulfilled") {
+			results.push(settled.value);
+		} else {
+			// This shouldn't happen but handle it gracefully
+			console.error("Webhook dispatch error:", settled.reason);
+		}
+	}
 
-  return results;
+	return results;
 }
 
 // ============================================================================
@@ -1059,33 +1043,27 @@ export async function dispatchWebhookEvent(
  * scheduleRetry(webhook, payload, 1);
  * ```
  */
-export function scheduleRetry(
-  webhook: Webhook,
-  payload: WebhookPayload,
-  attempt: number
-): void {
-  // Check if we've exceeded max retries
-  if (attempt >= RETRY_DELAYS_MS.length) {
-    console.log(
-      `Webhook ${webhook.id} exceeded max retries (${RETRY_DELAYS_MS.length})`
-    );
-    return;
-  }
+export function scheduleRetry(webhook: Webhook, payload: WebhookPayload, attempt: number): void {
+	// Check if we've exceeded max retries
+	if (attempt >= RETRY_DELAYS_MS.length) {
+		console.log(`Webhook ${webhook.id} exceeded max retries (${RETRY_DELAYS_MS.length})`);
+		return;
+	}
 
-  const delay = RETRY_DELAYS_MS[attempt];
+	const delay = RETRY_DELAYS_MS[attempt];
 
-  console.log(
-    `Scheduling retry ${attempt + 1}/${RETRY_DELAYS_MS.length} for webhook ${webhook.id} in ${delay}ms`
-  );
+	console.log(
+		`Scheduling retry ${attempt + 1}/${RETRY_DELAYS_MS.length} for webhook ${webhook.id} in ${delay}ms`,
+	);
 
-  // Schedule the retry
-  setTimeout(async () => {
-    try {
-      await executeRetry(webhook.id, payload, attempt);
-    } catch (error) {
-      console.error(`Retry failed for webhook ${webhook.id}:`, error);
-    }
-  }, delay);
+	// Schedule the retry
+	setTimeout(async () => {
+		try {
+			await executeRetry(webhook.id, payload, attempt);
+		} catch (error) {
+			console.error(`Retry failed for webhook ${webhook.id}:`, error);
+		}
+	}, delay);
 }
 
 /**
@@ -1096,57 +1074,49 @@ export function scheduleRetry(
  * @param attempt - The current attempt number
  */
 async function executeRetry(
-  webhookId: string,
-  payload: WebhookPayload,
-  attempt: number
+	webhookId: string,
+	payload: WebhookPayload,
+	attempt: number,
 ): Promise<void> {
-  // Fetch current webhook state (it may have been disabled or deleted)
-  const [webhook] = await db
-    .select()
-    .from(webhooks)
-    .where(eq(webhooks.id, webhookId))
-    .limit(1);
+	// Fetch current webhook state (it may have been disabled or deleted)
+	const [webhook] = await db.select().from(webhooks).where(eq(webhooks.id, webhookId)).limit(1);
 
-  if (!webhook) {
-    console.log(`Webhook ${webhookId} no longer exists, skipping retry`);
-    return;
-  }
+	if (!webhook) {
+		console.log(`Webhook ${webhookId} no longer exists, skipping retry`);
+		return;
+	}
 
-  if (!webhook.enabled) {
-    console.log(`Webhook ${webhookId} is disabled, skipping retry`);
-    return;
-  }
+	if (!webhook.enabled) {
+		console.log(`Webhook ${webhookId} is disabled, skipping retry`);
+		return;
+	}
 
-  const result = await deliverWebhook(webhook, payload);
+	const result = await deliverWebhook(webhook, payload);
 
-  // Log the retry attempt
-  await logDelivery(webhook.id, payload.event, payload, result);
+	// Log the retry attempt
+	await logDelivery(webhook.id, payload.event, payload, result);
 
-  // Update webhook status
-  // Pass webhook info for admin notification if auto-disabled
-  const { disabled } = await updateWebhookStatus(
-    webhook.id,
-    result,
-    webhook.failureCount ?? 0,
-    webhook
-  );
+	// Update webhook status
+	// Pass webhook info for admin notification if auto-disabled
+	const { disabled } = await updateWebhookStatus(
+		webhook.id,
+		result,
+		webhook.failureCount ?? 0,
+		webhook,
+	);
 
-  if (result.success) {
-    console.log(`Webhook ${webhookId} retry ${attempt + 1} succeeded`);
-  } else {
-    console.log(
-      `Webhook ${webhookId} retry ${attempt + 1} failed: ${result.error}`
-    );
+	if (result.success) {
+		console.log(`Webhook ${webhookId} retry ${attempt + 1} succeeded`);
+	} else {
+		console.log(`Webhook ${webhookId} retry ${attempt + 1} failed: ${result.error}`);
 
-    // Schedule next retry if not disabled
-    if (!disabled) {
-      scheduleRetry(webhook, payload, attempt + 1);
-    } else {
-      console.log(
-        `Webhook ${webhookId} has been auto-disabled due to consecutive failures`
-      );
-    }
-  }
+		// Schedule next retry if not disabled
+		if (!disabled) {
+			scheduleRetry(webhook, payload, attempt + 1);
+		} else {
+			console.log(`Webhook ${webhookId} has been auto-disabled due to consecutive failures`);
+		}
+	}
 }
 
 // ============================================================================
@@ -1167,8 +1137,8 @@ async function executeRetry(
  * ```
  */
 export async function triggerLeadCreated(lead: Lead): Promise<void> {
-  const payload = formatLeadCreatedPayload(lead);
-  await dispatchWebhookEvent("lead.created", payload);
+	const payload = formatLeadCreatedPayload(lead);
+	await dispatchWebhookEvent("lead.created", payload);
 }
 
 /**
@@ -1186,11 +1156,11 @@ export async function triggerLeadCreated(lead: Lead): Promise<void> {
  * ```
  */
 export async function triggerLeadUpdated(
-  lead: Lead,
-  changes: Record<string, { old: unknown; new: unknown }>
+	lead: Lead,
+	changes: Record<string, { old: unknown; new: unknown }>,
 ): Promise<void> {
-  const payload = formatLeadUpdatedPayload(lead, changes);
-  await dispatchWebhookEvent("lead.updated", payload);
+	const payload = formatLeadUpdatedPayload(lead, changes);
+	await dispatchWebhookEvent("lead.updated", payload);
 }
 
 /**
@@ -1208,12 +1178,12 @@ export async function triggerLeadUpdated(
  * ```
  */
 export async function triggerLeadStatusChanged(
-  lead: Lead,
-  previousStatus: string,
-  newStatus: string
+	lead: Lead,
+	previousStatus: string,
+	newStatus: string,
 ): Promise<void> {
-  const payload = formatLeadStatusChangedPayload(lead, previousStatus, newStatus);
-  await dispatchWebhookEvent("lead.status_changed", payload);
+	const payload = formatLeadStatusChangedPayload(lead, previousStatus, newStatus);
+	await dispatchWebhookEvent("lead.status_changed", payload);
 }
 
 /**
@@ -1233,12 +1203,12 @@ export async function triggerLeadStatusChanged(
  * ```
  */
 export async function triggerLeadDeleted(
-  leadId: string,
-  name: string,
-  email: string
+	leadId: string,
+	name: string,
+	email: string,
 ): Promise<void> {
-  const payload = formatLeadDeletedPayload(leadId, name, email);
-  await dispatchWebhookEvent("lead.deleted", payload);
+	const payload = formatLeadDeletedPayload(leadId, name, email);
+	await dispatchWebhookEvent("lead.deleted", payload);
 }
 
 /**
@@ -1255,12 +1225,9 @@ export async function triggerLeadDeleted(
  * await triggerLeadActivityAdded(lead, activity);
  * ```
  */
-export async function triggerLeadActivityAdded(
-  lead: Lead,
-  activity: LeadActivity
-): Promise<void> {
-  const payload = formatLeadActivityAddedPayload(lead, activity);
-  await dispatchWebhookEvent("lead.activity_added", payload);
+export async function triggerLeadActivityAdded(lead: Lead, activity: LeadActivity): Promise<void> {
+	const payload = formatLeadActivityAddedPayload(lead, activity);
+	await dispatchWebhookEvent("lead.activity_added", payload);
 }
 
 // ============================================================================
@@ -1271,11 +1238,11 @@ export async function triggerLeadActivityAdded(
  * Options for creating a webhook.
  */
 export interface CreateWebhookOptions {
-  name: string;
-  url: string;
-  events: WebhookEvent[];
-  secret?: string;
-  enabled?: boolean;
+	name: string;
+	url: string;
+	events: WebhookEvent[];
+	secret?: string;
+	enabled?: boolean;
 }
 
 /**
@@ -1295,42 +1262,42 @@ export interface CreateWebhookOptions {
  * ```
  */
 export async function createWebhook(options: CreateWebhookOptions): Promise<Webhook> {
-  // Validate URL
-  const urlValidation = validateWebhookUrl(options.url);
-  if (!urlValidation.valid) {
-    throw new Error(`Invalid webhook URL: ${urlValidation.error}`);
-  }
+	// Validate URL
+	const urlValidation = validateWebhookUrl(options.url);
+	if (!urlValidation.valid) {
+		throw new Error(`Invalid webhook URL: ${urlValidation.error}`);
+	}
 
-  // Validate events
-  for (const event of options.events) {
-    if (!VALID_WEBHOOK_EVENTS.has(event)) {
-      throw new Error(`Invalid webhook event: ${event}`);
-    }
-  }
+	// Validate events
+	for (const event of options.events) {
+		if (!VALID_WEBHOOK_EVENTS.has(event)) {
+			throw new Error(`Invalid webhook event: ${event}`);
+		}
+	}
 
-  const [webhook] = await db
-    .insert(webhooks)
-    .values({
-      name: options.name,
-      url: options.url,
-      events: options.events,
-      secret: options.secret ?? null,
-      enabled: options.enabled ?? true,
-    })
-    .returning();
+	const [webhook] = await db
+		.insert(webhooks)
+		.values({
+			name: options.name,
+			url: options.url,
+			events: options.events,
+			secret: options.secret ?? null,
+			enabled: options.enabled ?? true,
+		})
+		.returning();
 
-  return webhook;
+	return webhook;
 }
 
 /**
  * Options for updating a webhook.
  */
 export interface UpdateWebhookOptions {
-  name?: string;
-  url?: string;
-  events?: WebhookEvent[];
-  secret?: string | null;
-  enabled?: boolean;
+	name?: string;
+	url?: string;
+	events?: WebhookEvent[];
+	secret?: string | null;
+	enabled?: boolean;
 }
 
 /**
@@ -1349,50 +1316,46 @@ export interface UpdateWebhookOptions {
  * ```
  */
 export async function updateWebhook(
-  id: string,
-  options: UpdateWebhookOptions
+	id: string,
+	options: UpdateWebhookOptions,
 ): Promise<Webhook | null> {
-  // Validate URL if provided
-  if (options.url) {
-    const urlValidation = validateWebhookUrl(options.url);
-    if (!urlValidation.valid) {
-      throw new Error(`Invalid webhook URL: ${urlValidation.error}`);
-    }
-  }
+	// Validate URL if provided
+	if (options.url) {
+		const urlValidation = validateWebhookUrl(options.url);
+		if (!urlValidation.valid) {
+			throw new Error(`Invalid webhook URL: ${urlValidation.error}`);
+		}
+	}
 
-  // Validate events if provided
-  if (options.events) {
-    for (const event of options.events) {
-      if (!VALID_WEBHOOK_EVENTS.has(event)) {
-        throw new Error(`Invalid webhook event: ${event}`);
-      }
-    }
-  }
+	// Validate events if provided
+	if (options.events) {
+		for (const event of options.events) {
+			if (!VALID_WEBHOOK_EVENTS.has(event)) {
+				throw new Error(`Invalid webhook event: ${event}`);
+			}
+		}
+	}
 
-  const updates: Partial<{
-    name: string;
-    url: string;
-    events: string[];
-    secret: string | null;
-    enabled: boolean;
-    updatedAt: Date;
-  }> = {
-    updatedAt: new Date(),
-  };
+	const updates: Partial<{
+		name: string;
+		url: string;
+		events: string[];
+		secret: string | null;
+		enabled: boolean;
+		updatedAt: Date;
+	}> = {
+		updatedAt: new Date(),
+	};
 
-  if (options.name !== undefined) updates.name = options.name;
-  if (options.url !== undefined) updates.url = options.url;
-  if (options.events !== undefined) updates.events = options.events;
-  if (options.secret !== undefined) updates.secret = options.secret;
-  if (options.enabled !== undefined) updates.enabled = options.enabled;
+	if (options.name !== undefined) updates.name = options.name;
+	if (options.url !== undefined) updates.url = options.url;
+	if (options.events !== undefined) updates.events = options.events;
+	if (options.secret !== undefined) updates.secret = options.secret;
+	if (options.enabled !== undefined) updates.enabled = options.enabled;
 
-  const [webhook] = await db
-    .update(webhooks)
-    .set(updates)
-    .where(eq(webhooks.id, id))
-    .returning();
+	const [webhook] = await db.update(webhooks).set(updates).where(eq(webhooks.id, id)).returning();
 
-  return webhook ?? null;
+	return webhook ?? null;
 }
 
 /**
@@ -1402,13 +1365,9 @@ export async function updateWebhook(
  * @returns The webhook or null if not found
  */
 export async function getWebhook(id: string): Promise<Webhook | null> {
-  const [webhook] = await db
-    .select()
-    .from(webhooks)
-    .where(eq(webhooks.id, id))
-    .limit(1);
+	const [webhook] = await db.select().from(webhooks).where(eq(webhooks.id, id)).limit(1);
 
-  return webhook ?? null;
+	return webhook ?? null;
 }
 
 /**
@@ -1418,11 +1377,11 @@ export async function getWebhook(id: string): Promise<Webhook | null> {
  * @returns Array of webhooks
  */
 export async function listWebhooks(includeDisabled = true): Promise<Webhook[]> {
-  if (includeDisabled) {
-    return db.select().from(webhooks);
-  }
+	if (includeDisabled) {
+		return db.select().from(webhooks);
+	}
 
-  return db.select().from(webhooks).where(eq(webhooks.enabled, true));
+	return db.select().from(webhooks).where(eq(webhooks.enabled, true));
 }
 
 /**
@@ -1432,12 +1391,9 @@ export async function listWebhooks(includeDisabled = true): Promise<Webhook[]> {
  * @returns true if deleted, false if not found
  */
 export async function deleteWebhook(id: string): Promise<boolean> {
-  const [deleted] = await db
-    .delete(webhooks)
-    .where(eq(webhooks.id, id))
-    .returning();
+	const [deleted] = await db.delete(webhooks).where(eq(webhooks.id, id)).returning();
 
-  return !!deleted;
+	return !!deleted;
 }
 
 /**
@@ -1458,49 +1414,49 @@ export async function deleteWebhook(id: string): Promise<boolean> {
  * ```
  */
 export async function sendTestWebhook(id: string): Promise<DeliveryResult | null> {
-  const webhook = await getWebhook(id);
-  if (!webhook) {
-    return null;
-  }
+	const webhook = await getWebhook(id);
+	if (!webhook) {
+		return null;
+	}
 
-  // Create test payload
-  const testPayload: WebhookPayload = {
-    id: randomUUID(),
-    event: "lead.created",
-    timestamp: new Date().toISOString(),
-    data: {
-      lead: {
-        id: "test-lead-id",
-        name: "Test Lead",
-        email: "test@example.com",
-        company: "Test Company",
-        phone: "+1-555-0000",
-        budget: "$10,000 - $25,000",
-        projectType: "Test Project",
-        message: "This is a test webhook delivery",
-        source: "Webhook Test",
-        status: "new",
-        createdAt: new Date().toISOString(),
-      },
-    },
-  };
+	// Create test payload
+	const testPayload: WebhookPayload = {
+		id: randomUUID(),
+		event: "lead.created",
+		timestamp: new Date().toISOString(),
+		data: {
+			lead: {
+				id: "test-lead-id",
+				name: "Test Lead",
+				email: "test@example.com",
+				company: "Test Company",
+				phone: "+1-555-0000",
+				budget: "$10,000 - $25,000",
+				projectType: "Test Project",
+				message: "This is a test webhook delivery",
+				source: "Webhook Test",
+				status: "new",
+				createdAt: new Date().toISOString(),
+			},
+		},
+	};
 
-  const result = await deliverWebhook(webhook, testPayload, { noRetry: true });
+	const result = await deliverWebhook(webhook, testPayload, { noRetry: true });
 
-  // Log the test delivery
-  await logDelivery(webhook.id, "lead.created", testPayload, result);
+	// Log the test delivery
+	await logDelivery(webhook.id, "lead.created", testPayload, result);
 
-  // Update last triggered timestamp but don't affect failure count
-  await db
-    .update(webhooks)
-    .set({
-      lastTriggeredAt: new Date(),
-      lastStatusCode: result.statusCode,
-      updatedAt: new Date(),
-    })
-    .where(eq(webhooks.id, id));
+	// Update last triggered timestamp but don't affect failure count
+	await db
+		.update(webhooks)
+		.set({
+			lastTriggeredAt: new Date(),
+			lastStatusCode: result.statusCode,
+			updatedAt: new Date(),
+		})
+		.where(eq(webhooks.id, id));
 
-  return result;
+	return result;
 }
 
 /**
@@ -1511,57 +1467,57 @@ export async function sendTestWebhook(id: string): Promise<DeliveryResult | null
  * @returns Delivery records and pagination info
  */
 export async function getDeliveryHistory(
-  webhookId: string,
-  options: { page?: number; limit?: number } = {}
+	webhookId: string,
+	options: { page?: number; limit?: number } = {},
 ): Promise<{
-  deliveries: Array<{
-    id: string;
-    event: string;
-    statusCode: number | null;
-    durationMs: number | null;
-    attemptedAt: Date;
-  }>;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
+	deliveries: Array<{
+		id: string;
+		event: string;
+		statusCode: number | null;
+		durationMs: number | null;
+		attemptedAt: Date;
+	}>;
+	pagination: {
+		page: number;
+		limit: number;
+		total: number;
+	};
 }> {
-  const page = options.page ?? 1;
-  const limit = options.limit ?? 20;
-  const offset = (page - 1) * limit;
+	const page = options.page ?? 1;
+	const limit = options.limit ?? 20;
+	const offset = (page - 1) * limit;
 
-  // Get total count
-  const allDeliveries = await db
-    .select({ id: webhookDeliveries.id })
-    .from(webhookDeliveries)
-    .where(eq(webhookDeliveries.webhookId, webhookId));
+	// Get total count
+	const allDeliveries = await db
+		.select({ id: webhookDeliveries.id })
+		.from(webhookDeliveries)
+		.where(eq(webhookDeliveries.webhookId, webhookId));
 
-  const total = allDeliveries.length;
+	const total = allDeliveries.length;
 
-  // Get paginated deliveries
-  const deliveries = await db
-    .select({
-      id: webhookDeliveries.id,
-      event: webhookDeliveries.event,
-      statusCode: webhookDeliveries.statusCode,
-      durationMs: webhookDeliveries.durationMs,
-      attemptedAt: webhookDeliveries.attemptedAt,
-    })
-    .from(webhookDeliveries)
-    .where(eq(webhookDeliveries.webhookId, webhookId))
-    .orderBy(webhookDeliveries.attemptedAt)
-    .limit(limit)
-    .offset(offset);
+	// Get paginated deliveries
+	const deliveries = await db
+		.select({
+			id: webhookDeliveries.id,
+			event: webhookDeliveries.event,
+			statusCode: webhookDeliveries.statusCode,
+			durationMs: webhookDeliveries.durationMs,
+			attemptedAt: webhookDeliveries.attemptedAt,
+		})
+		.from(webhookDeliveries)
+		.where(eq(webhookDeliveries.webhookId, webhookId))
+		.orderBy(webhookDeliveries.attemptedAt)
+		.limit(limit)
+		.offset(offset);
 
-  return {
-    deliveries,
-    pagination: {
-      page,
-      limit,
-      total,
-    },
-  };
+	return {
+		deliveries,
+		pagination: {
+			page,
+			limit,
+			total,
+		},
+	};
 }
 
 /**
@@ -1572,15 +1528,15 @@ export async function getDeliveryHistory(
  * @returns The updated webhook or null if not found
  */
 export async function reenableWebhook(id: string): Promise<Webhook | null> {
-  const [webhook] = await db
-    .update(webhooks)
-    .set({
-      enabled: true,
-      failureCount: 0,
-      updatedAt: new Date(),
-    })
-    .where(eq(webhooks.id, id))
-    .returning();
+	const [webhook] = await db
+		.update(webhooks)
+		.set({
+			enabled: true,
+			failureCount: 0,
+			updatedAt: new Date(),
+		})
+		.where(eq(webhooks.id, id))
+		.returning();
 
-  return webhook ?? null;
+	return webhook ?? null;
 }

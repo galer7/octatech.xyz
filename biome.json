@@ -1,0 +1,58 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noThenProperty": "off",
+				"noUnknownAtRules": "off"
+			},
+			"correctness": {
+				"noUnusedVariables": "error",
+				"noUnusedImports": "error"
+			},
+			"a11y": {
+				"noSvgWithoutTitle": "warn",
+				"useButtonType": "warn",
+				"noLabelWithoutControl": "warn",
+				"noInteractiveElementToNoninteractiveRole": "warn",
+				"useKeyWithClickEvents": "warn",
+				"noStaticElementInteractions": "warn"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"files": {
+		"includes": ["packages/**", "*.json"]
+	},
+	"overrides": [
+		{
+			"includes": ["packages/blog/**/*.astro"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false }
+		},
+		{
+			"includes": ["**/dist/**", "**/.astro/**"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false }
+		}
+	]
+}

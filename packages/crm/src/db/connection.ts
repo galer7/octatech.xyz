@@ -14,10 +14,10 @@ import * as schema from "./schema.js";
 
 // Validate DATABASE_URL is present
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL environment variable is required. " +
-      "Example: postgresql://user:pass@host:5432/dbname"
-  );
+	throw new Error(
+		"DATABASE_URL environment variable is required. " +
+			"Example: postgresql://user:pass@host:5432/dbname",
+	);
 }
 
 /**
@@ -28,9 +28,9 @@ if (!process.env.DATABASE_URL) {
  * - connect_timeout: 10 seconds to fail fast on connection issues
  */
 const connectionConfig = {
-  max: parseInt(process.env.DB_POOL_MAX || "10", 10),
-  idle_timeout: parseInt(process.env.DB_IDLE_TIMEOUT || "20", 10),
-  connect_timeout: parseInt(process.env.DB_CONNECT_TIMEOUT || "10", 10),
+	max: parseInt(process.env.DB_POOL_MAX || "10", 10),
+	idle_timeout: parseInt(process.env.DB_IDLE_TIMEOUT || "20", 10),
+	connect_timeout: parseInt(process.env.DB_CONNECT_TIMEOUT || "10", 10),
 };
 
 /**
@@ -79,7 +79,7 @@ export type Database = typeof db;
  * ```
  */
 export async function closeConnection(): Promise<void> {
-  await sql.end();
+	await sql.end();
 }
 
 /**
@@ -95,18 +95,18 @@ export async function closeConnection(): Promise<void> {
  * ```
  */
 export async function checkDatabaseHealth(): Promise<{
-  connected: boolean;
-  latencyMs: number;
-  version: string;
+	connected: boolean;
+	latencyMs: number;
+	version: string;
 }> {
-  const start = Date.now();
+	const start = Date.now();
 
-  const result = await sql`SELECT version()`;
-  const version = result[0]?.version as string;
+	const result = await sql`SELECT version()`;
+	const version = result[0]?.version as string;
 
-  return {
-    connected: true,
-    latencyMs: Date.now() - start,
-    version: version.split(" ").slice(0, 2).join(" "),
-  };
+	return {
+		connected: true,
+		latencyMs: Date.now() - start,
+		version: version.split(" ").slice(0, 2).join(" "),
+	};
 }

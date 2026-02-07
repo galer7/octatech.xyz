@@ -13,11 +13,11 @@
  * This endpoint does NOT require authentication - Cal.com calls it directly.
  */
 
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { db } from "../../db/connection.js";
-import { leads, leadActivities } from "../../db/schema.js";
+import { leadActivities, leads } from "../../db/schema.js";
 import { formatZodErrors } from "../../lib/validation.js";
 import { triggerLeadCreated } from "../../lib/webhooks.js";
 
@@ -29,33 +29,31 @@ import { triggerLeadCreated } from "../../lib/webhooks.js";
  * Schema for Cal.com attendee information.
  */
 const calAttendeeSchema = z.object({
-  email: z.string().email("Invalid attendee email"),
-  name: z.string().min(1, "Attendee name is required"),
-  timeZone: z.string().optional(),
+	email: z.string().email("Invalid attendee email"),
+	name: z.string().min(1, "Attendee name is required"),
+	timeZone: z.string().optional(),
 });
 
 /**
  * Schema for Cal.com custom responses (optional fields from booking form).
  */
 const calResponsesSchema = z
-  .object({
-    company: z.string().optional(),
-    projectDescription: z.string().optional(),
-  })
-  .passthrough()
-  .optional();
+	.object({
+		company: z.string().optional(),
+		projectDescription: z.string().optional(),
+	})
+	.passthrough()
+	.optional();
 
 /**
  * Schema for Cal.com booking payload.
  */
 const calBookingPayloadSchema = z.object({
-  title: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  attendees: z
-    .array(calAttendeeSchema)
-    .min(1, "At least one attendee is required"),
-  responses: calResponsesSchema,
+	title: z.string().optional(),
+	startTime: z.string().optional(),
+	endTime: z.string().optional(),
+	attendees: z.array(calAttendeeSchema).min(1, "At least one attendee is required"),
+	responses: calResponsesSchema,
 });
 
 /**
@@ -63,8 +61,8 @@ const calBookingPayloadSchema = z.object({
  * Validates the structure expected from Cal.com webhooks.
  */
 const calWebhookSchema = z.object({
-  triggerEvent: z.string(),
-  payload: calBookingPayloadSchema,
+	triggerEvent: z.string(),
+	payload: calBookingPayloadSchema,
 });
 
 export type CalWebhookPayload = z.infer<typeof calWebhookSchema>;
@@ -104,128 +102,120 @@ export const calWebhookRoutes = new Hono();
  * ```
  */
 calWebhookRoutes.post("/", async (c) => {
-  // Parse and validate request body
-  const body = await c.req.json().catch(() => ({}));
-  const parseResult = calWebhookSchema.safeParse(body);
+	// Parse and validate request body
+	const body = await c.req.json().catch(() => ({}));
+	const parseResult = calWebhookSchema.safeParse(body);
 
-  if (!parseResult.success) {
-    const errors = formatZodErrors(parseResult.error);
-    console.error("[Cal.com Webhook] Validation failed:", errors);
-    return c.json(
-      {
-        success: false,
-        errors,
-      },
-      400
-    );
-  }
+	if (!parseResult.success) {
+		const errors = formatZodErrors(parseResult.error);
+		console.error("[Cal.com Webhook] Validation failed:", errors);
+		return c.json(
+			{
+				success: false,
+				errors,
+			},
+			400,
+		);
+	}
 
-  const webhookData = parseResult.data;
+	const webhookData = parseResult.data;
 
-  // Only handle BOOKING_CREATED events
-  if (webhookData.triggerEvent !== "BOOKING_CREATED") {
-    console.log(
-      `[Cal.com Webhook] Ignoring event: ${webhookData.triggerEvent}`
-    );
-    return c.json({ success: true, message: "Event ignored" });
-  }
+	// Only handle BOOKING_CREATED events
+	if (webhookData.triggerEvent !== "BOOKING_CREATED") {
+		console.log(`[Cal.com Webhook] Ignoring event: ${webhookData.triggerEvent}`);
+		return c.json({ success: true, message: "Event ignored" });
+	}
 
-  const { payload } = webhookData;
-  const attendee = payload.attendees[0];
-  const bookingTitle = payload.title || "Cal.com Booking";
-  const bookingTime = payload.startTime
-    ? new Date(payload.startTime).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : "Unknown time";
+	const { payload } = webhookData;
+	const attendee = payload.attendees[0];
+	const bookingTitle = payload.title || "Cal.com Booking";
+	const bookingTime = payload.startTime
+		? new Date(payload.startTime).toLocaleString("en-US", {
+				dateStyle: "medium",
+				timeStyle: "short",
+			})
+		: "Unknown time";
 
-  try {
-    // Check if lead with this email already exists
-    const [existingLead] = await db
-      .select()
-      .from(leads)
-      .where(eq(leads.email, attendee.email))
-      .limit(1);
+	try {
+		// Check if lead with this email already exists
+		const [existingLead] = await db
+			.select()
+			.from(leads)
+			.where(eq(leads.email, attendee.email))
+			.limit(1);
 
-    if (existingLead) {
-      // Lead exists - add activity noting the booking
-      console.log(
-        `[Cal.com Webhook] Lead exists for ${attendee.email}, adding booking activity`
-      );
+		if (existingLead) {
+			// Lead exists - add activity noting the booking
+			console.log(`[Cal.com Webhook] Lead exists for ${attendee.email}, adding booking activity`);
 
-      await db.insert(leadActivities).values({
-        leadId: existingLead.id,
-        type: "meeting",
-        description: `Cal.com booking created: "${bookingTitle}" scheduled for ${bookingTime}`,
-      });
+			await db.insert(leadActivities).values({
+				leadId: existingLead.id,
+				type: "meeting",
+				description: `Cal.com booking created: "${bookingTitle}" scheduled for ${bookingTime}`,
+			});
 
-      return c.json({
-        success: true,
-        message: "Activity added to existing lead",
-        leadId: existingLead.id,
-      });
-    }
+			return c.json({
+				success: true,
+				message: "Activity added to existing lead",
+				leadId: existingLead.id,
+			});
+		}
 
-    // No existing lead - create a new one
-    console.log(
-      `[Cal.com Webhook] Creating new lead for ${attendee.email}`
-    );
+		// No existing lead - create a new one
+		console.log(`[Cal.com Webhook] Creating new lead for ${attendee.email}`);
 
-    // Build message from available information
-    const messageParts: string[] = [];
-    if (payload.responses?.projectDescription) {
-      messageParts.push(payload.responses.projectDescription);
-    }
-    messageParts.push(`Booked via Cal.com: "${bookingTitle}" at ${bookingTime}`);
+		// Build message from available information
+		const messageParts: string[] = [];
+		if (payload.responses?.projectDescription) {
+			messageParts.push(payload.responses.projectDescription);
+		}
+		messageParts.push(`Booked via Cal.com: "${bookingTitle}" at ${bookingTime}`);
 
-    const [newLead] = await db
-      .insert(leads)
-      .values({
-        name: attendee.name,
-        email: attendee.email,
-        company: payload.responses?.company || null,
-        phone: null,
-        budget: null,
-        projectType: null,
-        message: messageParts.join("\n\n"),
-        source: "Cal.com Booking",
-        status: "new",
-      })
-      .returning();
+		const [newLead] = await db
+			.insert(leads)
+			.values({
+				name: attendee.name,
+				email: attendee.email,
+				company: payload.responses?.company || null,
+				phone: null,
+				budget: null,
+				projectType: null,
+				message: messageParts.join("\n\n"),
+				source: "Cal.com Booking",
+				status: "new",
+			})
+			.returning();
 
-    // Create initial activity
-    await db.insert(leadActivities).values({
-      leadId: newLead.id,
-      type: "meeting",
-      description: `Lead created from Cal.com booking: "${bookingTitle}" scheduled for ${bookingTime}`,
-    });
+		// Create initial activity
+		await db.insert(leadActivities).values({
+			leadId: newLead.id,
+			type: "meeting",
+			description: `Lead created from Cal.com booking: "${bookingTitle}" scheduled for ${bookingTime}`,
+		});
 
-    // Trigger webhooks (fire-and-forget, don't await)
-    triggerLeadCreated(newLead).catch((err) => {
-      console.error("[Cal.com Webhook] Failed to trigger lead.created webhook:", err);
-    });
+		// Trigger webhooks (fire-and-forget, don't await)
+		triggerLeadCreated(newLead).catch((err) => {
+			console.error("[Cal.com Webhook] Failed to trigger lead.created webhook:", err);
+		});
 
-    console.log(
-      `[Cal.com Webhook] Created new lead ${newLead.id} for ${attendee.email}`
-    );
+		console.log(`[Cal.com Webhook] Created new lead ${newLead.id} for ${attendee.email}`);
 
-    return c.json(
-      {
-        success: true,
-        message: "Lead created",
-        leadId: newLead.id,
-      },
-      201
-    );
-  } catch (error) {
-    console.error("[Cal.com Webhook] Error processing webhook:", error);
-    return c.json(
-      {
-        success: false,
-        error: "Internal server error",
-      },
-      500
-    );
-  }
+		return c.json(
+			{
+				success: true,
+				message: "Lead created",
+				leadId: newLead.id,
+			},
+			201,
+		);
+	} catch (error) {
+		console.error("[Cal.com Webhook] Error processing webhook:", error);
+		return c.json(
+			{
+				success: false,
+				error: "Internal server error",
+			},
+			500,
+		);
+	}
 });

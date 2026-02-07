@@ -1,19 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type {
-  Company,
-  CompanyWithContacts,
-  PaginatedResponse,
-} from "@/lib/types";
+import type { Company, CompanyWithContacts, PaginatedResponse } from "@/lib/types";
 
 interface CompaniesQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  size?: string;
-  contractType?: string;
-  hiringContractors?: boolean;
-  sort?: string;
+	page?: number;
+	limit?: number;
+	search?: string;
+	size?: string;
+	contractType?: string;
+	hiringContractors?: boolean;
+	sort?: string;
 }
 
 /**
@@ -21,7 +17,7 @@ interface CompaniesQueryParams {
  * Admin endpoints wrap single objects in { data: T }.
  */
 interface ApiResponse<T> {
-  data: T;
+	data: T;
 }
 
 /**
@@ -31,16 +27,16 @@ interface ApiResponse<T> {
  * The admin API returns { data: Company[], pagination: {...} }.
  */
 export function useCompanies(params: CompaniesQueryParams = {}) {
-  return useQuery({
-    queryKey: ["companies", params],
-    queryFn: async () => {
-      const response = await api.get<PaginatedResponse<Company>>(
-        "/admin/companies",
-        params as Record<string, string | number | boolean | undefined>,
-      );
-      return response;
-    },
-  });
+	return useQuery({
+		queryKey: ["companies", params],
+		queryFn: async () => {
+			const response = await api.get<PaginatedResponse<Company>>(
+				"/admin/companies",
+				params as Record<string, string | number | boolean | undefined>,
+			);
+			return response;
+		},
+	});
 }
 
 /**
@@ -50,17 +46,15 @@ export function useCompanies(params: CompaniesQueryParams = {}) {
  * Returns the company with contacts array attached.
  */
 export function useCompany(id: string | undefined) {
-  return useQuery({
-    queryKey: ["company", id],
-    queryFn: async () => {
-      if (!id) throw new Error("Company ID required");
-      const response = await api.get<ApiResponse<CompanyWithContacts>>(
-        `/admin/companies/${id}`,
-      );
-      return response.data;
-    },
-    enabled: !!id,
-  });
+	return useQuery({
+		queryKey: ["company", id],
+		queryFn: async () => {
+			if (!id) throw new Error("Company ID required");
+			const response = await api.get<ApiResponse<CompanyWithContacts>>(`/admin/companies/${id}`);
+			return response.data;
+		},
+		enabled: !!id,
+	});
 }
 
 /**
@@ -70,20 +64,17 @@ export function useCompany(id: string | undefined) {
  * Invalidates companies list cache on success.
  */
 export function useCreateCompany() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (data: Partial<Company>) => {
-      const response = await api.post<ApiResponse<Company>>(
-        "/admin/companies",
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-    },
-  });
+	return useMutation({
+		mutationFn: async (data: Partial<Company>) => {
+			const response = await api.post<ApiResponse<Company>>("/admin/companies", data);
+			return response.data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["companies"] });
+		},
+	});
 }
 
 /**
@@ -93,27 +84,18 @@ export function useCreateCompany() {
  * Invalidates companies list and single company caches on success.
  */
 export function useUpdateCompany() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: Partial<Company>;
-    }) => {
-      const response = await api.patch<ApiResponse<Company>>(
-        `/admin/companies/${id}`,
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: (company) => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      queryClient.invalidateQueries({ queryKey: ["company", company.id] });
-    },
-  });
+	return useMutation({
+		mutationFn: async ({ id, data }: { id: string; data: Partial<Company> }) => {
+			const response = await api.patch<ApiResponse<Company>>(`/admin/companies/${id}`, data);
+			return response.data;
+		},
+		onSuccess: (company) => {
+			queryClient.invalidateQueries({ queryKey: ["companies"] });
+			queryClient.invalidateQueries({ queryKey: ["company", company.id] });
+		},
+	});
 }
 
 /**
@@ -123,15 +105,15 @@ export function useUpdateCompany() {
  * Invalidates companies list cache on success.
  */
 export function useDeleteCompany() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/admin/companies/${id}`);
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-    },
-  });
+	return useMutation({
+		mutationFn: async (id: string) => {
+			await api.delete(`/admin/companies/${id}`);
+			return id;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["companies"] });
+		},
+	});
 }

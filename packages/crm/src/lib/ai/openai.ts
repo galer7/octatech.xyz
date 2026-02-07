@@ -7,10 +7,10 @@
 
 import OpenAI from "openai";
 import {
-  budgetOptions,
-  projectTypeOptions,
-  type BudgetOption,
-  type ProjectTypeOption,
+	type BudgetOption,
+	budgetOptions,
+	type ProjectTypeOption,
+	projectTypeOptions,
 } from "../validation.js";
 
 // ============================================================================
@@ -21,77 +21,77 @@ import {
  * Result of AI lead parsing operation.
  */
 export interface ParsedLeadResult {
-  /** Extracted lead data fields */
-  parsed: ParsedLeadData;
-  /** Overall confidence score (0-1) indicating extraction quality */
-  confidence: number;
-  /** List of fields that were successfully extracted */
-  extractedFields: string[];
+	/** Extracted lead data fields */
+	parsed: ParsedLeadData;
+	/** Overall confidence score (0-1) indicating extraction quality */
+	confidence: number;
+	/** List of fields that were successfully extracted */
+	extractedFields: string[];
 }
 
 /**
  * Structured lead data extracted from natural language.
  */
 export interface ParsedLeadData {
-  /** Contact's full name */
-  name: string | null;
-  /** Email address */
-  email: string | null;
-  /** Company or organization name */
-  company: string | null;
-  /** Phone number in any format */
-  phone: string | null;
-  /** Budget range mapped to predefined options */
-  budget: BudgetOption | null;
-  /** Project type mapped to predefined options */
-  projectType: ProjectTypeOption | null;
-  /** How they found us */
-  source: string | null;
-  /** Brief summary of their needs/project */
-  message: string | null;
+	/** Contact's full name */
+	name: string | null;
+	/** Email address */
+	email: string | null;
+	/** Company or organization name */
+	company: string | null;
+	/** Phone number in any format */
+	phone: string | null;
+	/** Budget range mapped to predefined options */
+	budget: BudgetOption | null;
+	/** Project type mapped to predefined options */
+	projectType: ProjectTypeOption | null;
+	/** How they found us */
+	source: string | null;
+	/** Brief summary of their needs/project */
+	message: string | null;
 }
 
 /**
  * Raw response from OpenAI before validation.
  */
 interface OpenAIParseResponse {
-  name: string | null;
-  email: string | null;
-  company: string | null;
-  phone: string | null;
-  budget: string | null;
-  projectType: string | null;
-  source: string | null;
-  message: string | null;
-  confidence: number;
+	name: string | null;
+	email: string | null;
+	company: string | null;
+	phone: string | null;
+	budget: string | null;
+	projectType: string | null;
+	source: string | null;
+	message: string | null;
+	confidence: number;
 }
 
 /**
  * Error thrown when AI service is unavailable.
  */
 export class AIServiceError extends Error {
-  public readonly code = "AI_SERVICE_ERROR";
+	public readonly code = "AI_SERVICE_ERROR";
 
-  constructor(message = "AI service temporarily unavailable") {
-    super(message);
-    this.name = "AIServiceError";
-  }
+	constructor(message = "AI service temporarily unavailable") {
+		super(message);
+		this.name = "AIServiceError";
+	}
 }
 
 /**
  * Error thrown when parsing fails to extract meaningful data.
  */
 export class ParseFailedError extends Error {
-  public readonly code = "PARSE_FAILED";
-  public readonly confidence: number;
-  public readonly parsed: ParsedLeadData;
+	public readonly code = "PARSE_FAILED";
+	public readonly confidence: number;
+	public readonly parsed: ParsedLeadData;
 
-  constructor(confidence: number, parsed: ParsedLeadData) {
-    super("Could not extract lead information");
-    this.name = "ParseFailedError";
-    this.confidence = confidence;
-    this.parsed = parsed;
-  }
+	constructor(confidence: number, parsed: ParsedLeadData) {
+		super("Could not extract lead information");
+		this.name = "ParseFailedError";
+		this.confidence = confidence;
+		this.parsed = parsed;
+	}
 }
 
 // ============================================================================
@@ -159,15 +159,15 @@ const MIN_CONFIDENCE_THRESHOLD = 0.3;
  * @throws AIServiceError if API key is not configured
  */
 export function createOpenAIClient(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
+	const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    throw new AIServiceError(
-      "OpenAI API key not configured. Set OPENAI_API_KEY environment variable."
-    );
-  }
+	if (!apiKey) {
+		throw new AIServiceError(
+			"OpenAI API key not configured. Set OPENAI_API_KEY environment variable.",
+		);
+	}
 
-  return new OpenAI({ apiKey });
+	return new OpenAI({ apiKey });
 }
 
 /**
@@ -178,68 +178,66 @@ export function createOpenAIClient(): OpenAI {
  * @returns Matching BudgetOption or null
  */
 export function mapBudgetToOption(budget: string | null): BudgetOption | null {
-  if (!budget) return null;
+	if (!budget) return null;
 
-  const normalized = budget.toLowerCase().trim();
+	const normalized = budget.toLowerCase().trim();
 
-  // Direct match (case-insensitive)
-  const directMatch = budgetOptions.find(
-    (opt) => opt.toLowerCase() === normalized
-  );
-  if (directMatch) return directMatch;
+	// Direct match (case-insensitive)
+	const directMatch = budgetOptions.find((opt) => opt.toLowerCase() === normalized);
+	if (directMatch) return directMatch;
 
-  // Check for "not sure" variants
-  if (
-    normalized.includes("not sure") ||
-    normalized.includes("unsure") ||
-    normalized.includes("unknown") ||
-    normalized.includes("don't know") ||
-    normalized.includes("tbd")
-  ) {
-    return "Not sure yet";
-  }
+	// Check for "not sure" variants
+	if (
+		normalized.includes("not sure") ||
+		normalized.includes("unsure") ||
+		normalized.includes("unknown") ||
+		normalized.includes("don't know") ||
+		normalized.includes("tbd")
+	) {
+		return "Not sure yet";
+	}
 
-  // Extract numeric value for range matching
-  const numericMatch = normalized.match(/\$?(\d+)[,.]?(\d*)\s*k?/i);
-  if (numericMatch) {
-    let value = parseInt(numericMatch[1], 10);
-    // Handle "k" suffix (e.g., "75k" = 75000)
-    if (normalized.includes("k") && value < 1000) {
-      value *= 1000;
-    }
-    // Handle missing "k" for values that look like thousands
-    if (numericMatch[2] && numericMatch[2].length === 3) {
-      // "75,000" format
-      value = parseInt(numericMatch[1] + numericMatch[2], 10);
-    }
+	// Extract numeric value for range matching
+	const numericMatch = normalized.match(/\$?(\d+)[,.]?(\d*)\s*k?/i);
+	if (numericMatch) {
+		let value = parseInt(numericMatch[1], 10);
+		// Handle "k" suffix (e.g., "75k" = 75000)
+		if (normalized.includes("k") && value < 1000) {
+			value *= 1000;
+		}
+		// Handle missing "k" for values that look like thousands
+		if (numericMatch[2] && numericMatch[2].length === 3) {
+			// "75,000" format
+			value = parseInt(numericMatch[1] + numericMatch[2], 10);
+		}
 
-    // Map to budget ranges
-    if (value < 5000) return "Not sure yet";
-    if (value >= 5000 && value < 15000) return "$5,000 - $15,000";
-    if (value >= 15000 && value < 50000) return "$15,000 - $50,000";
-    if (value >= 50000 && value < 100000) return "$50,000 - $100,000";
-    if (value >= 100000) return "$100,000+";
-  }
+		// Map to budget ranges
+		if (value < 5000) return "Not sure yet";
+		if (value >= 5000 && value < 15000) return "$5,000 - $15,000";
+		if (value >= 15000 && value < 50000) return "$15,000 - $50,000";
+		if (value >= 50000 && value < 100000) return "$50,000 - $100,000";
+		if (value >= 100000) return "$100,000+";
+	}
 
-  // Check for range mentions
-  if (normalized.includes("5") && normalized.includes("15")) {
-    return "$5,000 - $15,000";
-  }
-  if (normalized.includes("15") && normalized.includes("50")) {
-    return "$15,000 - $50,000";
-  }
-  if (normalized.includes("50") && normalized.includes("100")) {
-    return "$50,000 - $100,000";
-  }
-  if (
-    normalized.includes("100") ||
-    normalized.includes("enterprise") ||
-    normalized.includes("large")
-  ) {
-    return "$100,000+";
-  }
+	// Check for range mentions
+	if (normalized.includes("5") && normalized.includes("15")) {
+		return "$5,000 - $15,000";
+	}
+	if (normalized.includes("15") && normalized.includes("50")) {
+		return "$15,000 - $50,000";
+	}
+	if (normalized.includes("50") && normalized.includes("100")) {
+		return "$50,000 - $100,000";
+	}
+	if (
+		normalized.includes("100") ||
+		normalized.includes("enterprise") ||
+		normalized.includes("large")
+	) {
+		return "$100,000+";
+	}
 
-  return null;
+	return null;
 }
 
 /**
@@ -249,83 +247,79 @@ export function mapBudgetToOption(budget: string | null): BudgetOption | null {
  * @param projectType - Project type string from AI response
  * @returns Matching ProjectTypeOption or null
  */
-export function mapProjectTypeToOption(
-  projectType: string | null
-): ProjectTypeOption | null {
-  if (!projectType) return null;
+export function mapProjectTypeToOption(projectType: string | null): ProjectTypeOption | null {
+	if (!projectType) return null;
 
-  const normalized = projectType.toLowerCase().trim();
+	const normalized = projectType.toLowerCase().trim();
 
-  // Direct match (case-insensitive)
-  const directMatch = projectTypeOptions.find(
-    (opt) => opt.toLowerCase() === normalized
-  );
-  if (directMatch) return directMatch;
+	// Direct match (case-insensitive)
+	const directMatch = projectTypeOptions.find((opt) => opt.toLowerCase() === normalized);
+	if (directMatch) return directMatch;
 
-  // Keyword-based matching
-  if (
-    normalized.includes("mvp") ||
-    normalized.includes("new product") ||
-    normalized.includes("startup") ||
-    normalized.includes("build from scratch") ||
-    normalized.includes("greenfield")
-  ) {
-    return "New Product / MVP";
-  }
+	// Keyword-based matching
+	if (
+		normalized.includes("mvp") ||
+		normalized.includes("new product") ||
+		normalized.includes("startup") ||
+		normalized.includes("build from scratch") ||
+		normalized.includes("greenfield")
+	) {
+		return "New Product / MVP";
+	}
 
-  if (
-    normalized.includes("staff") ||
-    normalized.includes("augment") ||
-    normalized.includes("contractor") ||
-    normalized.includes("developer") ||
-    normalized.includes("engineer") ||
-    normalized.includes("team extension")
-  ) {
-    return "Staff Augmentation";
-  }
+	if (
+		normalized.includes("staff") ||
+		normalized.includes("augment") ||
+		normalized.includes("contractor") ||
+		normalized.includes("developer") ||
+		normalized.includes("engineer") ||
+		normalized.includes("team extension")
+	) {
+		return "Staff Augmentation";
+	}
 
-  if (
-    normalized.includes("legacy") ||
-    normalized.includes("moderniz") ||
-    normalized.includes("refactor") ||
-    normalized.includes("rewrite") ||
-    normalized.includes("upgrade")
-  ) {
-    return "Legacy Modernization";
-  }
+	if (
+		normalized.includes("legacy") ||
+		normalized.includes("moderniz") ||
+		normalized.includes("refactor") ||
+		normalized.includes("rewrite") ||
+		normalized.includes("upgrade")
+	) {
+		return "Legacy Modernization";
+	}
 
-  if (
-    normalized.includes("cloud") ||
-    normalized.includes("migration") ||
-    normalized.includes("aws") ||
-    normalized.includes("azure") ||
-    normalized.includes("gcp")
-  ) {
-    return "Cloud Migration";
-  }
+	if (
+		normalized.includes("cloud") ||
+		normalized.includes("migration") ||
+		normalized.includes("aws") ||
+		normalized.includes("azure") ||
+		normalized.includes("gcp")
+	) {
+		return "Cloud Migration";
+	}
 
-  if (
-    normalized.includes("performance") ||
-    normalized.includes("optimization") ||
-    normalized.includes("speed") ||
-    normalized.includes("slow") ||
-    normalized.includes("scale") ||
-    normalized.includes("scaling")
-  ) {
-    return "Performance Optimization";
-  }
+	if (
+		normalized.includes("performance") ||
+		normalized.includes("optimization") ||
+		normalized.includes("speed") ||
+		normalized.includes("slow") ||
+		normalized.includes("scale") ||
+		normalized.includes("scaling")
+	) {
+		return "Performance Optimization";
+	}
 
-  if (
-    normalized.includes("security") ||
-    normalized.includes("audit") ||
-    normalized.includes("penetration") ||
-    normalized.includes("vulnerability") ||
-    normalized.includes("compliance")
-  ) {
-    return "Security Audit";
-  }
+	if (
+		normalized.includes("security") ||
+		normalized.includes("audit") ||
+		normalized.includes("penetration") ||
+		normalized.includes("vulnerability") ||
+		normalized.includes("compliance")
+	) {
+		return "Security Audit";
+	}
 
-  return "Other";
+	return "Other";
 }
 
 /**
@@ -336,31 +330,19 @@ export function mapProjectTypeToOption(
  * @returns Validated and cleaned ParsedLeadData
  */
 function validateAndCleanResponse(raw: OpenAIParseResponse): ParsedLeadData {
-  return {
-    name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : null,
-    email:
-      typeof raw.email === "string" && raw.email.includes("@")
-        ? raw.email.trim().toLowerCase()
-        : null,
-    company:
-      typeof raw.company === "string" && raw.company.trim()
-        ? raw.company.trim()
-        : null,
-    phone:
-      typeof raw.phone === "string" && raw.phone.trim()
-        ? raw.phone.trim()
-        : null,
-    budget: mapBudgetToOption(raw.budget),
-    projectType: mapProjectTypeToOption(raw.projectType),
-    source:
-      typeof raw.source === "string" && raw.source.trim()
-        ? raw.source.trim()
-        : null,
-    message:
-      typeof raw.message === "string" && raw.message.trim()
-        ? raw.message.trim()
-        : null,
-  };
+	return {
+		name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : null,
+		email:
+			typeof raw.email === "string" && raw.email.includes("@")
+				? raw.email.trim().toLowerCase()
+				: null,
+		company: typeof raw.company === "string" && raw.company.trim() ? raw.company.trim() : null,
+		phone: typeof raw.phone === "string" && raw.phone.trim() ? raw.phone.trim() : null,
+		budget: mapBudgetToOption(raw.budget),
+		projectType: mapProjectTypeToOption(raw.projectType),
+		source: typeof raw.source === "string" && raw.source.trim() ? raw.source.trim() : null,
+		message: typeof raw.message === "string" && raw.message.trim() ? raw.message.trim() : null,
+	};
 }
 
 /**
@@ -370,18 +352,18 @@ function validateAndCleanResponse(raw: OpenAIParseResponse): ParsedLeadData {
  * @returns Array of field names that have non-null values
  */
 function getExtractedFields(parsed: ParsedLeadData): string[] {
-  const fields: string[] = [];
+	const fields: string[] = [];
 
-  if (parsed.name) fields.push("name");
-  if (parsed.email) fields.push("email");
-  if (parsed.company) fields.push("company");
-  if (parsed.phone) fields.push("phone");
-  if (parsed.budget) fields.push("budget");
-  if (parsed.projectType) fields.push("projectType");
-  if (parsed.source) fields.push("source");
-  if (parsed.message) fields.push("message");
+	if (parsed.name) fields.push("name");
+	if (parsed.email) fields.push("email");
+	if (parsed.company) fields.push("company");
+	if (parsed.phone) fields.push("phone");
+	if (parsed.budget) fields.push("budget");
+	if (parsed.projectType) fields.push("projectType");
+	if (parsed.source) fields.push("source");
+	if (parsed.message) fields.push("message");
 
-  return fields;
+	return fields;
 }
 
 // ============================================================================
@@ -413,93 +395,90 @@ function getExtractedFields(parsed: ParsedLeadData): string[] {
  * // result.confidence = 0.92
  * ```
  */
-export async function parseLeadText(
-  text: string,
-  client?: OpenAI
-): Promise<ParsedLeadResult> {
-  const openai = client ?? createOpenAIClient();
+export async function parseLeadText(text: string, client?: OpenAI): Promise<ParsedLeadResult> {
+	const openai = client ?? createOpenAIClient();
 
-  const userPrompt = `Extract lead information from this text:
+	const userPrompt = `Extract lead information from this text:
 
 """
 ${text}
 """`;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: DEFAULT_TEMPERATURE,
-      response_format: { type: "json_object" },
-    });
+	try {
+		const response = await openai.chat.completions.create({
+			model: DEFAULT_MODEL,
+			messages: [
+				{ role: "system", content: SYSTEM_PROMPT },
+				{ role: "user", content: userPrompt },
+			],
+			temperature: DEFAULT_TEMPERATURE,
+			response_format: { type: "json_object" },
+		});
 
-    const content = response.choices[0]?.message?.content;
+		const content = response.choices[0]?.message?.content;
 
-    if (!content) {
-      throw new AIServiceError("Empty response from OpenAI");
-    }
+		if (!content) {
+			throw new AIServiceError("Empty response from OpenAI");
+		}
 
-    // Parse JSON response
-    let raw: OpenAIParseResponse;
-    try {
-      raw = JSON.parse(content);
-    } catch {
-      throw new AIServiceError("Invalid JSON response from OpenAI");
-    }
+		// Parse JSON response
+		let raw: OpenAIParseResponse;
+		try {
+			raw = JSON.parse(content);
+		} catch {
+			throw new AIServiceError("Invalid JSON response from OpenAI");
+		}
 
-    // Validate confidence is a number
-    const confidence =
-      typeof raw.confidence === "number" && raw.confidence >= 0 && raw.confidence <= 1
-        ? raw.confidence
-        : 0.5;
+		// Validate confidence is a number
+		const confidence =
+			typeof raw.confidence === "number" && raw.confidence >= 0 && raw.confidence <= 1
+				? raw.confidence
+				: 0.5;
 
-    // Clean and validate parsed data
-    const parsed = validateAndCleanResponse(raw);
-    const extractedFields = getExtractedFields(parsed);
+		// Clean and validate parsed data
+		const parsed = validateAndCleanResponse(raw);
+		const extractedFields = getExtractedFields(parsed);
 
-    // Check if parsing was successful enough
-    if (confidence < MIN_CONFIDENCE_THRESHOLD || extractedFields.length === 0) {
-      throw new ParseFailedError(confidence, parsed);
-    }
+		// Check if parsing was successful enough
+		if (confidence < MIN_CONFIDENCE_THRESHOLD || extractedFields.length === 0) {
+			throw new ParseFailedError(confidence, parsed);
+		}
 
-    return {
-      parsed,
-      confidence,
-      extractedFields,
-    };
-  } catch (error) {
-    // Re-throw our custom errors
-    if (error instanceof AIServiceError || error instanceof ParseFailedError) {
-      throw error;
-    }
+		return {
+			parsed,
+			confidence,
+			extractedFields,
+		};
+	} catch (error) {
+		// Re-throw our custom errors
+		if (error instanceof AIServiceError || error instanceof ParseFailedError) {
+			throw error;
+		}
 
-    // Handle OpenAI-specific errors
-    if (error instanceof OpenAI.APIError) {
-      if (error.status === 401) {
-        throw new AIServiceError("Invalid OpenAI API key");
-      }
-      if (error.status === 429) {
-        throw new AIServiceError("OpenAI rate limit exceeded. Please try again later.");
-      }
-      if (error.status && error.status >= 500) {
-        throw new AIServiceError("OpenAI service temporarily unavailable");
-      }
-      throw new AIServiceError(`OpenAI API error: ${error.message}`);
-    }
+		// Handle OpenAI-specific errors
+		if (error instanceof OpenAI.APIError) {
+			if (error.status === 401) {
+				throw new AIServiceError("Invalid OpenAI API key");
+			}
+			if (error.status === 429) {
+				throw new AIServiceError("OpenAI rate limit exceeded. Please try again later.");
+			}
+			if (error.status && error.status >= 500) {
+				throw new AIServiceError("OpenAI service temporarily unavailable");
+			}
+			throw new AIServiceError(`OpenAI API error: ${error.message}`);
+		}
 
-    // Handle network errors
-    if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
-      throw new AIServiceError("Unable to connect to OpenAI API");
-    }
+		// Handle network errors
+		if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
+			throw new AIServiceError("Unable to connect to OpenAI API");
+		}
 
-    // Generic error
-    throw new AIServiceError(
-      error instanceof Error ? error.message : "Unknown error during AI parsing"
-    );
-  }
+		// Generic error
+		throw new AIServiceError(
+			error instanceof Error ? error.message : "Unknown error during AI parsing",
+		);
+	}
 }
 
 /**
@@ -508,7 +487,7 @@ ${text}
  * @returns true if API key is set
  */
 export function isOpenAIConfigured(): boolean {
-  return !!process.env.OPENAI_API_KEY;
+	return !!process.env.OPENAI_API_KEY;
 }
 
 // ============================================================================
@@ -519,30 +498,30 @@ export function isOpenAIConfigured(): boolean {
  * Result of AI contact parsing operation.
  */
 export interface ParsedContactResult {
-  /** Extracted contact data fields */
-  parsed: ParsedContactData;
-  /** Overall confidence score (0-1) indicating extraction quality */
-  confidence: number;
-  /** List of fields that were successfully extracted */
-  extractedFields: string[];
+	/** Extracted contact data fields */
+	parsed: ParsedContactData;
+	/** Overall confidence score (0-1) indicating extraction quality */
+	confidence: number;
+	/** List of fields that were successfully extracted */
+	extractedFields: string[];
 }
 
 /**
  * Structured contact data extracted from natural language (e.g., LinkedIn profile text).
  */
 export interface ParsedContactData {
-  /** Contact's full name */
-  name: string | null;
-  /** Email address */
-  email: string | null;
-  /** Job role/title */
-  role: string | null;
-  /** Company or organization name */
-  company: string | null;
-  /** Location (city, country) */
-  location: string | null;
-  /** LinkedIn profile URL */
-  linkedinUrl: string | null;
+	/** Contact's full name */
+	name: string | null;
+	/** Email address */
+	email: string | null;
+	/** Job role/title */
+	role: string | null;
+	/** Company or organization name */
+	company: string | null;
+	/** Location (city, country) */
+	location: string | null;
+	/** LinkedIn profile URL */
+	linkedinUrl: string | null;
 }
 
 /**
@@ -566,56 +545,45 @@ Only return valid JSON, no explanation.`;
  * Raw response from OpenAI for contact parsing.
  */
 interface OpenAIContactParseResponse {
-  name: string | null;
-  email: string | null;
-  role: string | null;
-  company: string | null;
-  location: string | null;
-  linkedinUrl: string | null;
-  confidence: number;
+	name: string | null;
+	email: string | null;
+	role: string | null;
+	company: string | null;
+	location: string | null;
+	linkedinUrl: string | null;
+	confidence: number;
 }
 
 /**
  * Validate and clean the parsed contact response from OpenAI.
  */
 function validateAndCleanContactResponse(raw: OpenAIContactParseResponse): ParsedContactData {
-  return {
-    name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : null,
-    email:
-      typeof raw.email === "string" && raw.email.includes("@")
-        ? raw.email.trim().toLowerCase()
-        : null,
-    role:
-      typeof raw.role === "string" && raw.role.trim()
-        ? raw.role.trim()
-        : null,
-    company:
-      typeof raw.company === "string" && raw.company.trim()
-        ? raw.company.trim()
-        : null,
-    location:
-      typeof raw.location === "string" && raw.location.trim()
-        ? raw.location.trim()
-        : null,
-    linkedinUrl:
-      typeof raw.linkedinUrl === "string" && raw.linkedinUrl.trim()
-        ? raw.linkedinUrl.trim()
-        : null,
-  };
+	return {
+		name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : null,
+		email:
+			typeof raw.email === "string" && raw.email.includes("@")
+				? raw.email.trim().toLowerCase()
+				: null,
+		role: typeof raw.role === "string" && raw.role.trim() ? raw.role.trim() : null,
+		company: typeof raw.company === "string" && raw.company.trim() ? raw.company.trim() : null,
+		location: typeof raw.location === "string" && raw.location.trim() ? raw.location.trim() : null,
+		linkedinUrl:
+			typeof raw.linkedinUrl === "string" && raw.linkedinUrl.trim() ? raw.linkedinUrl.trim() : null,
+	};
 }
 
 /**
  * Get list of contact fields that were successfully extracted.
  */
 function getExtractedContactFields(parsed: ParsedContactData): string[] {
-  const fields: string[] = [];
-  if (parsed.name) fields.push("name");
-  if (parsed.email) fields.push("email");
-  if (parsed.role) fields.push("role");
-  if (parsed.company) fields.push("company");
-  if (parsed.location) fields.push("location");
-  if (parsed.linkedinUrl) fields.push("linkedinUrl");
-  return fields;
+	const fields: string[] = [];
+	if (parsed.name) fields.push("name");
+	if (parsed.email) fields.push("email");
+	if (parsed.role) fields.push("role");
+	if (parsed.company) fields.push("company");
+	if (parsed.location) fields.push("location");
+	if (parsed.linkedinUrl) fields.push("linkedinUrl");
+	return fields;
 }
 
 /**
@@ -642,82 +610,82 @@ function getExtractedContactFields(parsed: ParsedContactData): string[] {
  * ```
  */
 export async function parseContactText(
-  text: string,
-  client?: OpenAI
+	text: string,
+	client?: OpenAI,
 ): Promise<ParsedContactResult> {
-  const openai = client ?? createOpenAIClient();
+	const openai = client ?? createOpenAIClient();
 
-  const userPrompt = `Extract contact information from this text:
+	const userPrompt = `Extract contact information from this text:
 
 """
 ${text}
 """`;
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
-      messages: [
-        { role: "system", content: CONTACT_SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: DEFAULT_TEMPERATURE,
-      response_format: { type: "json_object" },
-    });
+	try {
+		const response = await openai.chat.completions.create({
+			model: DEFAULT_MODEL,
+			messages: [
+				{ role: "system", content: CONTACT_SYSTEM_PROMPT },
+				{ role: "user", content: userPrompt },
+			],
+			temperature: DEFAULT_TEMPERATURE,
+			response_format: { type: "json_object" },
+		});
 
-    const content = response.choices[0]?.message?.content;
+		const content = response.choices[0]?.message?.content;
 
-    if (!content) {
-      throw new AIServiceError("Empty response from OpenAI");
-    }
+		if (!content) {
+			throw new AIServiceError("Empty response from OpenAI");
+		}
 
-    let raw: OpenAIContactParseResponse;
-    try {
-      raw = JSON.parse(content);
-    } catch {
-      throw new AIServiceError("Invalid JSON response from OpenAI");
-    }
+		let raw: OpenAIContactParseResponse;
+		try {
+			raw = JSON.parse(content);
+		} catch {
+			throw new AIServiceError("Invalid JSON response from OpenAI");
+		}
 
-    const confidence =
-      typeof raw.confidence === "number" && raw.confidence >= 0 && raw.confidence <= 1
-        ? raw.confidence
-        : 0.5;
+		const confidence =
+			typeof raw.confidence === "number" && raw.confidence >= 0 && raw.confidence <= 1
+				? raw.confidence
+				: 0.5;
 
-    const parsed = validateAndCleanContactResponse(raw);
-    const extractedFields = getExtractedContactFields(parsed);
+		const parsed = validateAndCleanContactResponse(raw);
+		const extractedFields = getExtractedContactFields(parsed);
 
-    if (confidence < MIN_CONFIDENCE_THRESHOLD || extractedFields.length === 0) {
-      throw new ParseFailedError(confidence, parsed as any);
-    }
+		if (confidence < MIN_CONFIDENCE_THRESHOLD || extractedFields.length === 0) {
+			throw new ParseFailedError(confidence, parsed as any);
+		}
 
-    return {
-      parsed,
-      confidence,
-      extractedFields,
-    };
-  } catch (error) {
-    if (error instanceof AIServiceError || error instanceof ParseFailedError) {
-      throw error;
-    }
+		return {
+			parsed,
+			confidence,
+			extractedFields,
+		};
+	} catch (error) {
+		if (error instanceof AIServiceError || error instanceof ParseFailedError) {
+			throw error;
+		}
 
-    if (error instanceof OpenAI.APIError) {
-      if (error.status === 401) {
-        throw new AIServiceError("Invalid OpenAI API key");
-      }
-      if (error.status === 429) {
-        throw new AIServiceError("OpenAI rate limit exceeded. Please try again later.");
-      }
-      if (error.status && error.status >= 500) {
-        throw new AIServiceError("OpenAI service temporarily unavailable");
-      }
-      throw new AIServiceError(`OpenAI API error: ${error.message}`);
-    }
+		if (error instanceof OpenAI.APIError) {
+			if (error.status === 401) {
+				throw new AIServiceError("Invalid OpenAI API key");
+			}
+			if (error.status === 429) {
+				throw new AIServiceError("OpenAI rate limit exceeded. Please try again later.");
+			}
+			if (error.status && error.status >= 500) {
+				throw new AIServiceError("OpenAI service temporarily unavailable");
+			}
+			throw new AIServiceError(`OpenAI API error: ${error.message}`);
+		}
 
-    if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
-      throw new AIServiceError("Unable to connect to OpenAI API");
-    }
+		if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
+			throw new AIServiceError("Unable to connect to OpenAI API");
+		}
 
-    throw new AIServiceError(
-      error instanceof Error ? error.message : "Unknown error during AI parsing"
-    );
-  }
+		throw new AIServiceError(
+			error instanceof Error ? error.message : "Unknown error during AI parsing",
+		);
+	}
 }

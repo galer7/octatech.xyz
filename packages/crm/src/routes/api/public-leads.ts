@@ -10,15 +10,15 @@
 
 import { Hono } from "hono";
 import { db } from "../../db/connection.js";
-import { leads, leadActivities } from "../../db/schema.js";
+import { leadActivities, leads } from "../../db/schema.js";
+import { triggerLeadCreatedNotification } from "../../lib/notifications/dispatcher.js";
 import {
-  publicLeadSchema,
-  formatZodErrors,
-  isHoneypotFilled,
-  type PublicLeadInput,
+	formatZodErrors,
+	isHoneypotFilled,
+	type PublicLeadInput,
+	publicLeadSchema,
 } from "../../lib/validation.js";
 import { triggerLeadCreated } from "../../lib/webhooks.js";
-import { triggerLeadCreatedNotification } from "../../lib/notifications/dispatcher.js";
 
 /**
  * Public leads routes app instance.
@@ -37,87 +37,85 @@ export const publicLeadsRoutes = new Hono();
  * - The lead is NOT actually created
  */
 publicLeadsRoutes.post("/", async (c) => {
-  // Parse and validate request body
-  const body = await c.req.json().catch(() => ({}));
-  const parseResult = publicLeadSchema.safeParse(body);
+	// Parse and validate request body
+	const body = await c.req.json().catch(() => ({}));
+	const parseResult = publicLeadSchema.safeParse(body);
 
-  if (!parseResult.success) {
-    // Return validation errors
-    const errors = formatZodErrors(parseResult.error);
-    return c.json(
-      {
-        success: false,
-        errors,
-      },
-      400
-    );
-  }
+	if (!parseResult.success) {
+		// Return validation errors
+		const errors = formatZodErrors(parseResult.error);
+		return c.json(
+			{
+				success: false,
+				errors,
+			},
+			400,
+		);
+	}
 
-  const input: PublicLeadInput = parseResult.data;
+	const input: PublicLeadInput = parseResult.data;
 
-  // Check honeypot - if filled, silently reject but return success
-  // This tricks bots into thinking their submission succeeded
-  if (isHoneypotFilled(input.website)) {
-    // Log for monitoring (in production, this could go to a metrics system)
-    console.log(
-      `[SPAM] Honeypot triggered for submission from: ${input.email}`
-    );
+	// Check honeypot - if filled, silently reject but return success
+	// This tricks bots into thinking their submission succeeded
+	if (isHoneypotFilled(input.website)) {
+		// Log for monitoring (in production, this could go to a metrics system)
+		console.log(`[SPAM] Honeypot triggered for submission from: ${input.email}`);
 
-    // Return success to not reveal the protection mechanism
-    return c.json(
-      {
-        success: true,
-        message: "Thank you! We'll be in touch within 24 hours.",
-      },
-      201
-    );
-  }
+		// Return success to not reveal the protection mechanism
+		return c.json(
+			{
+				success: true,
+				message: "Thank you! We'll be in touch within 24 hours.",
+			},
+			201,
+		);
+	}
 
-  // Get client IP for logging
-  const clientIp =
-    c.req.header("CF-Connecting-IP") ||
-    c.req.header("X-Real-IP") ||
-    c.req.header("X-Forwarded-For")?.split(",")[0].trim() ||
-    "unknown";
+	// Get client IP for logging
+	const clientIp =
+		c.req.header("CF-Connecting-IP") ||
+		c.req.header("X-Real-IP") ||
+		c.req.header("X-Forwarded-For")?.split(",")[0].trim() ||
+		"unknown";
 
-  // Insert lead
-  const [newLead] = await db
-    .insert(leads)
-    .values({
-      name: input.name,
-      email: input.email,
-      company: input.company || null,
-      phone: input.phone || null,
-      budget: input.budget || null,
-      projectType: input.projectType || null,
-      message: input.message,
-      source: input.source || "Contact Form",
-      status: "new",
-    })
-    .returning();
+	// Insert lead
+	const [newLead] = await db
+		.insert(leads)
+		.values({
+			name: input.name,
+			email: input.email,
+			company: input.company || null,
+			phone: input.phone || null,
+			budget: input.budget || null,
+			projectType: input.projectType || null,
+			message: input.message,
+			source: input.source || "Contact Form",
+			status: "new",
+		})
+		.returning();
 
-  // Create initial activity
-  await db.insert(leadActivities).values({
-    leadId: newLead.id,
-    type: "note",
-    description: `Lead created via contact form (IP: ${clientIp})`,
-  });
+	// Create initial activity
+	await db.insert(leadActivities).values({
+		leadId: newLead.id,
+		type: "note",
+		description: `Lead created via contact form (IP: ${clientIp})`,
+	});
 
-  // Trigger webhooks (fire-and-forget, don't await)
-  triggerLeadCreated(newLead).catch((err) => {
-    console.error("Failed to trigger lead.created webhook:", err);
-  });
+	// Trigger webhooks (fire-and-forget, don't await)
+	triggerLeadCreated(newLead).catch((err) => {
+		console.error("Failed to trigger lead.created webhook:", err);
+	});
 
-  // Trigger notifications (Discord, Telegram, Email)
-  // Fire-and-forget - notifications should not block the response
-  triggerLeadCreatedNotification(newLead);
+	// Trigger notifications (Discord, Telegram, Email)
+	// Fire-and-forget - notifications should not block the response
+	triggerLeadCreatedNotification(newLead);
 
-  // Return success response per spec
-  return c.json(
-    {
-      success: true,
-      message: "Thank you! We'll be in touch within 24 hours.",
-    },
-    201
-  );
+	// Return success response per spec
+	return c.json(
+		{
+			success: true,
+			message: "Thank you! We'll be in touch within 24 hours.",
+		},
+		201,
+	);
 });

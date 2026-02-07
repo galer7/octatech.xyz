@@ -13,36 +13,36 @@
 
 import type { Context, ErrorHandler } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { ApiError, ErrorCode, InternalError, ValidationError } from "../lib/errors.js";
 import type { ZodError } from "zod";
+import { ApiError, ErrorCode, InternalError, ValidationError } from "../lib/errors.js";
 
 /**
  * Check if an error is a Zod validation error.
  */
 function isZodError(error: unknown): error is ZodError {
-  return (
-    error !== null &&
-    typeof error === "object" &&
-    "name" in error &&
-    error.name === "ZodError" &&
-    "issues" in error &&
-    Array.isArray((error as ZodError).issues)
-  );
+	return (
+		error !== null &&
+		typeof error === "object" &&
+		"name" in error &&
+		error.name === "ZodError" &&
+		"issues" in error &&
+		Array.isArray((error as ZodError).issues)
+	);
 }
 
 /**
  * Convert Zod error to validation error with field details.
  */
 function zodErrorToValidationError(error: ZodError): ValidationError {
-  const details: Record<string, string> = {};
+	const details: Record<string, string> = {};
 
-  for (const issue of error.issues) {
-    const path = issue.path.join(".");
-    const field = path || "value";
-    details[field] = issue.message;
-  }
+	for (const issue of error.issues) {
+		const path = issue.path.join(".");
+		const field = path || "value";
+		details[field] = issue.message;
+	}
 
-  return new ValidationError("Validation failed", details);
+	return new ValidationError("Validation failed", details);
 }
 
 /**
@@ -50,49 +50,47 @@ function zodErrorToValidationError(error: ZodError): ValidationError {
  * Converts any error to a standardized JSON response.
  */
 export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
-  // Log the error (always log in development, only stack in dev)
-  const isDev = process.env.NODE_ENV === "development";
+	// Log the error (always log in development, only stack in dev)
+	const isDev = process.env.NODE_ENV === "development";
 
-  if (isDev) {
-    console.error("Error:", err);
-  } else {
-    console.error("Error:", err.message);
-  }
+	if (isDev) {
+		console.error("Error:", err);
+	} else {
+		console.error("Error:", err.message);
+	}
 
-  // Handle Zod validation errors
-  if (isZodError(err)) {
-    const validationError = zodErrorToValidationError(err);
-    return c.json(validationError.toJSON(), validationError.statusCode as ContentfulStatusCode);
-  }
+	// Handle Zod validation errors
+	if (isZodError(err)) {
+		const validationError = zodErrorToValidationError(err);
+		return c.json(validationError.toJSON(), validationError.statusCode as ContentfulStatusCode);
+	}
 
-  // Handle our custom API errors
-  if (err instanceof ApiError) {
-    return c.json(err.toJSON(), err.statusCode as ContentfulStatusCode);
-  }
+	// Handle our custom API errors
+	if (err instanceof ApiError) {
+		return c.json(err.toJSON(), err.statusCode as ContentfulStatusCode);
+	}
 
-  // Handle unknown errors - wrap in InternalError
-  const internalError = new InternalError(
-    isDev ? err.message : "Internal server error"
-  );
+	// Handle unknown errors - wrap in InternalError
+	const internalError = new InternalError(isDev ? err.message : "Internal server error");
 
-  return c.json(
-    {
-      error: internalError.message,
-      code: ErrorCode.INTERNAL_ERROR,
-    },
-    500
-  );
+	return c.json(
+		{
+			error: internalError.message,
+			code: ErrorCode.INTERNAL_ERROR,
+		},
+		500,
+	);
 };
 
 /**
  * 404 Not Found handler for unmatched routes.
  */
 export const notFoundHandler = (c: Context) => {
-  return c.json(
-    {
-      error: "Not Found",
-      code: ErrorCode.NOT_FOUND,
-    },
-    404
-  );
+	return c.json(
+		{
+			error: "Not Found",
+			code: ErrorCode.NOT_FOUND,
+		},
+		404,
+	);
 };

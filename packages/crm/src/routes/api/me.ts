@@ -20,12 +20,12 @@ export const meRoutes = new Hono();
  * Requires any valid API key.
  */
 meRoutes.get("/", requireApiKey, async (c) => {
-  const apiKey = requireApiKeyFromContext(c);
+	const apiKey = requireApiKeyFromContext(c);
 
-  return c.json({
-    keyPrefix: apiKey.keyPrefix,
-    name: apiKey.name,
-    scopes: apiKey.scopes,
-    createdAt: apiKey.createdAt.toISOString(),
-  });
+	return c.json({
+		keyPrefix: apiKey.keyPrefix,
+		name: apiKey.name,
+		scopes: apiKey.scopes,
+		createdAt: apiKey.createdAt.toISOString(),
+	});
 });
