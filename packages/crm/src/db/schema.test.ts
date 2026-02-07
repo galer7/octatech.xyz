@@ -769,6 +769,14 @@ describe("Schema Types", () => {
       "leads:write",
       "leads:delete",
       "leads:*",
+      "companies:read",
+      "companies:write",
+      "companies:delete",
+      "companies:*",
+      "contacts:read",
+      "contacts:write",
+      "contacts:delete",
+      "contacts:*",
     ]);
   });
 

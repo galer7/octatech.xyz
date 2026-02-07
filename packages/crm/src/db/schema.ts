@@ -30,6 +30,94 @@ export const leadStatusEnum = [
 ] as const;
 export type LeadStatus = (typeof leadStatusEnum)[number];
 
+// ============================================================================
+// OUTBOUND PIPELINE ENUMS
+// ============================================================================
+
+export const contactRelationshipStatusEnum = [
+  "identified",
+  "first_interaction",
+  "engaged",
+  "conversation",
+  "opportunity",
+  "converted",
+  "dormant",
+] as const;
+export type ContactRelationshipStatus = (typeof contactRelationshipStatusEnum)[number];
+
+export const contactWarmthEnum = ["cold", "warm", "hot"] as const;
+export type ContactWarmth = (typeof contactWarmthEnum)[number];
+
+export const contactTierEnum = ["A", "B", "C"] as const;
+export type ContactTier = (typeof contactTierEnum)[number];
+
+export const contactSourceEnum = [
+  "linkedin_search",
+  "linkedin_post_engagement",
+  "linkedin_comment",
+  "referral",
+  "event",
+  "cold_outreach",
+  "inbound_converted",
+  "other",
+] as const;
+export type ContactSource = (typeof contactSourceEnum)[number];
+
+export const companySizeEnum = [
+  "solo",
+  "startup",
+  "small",
+  "medium",
+  "large",
+  "enterprise",
+] as const;
+export type CompanySize = (typeof companySizeEnum)[number];
+
+export const companyContractTypeEnum = [
+  "b2b",
+  "employment",
+  "both",
+  "unknown",
+] as const;
+export type CompanyContractType = (typeof companyContractTypeEnum)[number];
+
+export const contactInteractionTypeEnum = [
+  "linkedin_comment",
+  "linkedin_like",
+  "linkedin_dm_sent",
+  "linkedin_dm_received",
+  "linkedin_connection_sent",
+  "linkedin_connection_accepted",
+  "linkedin_post_engagement",
+  "email_sent",
+  "email_received",
+  "call",
+  "meeting",
+  "note",
+] as const;
+export type ContactInteractionType = (typeof contactInteractionTypeEnum)[number];
+
+export const interactionDirectionEnum = ["inbound", "outbound"] as const;
+export type InteractionDirection = (typeof interactionDirectionEnum)[number];
+
+export const contentPlatformEnum = [
+  "linkedin",
+  "blog",
+  "devto",
+  "twitter",
+  "youtube",
+  "other",
+] as const;
+export type ContentPlatform = (typeof contentPlatformEnum)[number];
+
+export const contentEngagementTypeEnum = [
+  "like",
+  "comment",
+  "repost",
+  "share",
+] as const;
+export type ContentEngagementType = (typeof contentEngagementTypeEnum)[number];
+
 /**
  * Primary table for storing lead/contact information from contact forms,
  * API integrations, and AI-parsed inputs.
@@ -72,11 +160,15 @@ export const leads = pgTable(
       .notNull()
       .defaultNow(),
     contactedAt: timestamp("contacted_at", { withTimezone: true }),
+
+    // Bridge from leads back to outbound contacts
+    contactId: uuid("contact_id"),
   },
   (table) => [
     index("idx_leads_status").on(table.status),
     index("idx_leads_email").on(table.email),
     index("idx_leads_created_at").on(table.createdAt.desc()),
+    index("idx_leads_contact_id").on(table.contactId),
     check(
       "valid_status",
       sql`${table.status} IN ('new', 'contacted', 'qualified', 'proposal', 'won', 'lost')`
@@ -137,6 +229,14 @@ export const apiKeyScopeEnum = [
   "leads:write",
   "leads:delete",
   "leads:*",
+  "companies:read",
+  "companies:write",
+  "companies:delete",
+  "companies:*",
+  "contacts:read",
+  "contacts:write",
+  "contacts:delete",
+  "contacts:*",
 ] as const;
 export type ApiKeyScope = (typeof apiKeyScopeEnum)[number];
 
@@ -375,14 +475,208 @@ export const sessions = pgTable(
 );
 
 // ============================================================================
+// OUTBOUND PIPELINE TABLES
+// ============================================================================
+
+export const companies = pgTable(
+  "companies",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    industry: varchar("industry", { length: 255 }),
+    size: varchar("size", { length: 50 }),
+    location: varchar("location", { length: 255 }),
+    website: varchar("website", { length: 500 }),
+    linkedinUrl: varchar("linkedin_url", { length: 500 }),
+    hiringContractors: boolean("hiring_contractors"),
+    contractType: varchar("contract_type", { length: 50 }).default("unknown"),
+    notes: text("notes"),
+    tags: text("tags").array(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_companies_name").on(table.name),
+    check(
+      "valid_company_size",
+      sql`${table.size} IS NULL OR ${table.size} IN ('solo', 'startup', 'small', 'medium', 'large', 'enterprise')`
+    ),
+    check(
+      "valid_contract_type",
+      sql`${table.contractType} IS NULL OR ${table.contractType} IN ('b2b', 'employment', 'both', 'unknown')`
+    ),
+  ]
+);
+
+export const contacts = pgTable(
+  "contacts",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    role: varchar("role", { length: 255 }),
+    linkedinUrl: varchar("linkedin_url", { length: 500 }),
+    location: varchar("location", { length: 255 }),
+    companyId: uuid("company_id")
+      .references(() => companies.id, { onDelete: "set null" }),
+    source: varchar("source", { length: 100 }),
+    relationshipStatus: varchar("relationship_status", { length: 50 })
+      .notNull()
+      .default("identified"),
+    warmth: varchar("warmth", { length: 20 })
+      .notNull()
+      .default("cold"),
+    tier: varchar("tier", { length: 5 }).default("C"),
+    nextAction: text("next_action"),
+    nextActionDue: timestamp("next_action_due", { withTimezone: true }),
+    notes: text("notes"),
+    tags: text("tags").array(),
+    lastInteractionAt: timestamp("last_interaction_at", { withTimezone: true }),
+    leadId: uuid("lead_id")
+      .references(() => leads.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_contacts_company_id").on(table.companyId),
+    index("idx_contacts_relationship_status").on(table.relationshipStatus),
+    index("idx_contacts_warmth").on(table.warmth),
+    index("idx_contacts_next_action_due").on(table.nextActionDue),
+    index("idx_contacts_last_interaction_at").on(table.lastInteractionAt.desc()),
+    check(
+      "valid_relationship_status",
+      sql`${table.relationshipStatus} IN ('identified', 'first_interaction', 'engaged', 'conversation', 'opportunity', 'converted', 'dormant')`
+    ),
+    check(
+      "valid_warmth",
+      sql`${table.warmth} IN ('cold', 'warm', 'hot')`
+    ),
+    check(
+      "valid_tier",
+      sql`${table.tier} IS NULL OR ${table.tier} IN ('A', 'B', 'C')`
+    ),
+  ]
+);
+
+export const contactInteractions = pgTable(
+  "contact_interactions",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 50 }).notNull(),
+    direction: varchar("direction", { length: 20 }).notNull().default("outbound"),
+    description: text("description").notNull(),
+    url: varchar("url", { length: 1000 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_contact_interactions_contact_id").on(table.contactId),
+    index("idx_contact_interactions_created_at").on(table.createdAt.desc()),
+    check(
+      "valid_interaction_type",
+      sql`${table.type} IN ('linkedin_comment', 'linkedin_like', 'linkedin_dm_sent', 'linkedin_dm_received', 'linkedin_connection_sent', 'linkedin_connection_accepted', 'linkedin_post_engagement', 'email_sent', 'email_received', 'call', 'meeting', 'note')`
+    ),
+    check(
+      "valid_direction",
+      sql`${table.direction} IN ('inbound', 'outbound')`
+    ),
+  ]
+);
+
+export const contentPosts = pgTable(
+  "content_posts",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    platform: varchar("platform", { length: 50 }).notNull(),
+    title: varchar("title", { length: 500 }),
+    url: varchar("url", { length: 1000 }),
+    body: text("body"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    tags: text("tags").array(),
+    likesCount: integer("likes_count").default(0),
+    commentsCount: integer("comments_count").default(0),
+    repostsCount: integer("reposts_count").default(0),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_content_posts_platform").on(table.platform),
+    index("idx_content_posts_published_at").on(table.publishedAt.desc()),
+    check(
+      "valid_platform",
+      sql`${table.platform} IN ('linkedin', 'blog', 'devto', 'twitter', 'youtube', 'other')`
+    ),
+  ]
+);
+
+export const contentEngagements = pgTable(
+  "content_engagements",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    contentPostId: uuid("content_post_id")
+      .notNull()
+      .references(() => contentPosts.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .references(() => contacts.id, { onDelete: "set null" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    linkedinUrl: varchar("linkedin_url", { length: 500 }),
+    engagementType: varchar("engagement_type", { length: 50 }).notNull(),
+    commentText: text("comment_text"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_content_engagements_post_id").on(table.contentPostId),
+    index("idx_content_engagements_contact_id").on(table.contactId),
+    check(
+      "valid_engagement_type",
+      sql`${table.engagementType} IN ('like', 'comment', 'repost', 'share')`
+    ),
+  ]
+);
+
+// ============================================================================
 // RELATIONS
 // ============================================================================
 
 /**
  * Define Drizzle ORM relations for type-safe joins and nested queries.
  */
-export const leadsRelations = relations(leads, ({ many }) => ({
+export const leadsRelations = relations(leads, ({ many, one }) => ({
   activities: many(leadActivities),
+  contact: one(contacts, {
+    fields: [leads.contactId],
+    references: [contacts.id],
+  }),
 }));
 
 export const leadActivitiesRelations = relations(leadActivities, ({ one }) => ({
@@ -417,6 +711,44 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
   }),
 }));
 
+export const companiesRelations = relations(companies, ({ many }) => ({
+  contacts: many(contacts),
+}));
+
+export const contactsRelations = relations(contacts, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [contacts.companyId],
+    references: [companies.id],
+  }),
+  interactions: many(contactInteractions),
+  lead: one(leads, {
+    fields: [contacts.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export const contactInteractionsRelations = relations(contactInteractions, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactInteractions.contactId],
+    references: [contacts.id],
+  }),
+}));
+
+export const contentPostsRelations = relations(contentPosts, ({ many }) => ({
+  engagements: many(contentEngagements),
+}));
+
+export const contentEngagementsRelations = relations(contentEngagements, ({ one }) => ({
+  post: one(contentPosts, {
+    fields: [contentEngagements.contentPostId],
+    references: [contentPosts.id],
+  }),
+  contact: one(contacts, {
+    fields: [contentEngagements.contactId],
+    references: [contacts.id],
+  }),
+}));
+
 // ============================================================================
 // TYPE EXPORTS
 // ============================================================================
@@ -447,3 +779,18 @@ export type NewAdminUser = typeof adminUser.$inferInsert;
 
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
+
+export type Company = typeof companies.$inferSelect;
+export type NewCompany = typeof companies.$inferInsert;
+
+export type Contact = typeof contacts.$inferSelect;
+export type NewContact = typeof contacts.$inferInsert;
+
+export type ContactInteraction = typeof contactInteractions.$inferSelect;
+export type NewContactInteraction = typeof contactInteractions.$inferInsert;
+
+export type ContentPost = typeof contentPosts.$inferSelect;
+export type NewContentPost = typeof contentPosts.$inferInsert;
+
+export type ContentEngagement = typeof contentEngagements.$inferSelect;
+export type NewContentEngagement = typeof contentEngagements.$inferInsert;

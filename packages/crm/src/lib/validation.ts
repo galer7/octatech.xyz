@@ -248,6 +248,246 @@ export const parseLeadSchema = z.object({
 export type ParseLeadInput = z.infer<typeof parseLeadSchema>;
 
 // ============================================================================
+// COMPANIES VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Valid company size values matching the database constraint.
+ */
+export const companySizeOptions = [
+  "solo",
+  "startup",
+  "small",
+  "medium",
+  "large",
+  "enterprise",
+] as const;
+
+/**
+ * Valid contract type values.
+ */
+export const companyContractTypeOptions = [
+  "b2b",
+  "employment",
+  "both",
+  "unknown",
+] as const;
+
+/**
+ * Valid sort fields for company listing.
+ */
+export const companySortFields = [
+  "createdAt",
+  "updatedAt",
+  "name",
+] as const;
+export type CompanySortField = (typeof companySortFields)[number];
+
+/**
+ * Schema for listing companies with pagination, filtering, and search.
+ */
+export const listCompaniesQuerySchema = z.object({
+  page: z.coerce
+    .number()
+    .int("Page must be an integer")
+    .positive("Page must be positive")
+    .default(1),
+  limit: z.coerce
+    .number()
+    .int("Limit must be an integer")
+    .positive("Limit must be positive")
+    .max(100, "Maximum 100 items per page")
+    .default(20),
+  search: z.string().max(100, "Search query must be at most 100 characters").optional(),
+  size: z.enum(companySizeOptions).optional(),
+  contractType: z.enum(companyContractTypeOptions).optional(),
+  hiringContractors: z
+    .string()
+    .transform((val) => val === "true")
+    .optional(),
+  sort: z.string().default("-createdAt"),
+});
+export type ListCompaniesQuery = z.infer<typeof listCompaniesQuerySchema>;
+
+/**
+ * Schema for creating a company.
+ */
+export const createCompanySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(255, "Name must be at most 255 characters"),
+  industry: z.string().max(255, "Industry must be at most 255 characters").optional().nullable(),
+  size: z.enum(companySizeOptions).optional().nullable(),
+  location: z.string().max(255, "Location must be at most 255 characters").optional().nullable(),
+  website: z.string().url("Invalid URL format").max(500, "Website must be at most 500 characters").optional().nullable(),
+  linkedinUrl: z.string().url("Invalid URL format").max(500, "LinkedIn URL must be at most 500 characters").optional().nullable(),
+  hiringContractors: z.boolean().optional().nullable(),
+  contractType: z.enum(companyContractTypeOptions).optional().default("unknown"),
+  notes: z.string().max(10000, "Notes must be at most 10000 characters").optional().nullable(),
+  tags: z.array(z.string().max(50, "Tag must be at most 50 characters")).max(20, "Maximum 20 tags allowed").optional(),
+});
+export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
+
+/**
+ * Schema for updating a company. All fields optional.
+ */
+export const updateCompanySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(255, "Name must be at most 255 characters")
+    .optional(),
+  industry: z.string().max(255, "Industry must be at most 255 characters").optional().nullable(),
+  size: z.enum(companySizeOptions).optional().nullable(),
+  location: z.string().max(255, "Location must be at most 255 characters").optional().nullable(),
+  website: z.string().url("Invalid URL format").max(500, "Website must be at most 500 characters").optional().nullable(),
+  linkedinUrl: z.string().url("Invalid URL format").max(500, "LinkedIn URL must be at most 500 characters").optional().nullable(),
+  hiringContractors: z.boolean().optional().nullable(),
+  contractType: z.enum(companyContractTypeOptions).optional().nullable(),
+  notes: z.string().max(10000, "Notes must be at most 10000 characters").optional().nullable(),
+  tags: z.array(z.string().max(50, "Tag must be at most 50 characters")).max(20, "Maximum 20 tags allowed").optional(),
+});
+export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
+
+// ============================================================================
+// CONTACTS VALIDATION SCHEMAS
+// ============================================================================
+
+// Contact relationship status
+const contactRelationshipStatusOptions = [
+  "identified",
+  "first_interaction",
+  "engaged",
+  "conversation",
+  "opportunity",
+  "converted",
+  "dormant",
+] as const;
+
+// Contact warmth
+const contactWarmthOptions = ["cold", "warm", "hot"] as const;
+
+// Contact tier
+const contactTierOptions = ["A", "B", "C"] as const;
+
+// Contact source
+const contactSourceOptions = [
+  "linkedin_search",
+  "linkedin_post_engagement",
+  "linkedin_comment",
+  "referral",
+  "event",
+  "cold_outreach",
+  "inbound_converted",
+  "other",
+] as const;
+
+// Contact interaction type
+const contactInteractionTypeOptions = [
+  "linkedin_comment",
+  "linkedin_like",
+  "linkedin_dm_sent",
+  "linkedin_dm_received",
+  "linkedin_connection_sent",
+  "linkedin_connection_accepted",
+  "linkedin_post_engagement",
+  "email_sent",
+  "email_received",
+  "call",
+  "meeting",
+  "note",
+] as const;
+
+// Interaction direction
+const interactionDirectionOptions = ["inbound", "outbound"] as const;
+
+export const contactSortFields = [
+  "createdAt",
+  "updatedAt",
+  "name",
+  "lastInteractionAt",
+  "nextActionDue",
+] as const;
+export type ContactSortField = (typeof contactSortFields)[number];
+
+export const listContactsQuerySchema = z.object({
+  page: z.coerce.number().int("Page must be an integer").positive("Page must be positive").default(1),
+  limit: z.coerce.number().int("Limit must be an integer").positive("Limit must be positive").max(100, "Maximum 100 items per page").default(20),
+  search: z.string().max(100, "Search query must be at most 100 characters").optional(),
+  relationshipStatus: z.enum(contactRelationshipStatusOptions).optional(),
+  warmth: z.enum(contactWarmthOptions).optional(),
+  tier: z.enum(contactTierOptions).optional(),
+  companyId: z.string().uuid("Invalid company ID format").optional(),
+  followUpDue: z.string().transform((val) => val === "true").optional(),
+  sort: z.string().default("-lastInteractionAt"),
+});
+export type ListContactsQuery = z.infer<typeof listContactsQuerySchema>;
+
+export const createContactSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255, "Name must be at most 255 characters"),
+  email: z.string().email("Invalid email format").max(255, "Email must be at most 255 characters").optional().nullable(),
+  phone: z.string().max(50, "Phone must be at most 50 characters").optional().nullable(),
+  role: z.string().max(255, "Role must be at most 255 characters").optional().nullable(),
+  linkedinUrl: z.string().url("Invalid URL format").max(500, "LinkedIn URL must be at most 500 characters").optional().nullable(),
+  location: z.string().max(255, "Location must be at most 255 characters").optional().nullable(),
+  companyId: z.string().uuid("Invalid company ID format").optional().nullable(),
+  source: z.enum(contactSourceOptions).optional().default("other"),
+  relationshipStatus: z.enum(contactRelationshipStatusOptions).optional().default("identified"),
+  warmth: z.enum(contactWarmthOptions).optional().default("cold"),
+  tier: z.enum(contactTierOptions).optional().default("C"),
+  nextAction: z.string().max(1000, "Next action must be at most 1000 characters").optional().nullable(),
+  nextActionDue: z.string().datetime("Invalid datetime format").optional().nullable(),
+  notes: z.string().max(10000, "Notes must be at most 10000 characters").optional().nullable(),
+  tags: z.array(z.string().max(50, "Tag must be at most 50 characters")).max(20, "Maximum 20 tags allowed").optional(),
+});
+export type CreateContactInput = z.infer<typeof createContactSchema>;
+
+export const updateContactSchema = z.object({
+  name: z.string().min(1, "Name is required").max(255, "Name must be at most 255 characters").optional(),
+  email: z.string().email("Invalid email format").max(255, "Email must be at most 255 characters").optional().nullable(),
+  phone: z.string().max(50, "Phone must be at most 50 characters").optional().nullable(),
+  role: z.string().max(255, "Role must be at most 255 characters").optional().nullable(),
+  linkedinUrl: z.string().url("Invalid URL format").max(500, "LinkedIn URL must be at most 500 characters").optional().nullable(),
+  location: z.string().max(255, "Location must be at most 255 characters").optional().nullable(),
+  companyId: z.string().uuid("Invalid company ID format").optional().nullable(),
+  source: z.enum(contactSourceOptions).optional().nullable(),
+  relationshipStatus: z.enum(contactRelationshipStatusOptions).optional(),
+  warmth: z.enum(contactWarmthOptions).optional(),
+  tier: z.enum(contactTierOptions).optional(),
+  nextAction: z.string().max(1000, "Next action must be at most 1000 characters").optional().nullable(),
+  nextActionDue: z.string().datetime("Invalid datetime format").optional().nullable(),
+  notes: z.string().max(10000, "Notes must be at most 10000 characters").optional().nullable(),
+  tags: z.array(z.string().max(50, "Tag must be at most 50 characters")).max(20, "Maximum 20 tags allowed").optional(),
+});
+export type UpdateContactInput = z.infer<typeof updateContactSchema>;
+
+export const createInteractionSchema = z.object({
+  type: z.enum(contactInteractionTypeOptions, {
+    errorMap: () => ({
+      message: `Type must be one of: ${contactInteractionTypeOptions.join(", ")}`,
+    }),
+  }),
+  direction: z.enum(interactionDirectionOptions).optional().default("outbound"),
+  description: z.string().min(1, "Description is required").max(5000, "Description must be at most 5000 characters"),
+  url: z.string().url("Invalid URL format").max(1000, "URL must be at most 1000 characters").optional().nullable(),
+});
+export type CreateInteractionInput = z.infer<typeof createInteractionSchema>;
+
+export const listInteractionsQuerySchema = z.object({
+  page: z.coerce.number().int("Page must be an integer").positive("Page must be positive").default(1),
+  limit: z.coerce.number().int("Limit must be an integer").positive("Limit must be positive").max(100, "Maximum 100 items per page").default(50),
+  type: z.enum(contactInteractionTypeOptions).optional(),
+});
+export type ListInteractionsQuery = z.infer<typeof listInteractionsQuerySchema>;
+
+export const parseContactSchema = z.object({
+  text: z.string().min(1, "Text is required").max(5000, "Text must be at most 5000 characters"),
+  autoSave: z.boolean().optional().default(false),
+});
+export type ParseContactInput = z.infer<typeof parseContactSchema>;
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -274,6 +514,43 @@ export function parseSortParam(sort: string): {
   // Validate and default to createdAt if invalid
   const validField = leadSortFields.includes(fieldName as LeadSortField)
     ? (fieldName as LeadSortField)
+    : "createdAt";
+
+  return {
+    field: validField,
+    direction: isDescending ? "desc" : "asc",
+  };
+}
+
+/**
+ * Parse and validate the sort parameter for companies.
+ */
+export function parseCompanySortParam(sort: string): {
+  field: CompanySortField;
+  direction: "asc" | "desc";
+} {
+  const isDescending = sort.startsWith("-");
+  const fieldName = isDescending ? sort.slice(1) : sort;
+
+  const validField = companySortFields.includes(fieldName as CompanySortField)
+    ? (fieldName as CompanySortField)
+    : "createdAt";
+
+  return {
+    field: validField,
+    direction: isDescending ? "desc" : "asc",
+  };
+}
+
+export function parseContactSortParam(sort: string): {
+  field: ContactSortField;
+  direction: "asc" | "desc";
+} {
+  const isDescending = sort.startsWith("-");
+  const fieldName = isDescending ? sort.slice(1) : sort;
+
+  const validField = contactSortFields.includes(fieldName as ContactSortField)
+    ? (fieldName as ContactSortField)
     : "createdAt";
 
   return {

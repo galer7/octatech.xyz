@@ -510,3 +510,214 @@ ${text}
 export function isOpenAIConfigured(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
+
+// ============================================================================
+// CONTACT PARSING
+// ============================================================================
+
+/**
+ * Result of AI contact parsing operation.
+ */
+export interface ParsedContactResult {
+  /** Extracted contact data fields */
+  parsed: ParsedContactData;
+  /** Overall confidence score (0-1) indicating extraction quality */
+  confidence: number;
+  /** List of fields that were successfully extracted */
+  extractedFields: string[];
+}
+
+/**
+ * Structured contact data extracted from natural language (e.g., LinkedIn profile text).
+ */
+export interface ParsedContactData {
+  /** Contact's full name */
+  name: string | null;
+  /** Email address */
+  email: string | null;
+  /** Job role/title */
+  role: string | null;
+  /** Company or organization name */
+  company: string | null;
+  /** Location (city, country) */
+  location: string | null;
+  /** LinkedIn profile URL */
+  linkedinUrl: string | null;
+}
+
+/**
+ * System prompt for contact data extraction.
+ * Instructs the AI to extract contact info from LinkedIn profiles or similar text.
+ */
+const CONTACT_SYSTEM_PROMPT = `You are a contact data extraction assistant. Extract structured contact information from text that may come from LinkedIn profiles, emails, messages, or other professional contexts.
+
+Return a JSON object with these fields (use null for missing/unclear values):
+- name: Full name of the person
+- email: Email address (if present)
+- role: Job title or role (e.g., "CTO", "Senior Engineer", "Head of Product")
+- company: Company or organization they work at
+- location: City, country, or region (e.g., "Warsaw, Poland", "San Francisco, CA")
+- linkedinUrl: LinkedIn profile URL (if present, or construct from profile slug if visible)
+- confidence: A number 0-1 indicating overall extraction confidence
+
+Only return valid JSON, no explanation.`;
+
+/**
+ * Raw response from OpenAI for contact parsing.
+ */
+interface OpenAIContactParseResponse {
+  name: string | null;
+  email: string | null;
+  role: string | null;
+  company: string | null;
+  location: string | null;
+  linkedinUrl: string | null;
+  confidence: number;
+}
+
+/**
+ * Validate and clean the parsed contact response from OpenAI.
+ */
+function validateAndCleanContactResponse(raw: OpenAIContactParseResponse): ParsedContactData {
+  return {
+    name: typeof raw.name === "string" && raw.name.trim() ? raw.name.trim() : null,
+    email:
+      typeof raw.email === "string" && raw.email.includes("@")
+        ? raw.email.trim().toLowerCase()
+        : null,
+    role:
+      typeof raw.role === "string" && raw.role.trim()
+        ? raw.role.trim()
+        : null,
+    company:
+      typeof raw.company === "string" && raw.company.trim()
+        ? raw.company.trim()
+        : null,
+    location:
+      typeof raw.location === "string" && raw.location.trim()
+        ? raw.location.trim()
+        : null,
+    linkedinUrl:
+      typeof raw.linkedinUrl === "string" && raw.linkedinUrl.trim()
+        ? raw.linkedinUrl.trim()
+        : null,
+  };
+}
+
+/**
+ * Get list of contact fields that were successfully extracted.
+ */
+function getExtractedContactFields(parsed: ParsedContactData): string[] {
+  const fields: string[] = [];
+  if (parsed.name) fields.push("name");
+  if (parsed.email) fields.push("email");
+  if (parsed.role) fields.push("role");
+  if (parsed.company) fields.push("company");
+  if (parsed.location) fields.push("location");
+  if (parsed.linkedinUrl) fields.push("linkedinUrl");
+  return fields;
+}
+
+/**
+ * Parse natural language text into structured contact data using OpenAI.
+ *
+ * This function takes free-form text (e.g., LinkedIn profile copy-paste, email signature)
+ * and extracts structured contact information including name, role, company, and location.
+ *
+ * @param text - Natural language text to parse (max 5000 characters)
+ * @param client - Optional OpenAI client (creates new one if not provided)
+ * @returns Parsed contact result with data, confidence, and extracted fields
+ * @throws AIServiceError if OpenAI API is unavailable or fails
+ * @throws ParseFailedError if confidence is below threshold
+ *
+ * @example
+ * ```ts
+ * const result = await parseContactText(
+ *   "John Doe - CTO at Fintech Co | Warsaw, Poland | Building scalable systems"
+ * );
+ * // result.parsed.name = "John Doe"
+ * // result.parsed.role = "CTO"
+ * // result.parsed.company = "Fintech Co"
+ * // result.confidence = 0.90
+ * ```
+ */
+export async function parseContactText(
+  text: string,
+  client?: OpenAI
+): Promise<ParsedContactResult> {
+  const openai = client ?? createOpenAIClient();
+
+  const userPrompt = `Extract contact information from this text:
+
+"""
+${text}
+"""`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: DEFAULT_MODEL,
+      messages: [
+        { role: "system", content: CONTACT_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: DEFAULT_TEMPERATURE,
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content;
+
+    if (!content) {
+      throw new AIServiceError("Empty response from OpenAI");
+    }
+
+    let raw: OpenAIContactParseResponse;
+    try {
+      raw = JSON.parse(content);
+    } catch {
+      throw new AIServiceError("Invalid JSON response from OpenAI");
+    }
+
+    const confidence =
+      typeof raw.confidence === "number" && raw.confidence >= 0 && raw.confidence <= 1
+        ? raw.confidence
+        : 0.5;
+
+    const parsed = validateAndCleanContactResponse(raw);
+    const extractedFields = getExtractedContactFields(parsed);
+
+    if (confidence < MIN_CONFIDENCE_THRESHOLD || extractedFields.length === 0) {
+      throw new ParseFailedError(confidence, parsed as any);
+    }
+
+    return {
+      parsed,
+      confidence,
+      extractedFields,
+    };
+  } catch (error) {
+    if (error instanceof AIServiceError || error instanceof ParseFailedError) {
+      throw error;
+    }
+
+    if (error instanceof OpenAI.APIError) {
+      if (error.status === 401) {
+        throw new AIServiceError("Invalid OpenAI API key");
+      }
+      if (error.status === 429) {
+        throw new AIServiceError("OpenAI rate limit exceeded. Please try again later.");
+      }
+      if (error.status && error.status >= 500) {
+        throw new AIServiceError("OpenAI service temporarily unavailable");
+      }
+      throw new AIServiceError(`OpenAI API error: ${error.message}`);
+    }
+
+    if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
+      throw new AIServiceError("Unable to connect to OpenAI API");
+    }
+
+    throw new AIServiceError(
+      error instanceof Error ? error.message : "Unknown error during AI parsing"
+    );
+  }
+}

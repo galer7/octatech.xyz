@@ -33,6 +33,11 @@ export {
   settings,
   adminUser,
   sessions,
+  companies,
+  contacts,
+  contactInteractions,
+  contentPosts,
+  contentEngagements,
 } from "./schema";
 
 // Relations
@@ -43,6 +48,11 @@ export {
   webhookDeliveriesRelations,
   adminUserRelations,
   sessionsRelations,
+  companiesRelations,
+  contactsRelations,
+  contactInteractionsRelations,
+  contentPostsRelations,
+  contentEngagementsRelations,
 } from "./schema";
 
 // Enum values
@@ -52,6 +62,16 @@ export {
   apiKeyScopeEnum,
   webhookEventEnum,
   notificationChannelTypeEnum,
+  contactRelationshipStatusEnum,
+  contactWarmthEnum,
+  contactTierEnum,
+  contactSourceEnum,
+  companySizeEnum,
+  companyContractTypeEnum,
+  contactInteractionTypeEnum,
+  interactionDirectionEnum,
+  contentPlatformEnum,
+  contentEngagementTypeEnum,
 } from "./schema";
 
 // Types - Tables
@@ -74,6 +94,16 @@ export type {
   NewAdminUser,
   Session,
   NewSession,
+  Company,
+  NewCompany,
+  Contact,
+  NewContact,
+  ContactInteraction,
+  NewContactInteraction,
+  ContentPost,
+  NewContentPost,
+  ContentEngagement,
+  NewContentEngagement,
 } from "./schema";
 
 // Types - Enums
@@ -87,4 +117,14 @@ export type {
   DiscordConfig,
   TelegramConfig,
   EmailConfig,
+  ContactRelationshipStatus,
+  ContactWarmth,
+  ContactTier,
+  ContactSource,
+  CompanySize,
+  CompanyContractType,
+  ContactInteractionType,
+  InteractionDirection,
+  ContentPlatform,
+  ContentEngagementType,
 } from "./schema";

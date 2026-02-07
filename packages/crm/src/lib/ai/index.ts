@@ -4,6 +4,7 @@
 
 export {
   parseLeadText,
+  parseContactText,
   createOpenAIClient,
   isOpenAIConfigured,
   mapBudgetToOption,
@@ -12,4 +13,6 @@ export {
   ParseFailedError,
   type ParsedLeadResult,
   type ParsedLeadData,
+  type ParsedContactResult,
+  type ParsedContactData,
 } from "./openai";

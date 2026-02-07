@@ -8,3 +8,5 @@ export { leadsRoutes } from "./leads";
 export { publicLeadsRoutes } from "./public-leads";
 export { meRoutes } from "./me";
 export { calWebhookRoutes } from "./cal-webhook";
+export { companiesApiRoutes } from "./companies";
+export { contactsApiRoutes } from "./contacts";

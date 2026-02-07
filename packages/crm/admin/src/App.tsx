@@ -8,6 +8,11 @@ import { LeadsPage } from '@/pages/LeadsPage';
 import { LeadDetailPage } from '@/pages/LeadDetailPage';
 import { LeadNewPage } from '@/pages/LeadNewPage';
 import { LeadAIPage } from '@/pages/LeadAIPage';
+import { ContactsPage } from '@/pages/ContactsPage';
+import { ContactDetailPage } from '@/pages/ContactDetailPage';
+import { ContactAIPage } from '@/pages/ContactAIPage';
+import { CompaniesPage } from '@/pages/CompaniesPage';
+import { CompanyDetailPage } from '@/pages/CompanyDetailPage';
 import { ApiKeysPage } from '@/pages/ApiKeysPage';
 import { WebhooksPage } from '@/pages/WebhooksPage';
 import { WebhookDeliveriesPage } from '@/pages/WebhookDeliveriesPage';
@@ -49,6 +54,11 @@ function AppRoutes() {
         <Route path="leads/new" element={<LeadNewPage />} />
         <Route path="leads/ai" element={<LeadAIPage />} />
         <Route path="leads/:id" element={<LeadDetailPage />} />
+        <Route path="contacts" element={<ContactsPage />} />
+        <Route path="contacts/ai" element={<ContactAIPage />} />
+        <Route path="contacts/:id" element={<ContactDetailPage />} />
+        <Route path="companies" element={<CompaniesPage />} />
+        <Route path="companies/:id" element={<CompanyDetailPage />} />
         <Route path="api-keys" element={<ApiKeysPage />} />
         <Route path="webhooks" element={<WebhooksPage />} />
         <Route path="webhooks/:id/deliveries" element={<WebhookDeliveriesPage />} />

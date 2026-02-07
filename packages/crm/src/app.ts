@@ -20,12 +20,16 @@ import {
   adminSettingsRoutes,
   adminDashboardRoutes,
   adminLeadsRoutes,
+  adminCompaniesRoutes,
+  adminContactsRoutes,
 } from "./routes/admin";
 import {
   leadsRoutes,
   publicLeadsRoutes,
   meRoutes,
   calWebhookRoutes,
+  companiesApiRoutes,
+  contactsApiRoutes,
 } from "./routes/api";
 
 export const app = new Hono();
@@ -86,6 +90,12 @@ app.route("/api/admin/dashboard", adminDashboardRoutes);
 // Admin leads management routes (session auth)
 app.route("/api/admin/leads", adminLeadsRoutes);
 
+// Admin companies management routes (session auth)
+app.route("/api/admin/companies", adminCompaniesRoutes);
+
+// Admin contacts management routes (session auth)
+app.route("/api/admin/contacts", adminContactsRoutes);
+
 // Public leads endpoint (contact form) - no auth required
 // Rate limiting is applied via the /api/* pattern
 app.use("/api/leads", rateLimiter);
@@ -98,6 +108,8 @@ app.route("/api/webhooks/cal", calWebhookRoutes);
 
 // API v1 routes (require API key authentication)
 app.route("/api/v1/leads", leadsRoutes);
+app.route("/api/v1/companies", companiesApiRoutes);
+app.route("/api/v1/contacts", contactsApiRoutes);
 app.route("/api/v1/me", meRoutes);
 
 // Root redirect to admin UI

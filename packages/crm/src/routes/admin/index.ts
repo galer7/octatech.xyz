@@ -10,3 +10,5 @@ export { adminNotificationsRoutes } from "./notifications";
 export { adminSettingsRoutes } from "./settings";
 export { adminDashboardRoutes } from "./dashboard";
 export { adminLeadsRoutes } from "./leads";
+export { adminCompaniesRoutes } from "./companies";
+export { adminContactsRoutes } from "./contacts";

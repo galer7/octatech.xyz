@@ -275,6 +275,10 @@ describe("areValidScopes", () => {
     expect(areValidScopes(["leads:write"])).toBe(true);
     expect(areValidScopes(["leads:delete"])).toBe(true);
     expect(areValidScopes(["leads:*"])).toBe(true);
+    expect(areValidScopes(["contacts:read"])).toBe(true);
+    expect(areValidScopes(["contacts:write"])).toBe(true);
+    expect(areValidScopes(["contacts:delete"])).toBe(true);
+    expect(areValidScopes(["contacts:*"])).toBe(true);
   });
 
   it("should return true for multiple valid scopes", () => {
@@ -282,6 +286,8 @@ describe("areValidScopes", () => {
     expect(areValidScopes(["leads:read", "leads:write", "leads:delete"])).toBe(
       true
     );
+    expect(areValidScopes(["contacts:read", "contacts:write"])).toBe(true);
+    expect(areValidScopes(["leads:read", "contacts:read"])).toBe(true);
   });
 
   it("should return false for invalid scopes", () => {
@@ -348,10 +354,14 @@ describe("VALID_SCOPES constant", () => {
     expect(VALID_SCOPES.has("leads:write")).toBe(true);
     expect(VALID_SCOPES.has("leads:delete")).toBe(true);
     expect(VALID_SCOPES.has("leads:*")).toBe(true);
+    expect(VALID_SCOPES.has("contacts:read")).toBe(true);
+    expect(VALID_SCOPES.has("contacts:write")).toBe(true);
+    expect(VALID_SCOPES.has("contacts:delete")).toBe(true);
+    expect(VALID_SCOPES.has("contacts:*")).toBe(true);
   });
 
-  it("should have exactly 4 scopes", () => {
-    expect(VALID_SCOPES.size).toBe(4);
+  it("should have exactly 12 scopes", () => {
+    expect(VALID_SCOPES.size).toBe(12);
   });
 });
 

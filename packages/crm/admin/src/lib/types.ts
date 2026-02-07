@@ -160,9 +160,157 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// Company size options
+export type CompanySize = 'solo' | 'startup' | 'small' | 'medium' | 'large' | 'enterprise';
+
+// Company contract type
+export type CompanyContractType = 'b2b' | 'employment' | 'both' | 'unknown';
+
+// Company
+export interface Company {
+  id: string;
+  name: string;
+  industry: string | null;
+  size: CompanySize | null;
+  location: string | null;
+  website: string | null;
+  linkedinUrl: string | null;
+  hiringContractors: boolean | null;
+  contractType: CompanyContractType | null;
+  notes: string | null;
+  tags: string[];
+  contactCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Company with contacts (for detail page)
+export interface CompanyWithContacts extends Company {
+  contacts: CompanyContact[];
+}
+
+// Contact summary for company detail
+export interface CompanyContact {
+  id: string;
+  name: string;
+  role: string | null;
+  warmth: string;
+  relationshipStatus: string;
+  lastInteractionAt: string | null;
+}
+
 // Dashboard stats
 export interface DashboardStats {
   total: number;
   byStatus: Record<LeadStatus, number>;
   recentLeads: Lead[];
+}
+
+// ============================================================================
+// CONTACTS
+// ============================================================================
+
+// Contact relationship status
+export type ContactRelationshipStatus =
+  | 'identified'
+  | 'first_interaction'
+  | 'engaged'
+  | 'conversation'
+  | 'opportunity'
+  | 'converted'
+  | 'dormant';
+
+// Contact warmth
+export type ContactWarmth = 'cold' | 'warm' | 'hot';
+
+// Contact tier
+export type ContactTier = 'A' | 'B' | 'C';
+
+// Contact source
+export type ContactSource =
+  | 'linkedin_search'
+  | 'linkedin_post_engagement'
+  | 'linkedin_comment'
+  | 'referral'
+  | 'event'
+  | 'cold_outreach'
+  | 'inbound_converted'
+  | 'other';
+
+// Contact interaction type
+export type ContactInteractionType =
+  | 'linkedin_comment'
+  | 'linkedin_like'
+  | 'linkedin_dm_sent'
+  | 'linkedin_dm_received'
+  | 'linkedin_connection_sent'
+  | 'linkedin_connection_accepted'
+  | 'linkedin_post_engagement'
+  | 'email_sent'
+  | 'email_received'
+  | 'call'
+  | 'meeting'
+  | 'note';
+
+// Interaction direction
+export type InteractionDirection = 'inbound' | 'outbound';
+
+// Contact
+export interface Contact {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
+  linkedinUrl: string | null;
+  location: string | null;
+  companyId: string | null;
+  source: ContactSource | null;
+  relationshipStatus: ContactRelationshipStatus;
+  warmth: ContactWarmth;
+  tier: ContactTier | null;
+  nextAction: string | null;
+  nextActionDue: string | null;
+  notes: string | null;
+  tags: string[];
+  lastInteractionAt: string | null;
+  leadId: string | null;
+  interactionCount?: number;
+  company?: { id: string; name: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Contact with full details (for detail page)
+export interface ContactWithDetails extends Contact {
+  company: { id: string; name: string; industry: string | null } | null;
+  lead: { id: string; name: string; status: string } | null;
+  interactions: ContactInteraction[];
+}
+
+// Contact interaction
+export interface ContactInteraction {
+  id: string;
+  contactId: string;
+  type: ContactInteractionType;
+  direction: InteractionDirection;
+  description: string;
+  url: string | null;
+  createdAt: string;
+}
+
+// Contact AI parse result
+export interface ContactParseResult {
+  parsed: {
+    name: string | null;
+    email: string | null;
+    role: string | null;
+    company: string | null;
+    location: string | null;
+    linkedinUrl: string | null;
+  };
+  confidence: number;
+  extractedFields: string[];
+  saved?: boolean;
+  contact?: Contact;
 }
