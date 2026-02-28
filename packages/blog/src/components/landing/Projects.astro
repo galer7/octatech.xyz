@@ -1,0 +1,66 @@
+---
+/**
+ * What I Build — real projects: Geostruct, FormForm, Leafwell
+ */
+const projects = [
+  {
+    name: "Geostruct",
+    tagline: "AI for geotechnical engineering",
+    description:
+      "Replacing Excel workflows with intelligent software. Romanian standards (NP 122-2010) encoded in code. Desktop app with AI-assisted analysis.",
+    status: "Building",
+    statusColor: "indigo",
+    icon: `<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" fill="currentColor" fill-opacity="0.4" /><path d="M8 16L12 8L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /><path d="M9.5 13H14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />`,
+  },
+  {
+    name: "FormForm",
+    tagline: "AI-powered adaptive user journeys",
+    description:
+      "Turns client responses into structured design briefs for architects and interior designers. Adaptive forms that learn what to ask next.",
+    status: "Building",
+    statusColor: "indigo",
+    icon: `<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" fill="currentColor" fill-opacity="0.4" /><path d="M8 8H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /><path d="M8 12H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /><path d="M8 16H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />`,
+  },
+  {
+    name: "Leafwell",
+    tagline: "Legacy modernization — contract work",
+    description:
+      "Modernizing a Ruby platform serving 300k+ users. Event-driven TypeScript architecture. Production system with real users.",
+    status: "Shipped",
+    statusColor: "emerald",
+    icon: `<path d="M12.8252 2.05267C11.5168 2.01918 10.4227 2.94611 10.1506 4.19561C9.62014 6.63223 7.64166 8.52554 4.88126 9.08865C3.30873 9.40944 2.11572 10.7419 2.11572 12.3813C2.11572 16.8978 7.3753 21.0531 10.1132 21.8741C10.7099 22.053 11.3551 22.0463 11.9472 21.8549C14.7176 20.9592 20.0157 16.7725 20.0157 12.1813C20.0157 10.7081 18.9663 9.42142 17.4789 9.00693C14.8872 8.28475 13.0645 6.53676 12.8252 2.05267Z" fill="currentColor" fill-opacity="0.4" /><path d="M11.0657 12.1813C11.0657 13.2858 11.9611 14.1813 13.0657 14.1813C14.1702 14.1813 15.0657 13.2858 15.0657 12.1813C15.0657 11.0767 14.1702 10.1813 13.0657 10.1813C11.9611 10.1813 11.0657 11.0767 11.0657 12.1813Z" fill="currentColor" />`,
+  },
+];
+---
+
+<section id="projects" class="max-w-7xl mx-auto px-6 mt-4 md:mt-8 scroll-mt-20">
+  <div class="mb-8">
+    <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">What I Build</h2>
+    <p class="text-white/70 mt-2">Real products solving real problems in professional domains.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {projects.map((project) => (
+      <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <span
+            class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" set:html={project.icon} />
+          </span>
+          <span
+            class:list={[
+              "inline-flex items-center h-7 px-2.5 rounded-lg text-xs border",
+              project.statusColor === "emerald"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+            ]}>
+            {project.status}
+          </span>
+        </div>
+        <h3 class="text-lg font-semibold tracking-tight">{project.name}</h3>
+        <p class="text-sm text-white/60 mt-0.5">{project.tagline}</p>
+        <p class="text-sm text-white/70 mt-3 leading-relaxed flex-1">{project.description}</p>
+      </div>
+    ))}
+  </div>
+</section>

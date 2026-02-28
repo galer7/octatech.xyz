@@ -1,4 +1,7 @@
 ---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
 interface Props {
   title: string;
   description?: string;
@@ -12,35 +15,51 @@ const { title, description = "Engineering insights from Octatech" } = Astro.prop
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title} | Octatech Blog</title>
+    <title>{title} | Octatech</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="canonical" href={Astro.url.href} />
+    <!-- Cal.com Embed -->
+    <script is:inline>
+      (function (C, A, L) {
+        let p = function (a, ar) { a.q.push(ar); };
+        let d = C.document;
+        C.Cal = C.Cal || function () {
+          let cal = C.Cal;
+          let ar = arguments;
+          if (!cal.loaded) {
+            cal.ns = {};
+            cal.q = cal.q || [];
+            d.head.appendChild(d.createElement("script")).src = A;
+            cal.loaded = true;
+          }
+          if (ar[0] === L) {
+            const api = function () { p(api, arguments); };
+            const namespace = ar[1];
+            api.q = api.q || [];
+            typeof namespace === "string" ? (cal.ns[namespace] = api) && p(api, ar) : p(cal, ar);
+            return;
+          }
+          p(cal, ar);
+        };
+      })(window, "https://app.cal.com/embed/embed.js", "init");
+
+      Cal("init", { origin: "https://cal.com" });
+      Cal("ui", {
+        theme: "dark",
+        styles: { branding: { brandColor: "#6366f1" } },
+        hideEventTypeDetails: false,
+        layout: "month_view"
+      });
+    </script>
   </head>
-  <body class="antialiased bg-neutral-950 text-white min-h-screen">
-    <header class="sticky top-0 z-30 backdrop-blur-md bg-neutral-950/70 border-b border-white/10">
-      <div class="max-w-4xl mx-auto px-6">
-        <div class="flex items-center justify-between h-16">
-          <a href="/" class="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm">
-            ← Back to Octatech
-          </a>
-          <a href="/blog" class="text-base font-semibold tracking-tight">
-            Octatech Blog
-          </a>
-          <a href="/blog/rss.xml" class="text-white/70 hover:text-white transition-colors text-sm">
-            RSS
-          </a>
-        </div>
-      </div>
-    </header>
+  <body class="antialiased bg-neutral-950 text-white min-h-screen selection:bg-indigo-500/30 selection:text-indigo-200"
+    style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto">
+    <Header />
     <main class="max-w-4xl mx-auto px-6 py-12">
       <slot />
     </main>
-    <footer class="border-t border-white/10 mt-16">
-      <div class="max-w-4xl mx-auto px-6 py-8 text-center text-sm text-white/60">
-        © {new Date().getFullYear()} Octatech Inc. | <a href="/" class="hover:text-white">octatech.xyz</a>
-      </div>
-    </footer>
+    <Footer />
   </body>
 </html>
 

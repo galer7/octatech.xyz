@@ -1,0 +1,58 @@
+---
+/**
+ * Shared site header — used on both landing page and blog
+ */
+const currentPath = Astro.url.pathname;
+const isBlog = currentPath.startsWith("/blog");
+---
+
+<header class="sticky top-0 z-30 backdrop-blur-md bg-neutral-950/70 border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-center justify-between h-16">
+      <a href="/" class="inline-flex items-center gap-2 group">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+          class="text-indigo-500 transition-transform group-hover:scale-110">
+          <path
+            d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z"
+            fill="currentColor" fill-opacity="0.4" />
+          <path
+            d="M8.25 14L5.80303 11.553C5.51014 11.2601 5.51014 10.7853 5.80303 10.4924L8.25 8.04545M15.75 14L18.197 11.553C18.4899 11.2601 18.4899 10.7853 18.197 10.4924L15.75 8.04545M10.5 16L13.5 8"
+            stroke="white" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span class="text-base font-semibold tracking-tight">Octatech</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm text-white/70">
+        {isBlog ? (
+          <a href="/" class="hover:text-white transition-colors">Home</a>
+          <a href="/blog" class:list={["hover:text-white transition-colors", currentPath === "/blog" || currentPath === "/blog/" ? "text-white" : ""]}>Blog</a>
+          <a href="/blog/rss.xml" class="hover:text-white transition-colors">RSS</a>
+          <a href="/#contact" class="hover:text-white transition-colors">Contact</a>
+        ) : (
+          <a href="#projects" class="hover:text-white transition-colors">Projects</a>
+          <a href="#expertise" class="hover:text-white transition-colors">Expertise</a>
+          <a href="/blog" class="hover:text-white transition-colors">Blog</a>
+          <a href="#contact" class="hover:text-white transition-colors">Contact</a>
+        )}
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a href="https://api.octatech.xyz/admin" target="_blank" rel="noopener noreferrer"
+          class="hidden sm:inline-flex items-center h-9 px-3 rounded-lg border border-white/10 text-sm text-white/80 hover:text-white hover:border-white/20 transition-colors">
+          Client Portal
+        </a>
+        <a href="#" data-cal-link="octatech/discovery" data-cal-config='{"layout":"month_view"}'
+          class="inline-flex items-center h-9 px-3 rounded-lg bg-white text-neutral-900 text-sm font-medium hover:bg-white/90 transition-colors">
+          Book a call
+          <svg width="18" height="18" viewBox="0 0 24 24" class="ml-1" fill="none">
+            <path
+              d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z"
+              fill="currentColor" fill-opacity="0.4" />
+            <path d="M9 15L15 9M15 9H10.5M15 9V13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>

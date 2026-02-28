@@ -1,0 +1,51 @@
+---
+/**
+ * What I Know — real expertise and tech stack
+ */
+const areas = [
+  {
+    title: "TypeScript / Node Ecosystem",
+    description: "React, Next.js, Hono, Drizzle ORM, Vite. Full-stack TypeScript from frontend to database.",
+    icon: `<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" fill="currentColor" fill-opacity="0.4" /><path d="M14.5 9L17.5 12L14.5 15M9.5 9L6.5 12L9.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />`,
+  },
+  {
+    title: "AI Agent Workflows",
+    description: "Ralph Loop, agentic coding patterns, control planes. Deep study of Claude Code, Loom, Kiro, Rovo internals.",
+    icon: `<path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor" fill-opacity="0.4" /><path d="M8 12H16M12 8V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />`,
+  },
+  {
+    title: "Legacy Modernization",
+    description: "Ruby to TypeScript migrations. Monolith to event-driven architecture. Done it for a platform with 300k+ users.",
+    icon: `<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" fill="currentColor" fill-opacity="0.4" /><path d="M15.3533 8.35355C14.4883 7.48829 13.3138 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17L12 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /><path d="M15.3535 8.35355V10.8284" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /><path d="M15.3535 8.35355H12.8786" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />`,
+  },
+  {
+    title: "Cloud Infrastructure",
+    description: "AWS, Railway, containerized deployments. CI/CD pipelines, PostgreSQL, infrastructure as code.",
+    icon: `<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" fill="currentColor" fill-opacity="0.4" /><path d="M8.5 16C7.11929 16 6 14.8807 6 13.5C6 12.1193 7.11929 11 8.5 11H8.6257C8.91684 8.76183 10.8256 7 13.125 7C15.8174 7 18 9.18261 18 11.875V12.0396C18.0415 12.0391 18.0831 12.0388 18.125 12.0388C19.1605 12.0388 20 12.8783 20 13.9138C20 14.9493 19.1605 15.7888 18.125 15.7888H15.625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />`,
+  },
+];
+---
+
+<section id="expertise" class="max-w-7xl mx-auto px-6 mt-16 scroll-mt-20">
+  <div class="rounded-3xl border border-white/10 bg-white/[0.02] p-6 md:p-8">
+    <div class="mb-6">
+      <h2 class="text-2xl md:text-3xl font-semibold tracking-tight">What I Know</h2>
+      <p class="text-white/70 mt-2">7 years of building production software.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {areas.map((area) => (
+        <div class="flex items-start gap-4">
+          <span
+            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" set:html={area.icon} />
+          </span>
+          <div>
+            <h3 class="text-base font-semibold tracking-tight">{area.title}</h3>
+            <p class="text-sm text-white/70 mt-1 leading-relaxed">{area.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
