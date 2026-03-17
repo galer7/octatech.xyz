@@ -1,0 +1,233 @@
+# Octatech Project
+
+This is the Octatech monorepo containing the company landing page/blog and CRM application.
+
+## Project Structure
+
+```
+packages/
+├── blog/     # Astro static site (landing page + engineering blog)
+└── crm/      # Hono backend + React admin UI
+    └── admin/  # React/Vite admin dashboard
+```
+
+## Tech Stack
+
+### Blog (`@octatech/blog`)
+- Astro 5.x with Tailwind CSS
+- Static site generation
+
+### CRM (`@octatech/crm`)
+- **Backend**: Hono framework on Node.js
+- **Database**: PostgreSQL with Drizzle ORM
+- **Auth**: Argon2 password hashing, session-based auth
+- **Admin UI**: React + Vite + Tailwind
+- **Testing**: Vitest
+- **Other**: OpenAI integration, Resend for email, Zod validation
+
+## Common Commands
+
+```bash
+# Development
+pnpm dev:crm      # Start CRM backend (tsx watch)
+pnpm dev:admin    # Start admin UI (Vite)
+pnpm dev:blog     # Start blog (Astro)
+
+# Build
+pnpm build        # Build all workspaces
+pnpm build:crm    # Build CRM only
+pnpm build:admin  # Build admin UI only
+
+# Testing
+pnpm test         # Run all tests
+pnpm --filter @octatech/crm test  # Run CRM tests
+
+# Type checking
+pnpm typecheck    # Type-check all packages
+
+# Database (from packages/crm)
+pnpm --filter @octatech/crm db:generate  # Generate migrations
+pnpm --filter @octatech/crm db:migrate   # Run migrations
+pnpm --filter @octatech/crm db:push      # Push schema changes
+pnpm --filter @octatech/crm db:studio    # Open Drizzle Studio
+```
+
+## Debugging Tools
+
+### Namecheap DNS Management
+`./.claude/tools/namecheap-dns.sh` - Manage DNS records via Namecheap API
+
+```bash
+# List all records
+./.claude/tools/namecheap-dns.sh list --api-key KEY --api-user USER --domain example.com
+
+# Add a record
+./.claude/tools/namecheap-dns.sh add --api-key KEY --api-user USER --domain example.com \
+  --type A --host www --value 192.168.1.1
+
+# Update/delete records (use --record-id from list output)
+./.claude/tools/namecheap-dns.sh update --api-key KEY --api-user USER --domain example.com \
+  --record-id 12345 --value 192.168.1.2
+./.claude/tools/namecheap-dns.sh delete --api-key KEY --api-user USER --domain example.com \
+  --record-id 12345
+```
+
+### Railway Deployment Scripts
+Scripts in `./.claude/tools/railway/` for Railway infrastructure management:
+
+| Script | Description |
+|--------|-------------|
+| `railway-gql.sh` | Base GraphQL helper for Railway API |
+| `railway-workspaces.sh` | List Railway workspaces |
+| `railway-create-project.sh` | Create a new Railway project |
+| `railway-list-services.sh` | List services in a project |
+| `railway-create-service.sh` | Create a new service |
+| `railway-delete-service.sh` | Delete a service |
+| `railway-service-update.sh` | Update service configuration |
+| `railway-set-vars.sh` | Set environment variables |
+| `railway-deploy.sh` | Trigger a deployment |
+| `railway-redeploy.sh` | Redeploy an existing service |
+| `railway-deploy-status.sh` | Check deployment status |
+| `railway-tail-deploy.sh` | Tail deployment logs in real-time |
+| `railway-logs.sh` | View service logs |
+
+See `./.claude/tools/railway/README.md` for detailed usage
+
+## Environment Variables
+
+CRM requires PostgreSQL connection. See `packages/crm/.env.example` for required variables.
+
+### Tool API Keys (`.env.claude`)
+
+Store API keys for debugging tools in `.env.claude` (gitignored):
+
+```bash
+# Namecheap DNS
+NAMECHEAP_API_KEY=your_api_key
+NAMECHEAP_API_USER=your_username
+
+# Railway
+RAILWAY_API_TOKEN=your_railway_token
+```
+
+Tools can be invoked with these env vars:
+```bash
+# Namecheap
+./.claude/tools/namecheap-dns.sh list --api-key $NAMECHEAP_API_KEY --api-user $NAMECHEAP_API_USER --domain octatech.xyz
+
+# Railway (scripts read RAILWAY_API_TOKEN automatically)
+./.claude/tools/railway/railway-list-services.sh --project-id $RAILWAY_PROJECT_ID
+```
+
+<!-- BEGIN BEADS INTEGRATION v:1 profile:full hash:d4f96305 -->
+## Issue Tracking with bd (beads)
+
+**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+
+### Why bd?
+
+- Dependency-aware: Track blockers and relationships between issues
+- Git-friendly: Dolt-powered version control with native sync
+- Agent-optimized: JSON output, ready work detection, discovered-from links
+- Prevents duplicate tracking systems and confusion
+
+### Quick Start
+
+**Check for ready work:**
+
+```bash
+bd ready --json
+```
+
+**Create new issues:**
+
+```bash
+bd create "Issue title" --description="Detailed context" -t bug|feature|task -p 0-4 --json
+bd create "Issue title" --description="What this issue is about" -p 1 --deps discovered-from:bd-123 --json
+```
+
+**Claim and update:**
+
+```bash
+bd update <id> --claim --json
+bd update bd-42 --priority 1 --json
+```
+
+**Complete work:**
+
+```bash
+bd close bd-42 --reason "Completed" --json
+```
+
+### Issue Types
+
+- `bug` - Something broken
+- `feature` - New functionality
+- `task` - Work item (tests, docs, refactoring)
+- `epic` - Large feature with subtasks
+- `chore` - Maintenance (dependencies, tooling)
+
+### Priorities
+
+- `0` - Critical (security, data loss, broken builds)
+- `1` - High (major features, important bugs)
+- `2` - Medium (default, nice-to-have)
+- `3` - Low (polish, optimization)
+- `4` - Backlog (future ideas)
+
+### Workflow for AI Agents
+
+1. **Check ready work**: `bd ready` shows unblocked issues
+2. **Claim your task atomically**: `bd update <id> --claim`
+3. **Work on it**: Implement, test, document
+4. **Discover new work?** Create linked issue:
+   - `bd create "Found bug" --description="Details about what was found" -p 1 --deps discovered-from:<parent-id>`
+5. **Complete**: `bd close <id> --reason "Done"`
+
+### Auto-Sync
+
+bd automatically syncs via Dolt:
+
+- Each write auto-commits to Dolt history
+- Use `bd dolt push`/`bd dolt pull` for remote sync
+- No manual export/import needed!
+
+### Important Rules
+
+- ✅ Use bd for ALL task tracking
+- ✅ Always use `--json` flag for programmatic use
+- ✅ Link discovered work with `discovered-from` dependencies
+- ✅ Check `bd ready` before asking "what should I work on?"
+- ❌ Do NOT create markdown TODO lists
+- ❌ Do NOT use external issue trackers
+- ❌ Do NOT duplicate tracking systems
+
+For more details, see README.md and docs/QUICKSTART.md.
+
+## Landing the Plane (Session Completion)
+
+**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+
+**MANDATORY WORKFLOW:**
+
+1. **File issues for remaining work** - Create issues for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **PUSH TO REMOTE** - This is MANDATORY:
+   ```bash
+   git pull --rebase
+   bd dolt push
+   git push
+   git status  # MUST show "up to date with origin"
+   ```
+5. **Clean up** - Clear stashes, prune remote branches
+6. **Verify** - All changes committed AND pushed
+7. **Hand off** - Provide context for next session
+
+**CRITICAL RULES:**
+- Work is NOT complete until `git push` succeeds
+- NEVER stop before pushing - that leaves work stranded locally
+- NEVER say "ready to push when you are" - YOU must push
+- If push fails, resolve and retry until it succeeds
+
+<!-- END BEADS INTEGRATION -->
