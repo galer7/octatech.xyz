@@ -2,8 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(sips:*)"
-    ],
-    "deny": [],
-    "ask": []
+    ]
   }
 }
